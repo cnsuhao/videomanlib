@@ -5,10 +5,8 @@ http://www.cmake.org/
 
 EXTERNAL DEPENDENCIES
 =========
-Necessary:
--OpenGL: Necessary to build VideoMan core
-
 Optional:
+-OpenGL: Necessary to build VideoMan OpenGL Renderer
 -GLUT: Used in some examples http://www.xmission.com/~nate/glut.html
 -QT: Used in some examples http://qt.nokia.com/
 -FreeType: Used in some examples http://www.freetype.org/

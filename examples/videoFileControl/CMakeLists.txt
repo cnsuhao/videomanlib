@@ -1,0 +1,7 @@
+FIND_PACKAGE( GLUT REQUIRED )
+FIND_PACKAGE( OpenGL REQUIRED )
+INCLUDE_DIRECTORIES( ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR} )
+ADD_EXECUTABLE( exampleVideoFileControl videoFileControl.cpp )
+TARGET_LINK_LIBRARIES( exampleVideoFileControl VideoMan ${GLUT_glut_LIBRARY} ${OPENGL_LIBRARIES}  )
+set_target_properties( exampleVideoFileControl PROPERTIES FOLDER "examples")
+add_dependencies( exampleVideoFileControl VideoMan )

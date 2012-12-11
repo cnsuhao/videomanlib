@@ -1,0 +1,7 @@
+FIND_PACKAGE( GLUT REQUIRED )
+FIND_PACKAGE( OpenGL REQUIRED )
+INCLUDE_DIRECTORIES( ${GLUT_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR} )
+ADD_EXECUTABLE( exampleVMwithDirectShowMultiVideo VMwithDirectShowMultiVideo.cpp )
+TARGET_LINK_LIBRARIES( exampleVMwithDirectShowMultiVideo VideoMan ${GLUT_glut_LIBRARY}  ${OPENGL_LIBRARIES} )
+set_target_properties( exampleVMwithDirectShowMultiVideo PROPERTIES FOLDER "examples")
+add_dependencies( exampleVMwithDirectShowMultiVideo VideoMan )

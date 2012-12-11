@@ -1,0 +1,204 @@
+#ifdef WIN32
+	#include <windows.h>
+#endif
+#include <GL/glut.h>
+#include <iostream>
+#include <sstream>
+#include <stdlib.h>
+#include <vector>
+
+#include "VideoManControl.h"
+
+using namespace std;
+using namespace VideoMan;
+
+/*
+This is an example using VideoMan with cameras and OpenGL.
+All the available cameras are initilized
+To use this example, VideoMan must be built with the directive VM_OGLRenderer, 
+*/
+
+VideoManControl videoMan;
+int screenLeft, screenUp, screenWidth, screenHeight;
+bool fullScreened;
+int visualMode = 0;
+int mainInput = 0;
+std::vector< int > videoInputIDs; //List of indexes of the initialized inputs
+
+size_t maxDevices = 10;
+
+void glutResize(int width, int height)
+{
+	screenLeft = 0;
+	screenUp = 0;
+	screenWidth = width;
+	screenHeight = height;
+	//Notify to VideoMan the change of the screen size
+	videoMan.changeScreenSize( screenLeft, screenUp, screenWidth, screenHeight );
+}
+
+
+void glutKeyboard(unsigned char key, int x, int y)
+{
+	switch (key)
+	{
+		case 27:
+		{
+			exit(0);
+		}
+	}
+}
+
+
+void glutSpecialKeyboard(int value, int x, int y)
+{
+	switch (value)
+    {
+		case GLUT_KEY_F1:
+		{
+			if ( !fullScreened )
+				glutFullScreen();
+			else
+			{
+				glutPositionWindow( 0, 20 );
+				glutReshapeWindow( 640, 480 );
+			}
+			fullScreened = !fullScreened;
+			break;
+		}
+		case GLUT_KEY_F2:
+		{
+			visualMode = (visualMode + 1 ) %5;
+			videoMan.changeVisualizationMode( visualMode);
+			break;
+		}		
+		case GLUT_KEY_F3:
+		{
+			mainInput = ( mainInput + 1 ) %videoInputIDs.size();
+			videoMan.changeMainVisualizationInput( mainInput );
+			break;
+		}
+    }
+}
+
+
+void InitializeOpenGL()
+{
+
+}
+
+bool InitializeVideoMan()
+{
+	VMInputFormat format;	
+	VMInputIdentification device;
+	VMInputIdentification *list;
+	int numDevices;
+	videoMan.getAvailableDevices( &list, numDevices ); //list all the available devices
+	for ( int v = 0; v < numDevices && videoInputIDs.size() < maxDevices; ++v )
+	{
+		//Initialize one input from a camera
+		device = list[v];
+		format.showDlg = true;
+		int inputID;
+		if ( ( inputID = videoMan.addVideoInput( device, &format ) ) != -1 )
+		{
+			cout << endl;
+			cout << "Initialized camera: " << endl;
+			if ( device.friendlyName )
+				cout << "-Friendly name: " << device.friendlyName << endl;
+			if ( device.uniqueName )
+				cout << "-uniqueName: " << device.uniqueName << endl;
+			cout << "-resolution: " << format.width <<" " << format.height << endl;
+			cout << "-FPS: " << format.fps << endl;
+			cout << "===========" << endl;
+			videoInputIDs.push_back( inputID );
+			videoMan.showPropertyPage( inputID );
+		}	
+	}
+	videoMan.freeAvailableDevicesList(  &list, numDevices );
+
+	//We want to display all the intialized video inputs
+	videoMan.activateAllVideoInputs();	
+
+	return ( videoInputIDs.size() > 0);
+}
+
+
+void glutDisplay(void)
+{
+	//Clear the opengl window
+	glClear( GL_COLOR_BUFFER_BIT );
+	//For each initialized inputs
+	for ( size_t n=0; n < videoInputIDs.size(); n++ )
+	{
+		//Get a new frame from input n
+		char *image = videoMan.getFrame( videoInputIDs[n] );
+		if ( image != NULL )
+		{
+			//Update the texture of the renderer
+			videoMan.updateTexture( videoInputIDs[n] ); 
+            
+			/*
+				Process the image...
+			*/
+
+			//Release the frame
+			videoMan.releaseFrame( videoInputIDs[n] );
+		}
+		//render the image of input n in the screen
+		videoMan.renderFrame( videoInputIDs[n] ); 
+	}
+	glFlush();
+    glutSwapBuffers();
+}
+
+
+void showHelp()
+{
+	cout << "========" << endl;
+	cout << "keys:" << endl;
+	cout << "Esc->Exit" << endl;
+	cout << "F1->Fullscreen" << endl;
+	cout << "F2->Switch Visualization Mode" << endl;
+	cout << "F3->Switch Main Input" << endl;
+	cout << "========" << endl;
+}
+
+int main(int argc, char** argv)
+{
+	cout << "The specified number of available cameras are initilized" << endl;		
+	cout << "Usage: multiCamera.exe numberOfCameras(int)" << endl;
+	cout << "Example: multiCamera.exe 3" << endl;
+	cout << "=====================================================" << endl;
+	if ( argc > 1 )
+	{
+		std::istringstream st( argv[1] );
+		st >> maxDevices;
+	}
+
+	glutInitDisplayMode( GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA | GLUT_MULTISAMPLE );
+    glutInitWindowPosition( 0, 0 );
+    glutInitWindowSize( 640, 480 );
+    glutInit( &argc, argv );
+
+    glutCreateWindow("VideoMan MultiCamera Example");
+
+    glutReshapeFunc(glutResize);
+    glutDisplayFunc(glutDisplay);
+    glutIdleFunc(glutDisplay);
+    glutKeyboardFunc(glutKeyboard);
+	glutSpecialFunc(glutSpecialKeyboard);
+
+    InitializeOpenGL();
+	
+	if ( !InitializeVideoMan() )	
+		return 0;	
+	
+	fullScreened = false;
+
+	showHelp();
+
+    glutMainLoop();
+
+	return 0;
+}

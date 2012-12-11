@@ -1,0 +1,7 @@
+FIND_PACKAGE( GLUT REQUIRED )
+FIND_PACKAGE( OpenGL REQUIRED )
+INCLUDE_DIRECTORIES(  ${GLUT_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR} )
+ADD_EXECUTABLE( exampleIDSuEye IDSuEye.cpp )
+TARGET_LINK_LIBRARIES( exampleIDSuEye VideoMan ${GLUT_glut_LIBRARY} ${OPENGL_LIBRARIES} )
+set_target_properties( exampleIDSuEye PROPERTIES FOLDER "examples")
+add_dependencies( exampleIDSuEye VideoMan )

@@ -1,0 +1,52 @@
+these are the steps to build VMDirectShow 
+
+USING VISUAL STUDIO 2005 or later
+===========================================================
+
+1- Download web install of Windows SDK for Windows Server 2008
+http://www.microsoft.com/downloads/details.aspx?FamilyId=E6E1C3DF-A74F-4207-8586-711EBE331CDC&displaylang=en
+You only need "Samples\win32", "Developer Tools\Windows Headers and Libraries" and "Developer Tools\Windows Development Tools\Win 32 Development Tools"
+
+2-Add the BaseClasses directory (absolute path)  
+"Microsoft SDKs\Windows\v6.1\Samples\Multimedia\DirectShow\BaseClasses"  
+and 
+"Microsoft SDKs\Windows\v6.1\Include" 
+in the VC++ include directories , not in the VMDirectShow project properties but in the Visual Studio global directories (Tools/Options/Projects and Solutions/VC++ Directories). 
+Also they must be located in the first place of the list and in that order (BaseClasses at the top of the list). This is very important, in other case you will compile using the old headers
+
+3-Add the location of the lib directories "Microsoft SDKs\Windows\v6.1\Lib"
+"Microsoft SDKs\Windows\v6.1\Samples\Multimedia\DirectShow\BaseClasses\Release"
+"Microsoft SDKs\Windows\v6.1\Samples\Multimedia\DirectShow\BaseClasses\Debug"
+in the VC++ Library directories  (Tools/Options/Projects and Solutions/VC++ Directories)
+
+4-In the file "Microsoft SDKs\Windows\v6.1\Include\Qedit.h" comment this line #include "dxtrans.h" (line 498)
+
+5- Build the strmbase.lib(release) and  strmbasd.lib(debug) with the "BaseClasses" sample
+"Microsoft SDKs\Windows\v6.1\Samples\Multimedia\DirectShow\BaseClasses"
+
+6-Change the VMDirectShow project property "C/C++ - Language - Treat wchar_t as Built-in Type" to NO (release and debug properties)
+
+7-Build VMDirectShow.dll
+
+
+
+
+
+USING VISUAL STUDIO 2003
+==========================================================
+
+1- Download DirectX 9.0 SDK Update (February 2005) Extras
+http://download.microsoft.com/download/d/9/1/d91c44b9-fbac-4e8e-bee1-4a75777923ec/dxsdk_feb2005_extras.exe
+
+2- Build the strmbase.lib (release) strmbasd.lib (debug) with the "BaseClasses" sample
+"Extras\DirectShow\Samples\C++\DirectShow\BaseClasses"
+
+3-Add the include dir (absolute path) to the VC++ includes Directories
+"\Extras\DirectShow\Samples\C++\DirectShow\BaseClasses"
+
+4-Add these paths to the VC++ LIBS Directories  (Tools/Options/Projects/VC++ Directories)
+"\Extras\DirectShow\Samples\C++\DirectShow\BaseClasses\Release\"
+"\Extras\DirectShow\Samples\C++\DirectShow\BaseClasses\Debug\"
+"\Extras\DirectShow\Lib\x86\"
+
+5-Build VMDirectShow.dll

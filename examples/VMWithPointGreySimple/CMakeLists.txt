@@ -1,0 +1,7 @@
+FIND_PACKAGE( GLUT REQUIRED )
+FIND_PACKAGE( OpenGL REQUIRED )
+INCLUDE_DIRECTORIES(  ${GLUT_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR} )
+ADD_EXECUTABLE( exampleVMWithPointGreySimple VMWithPointGrey.cpp )
+TARGET_LINK_LIBRARIES( exampleVMWithPointGreySimple VideoMan ${GLUT_glut_LIBRARY} ${OPENGL_LIBRARIES} )
+set_target_properties( exampleVMWithPointGreySimple PROPERTIES FOLDER "examples")
+add_dependencies( exampleVMWithPointGreySimple VideoMan )

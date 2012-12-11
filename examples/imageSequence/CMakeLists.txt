@@ -1,0 +1,7 @@
+FIND_PACKAGE( GLUT REQUIRED )
+FIND_PACKAGE( OpenGL REQUIRED )
+INCLUDE_DIRECTORIES( ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR} )
+ADD_EXECUTABLE( exampleImageSequence imageSequence.cpp )
+TARGET_LINK_LIBRARIES( exampleImageSequence VideoMan ${GLUT_glut_LIBRARY} ${OPENGL_LIBRARIES}  )
+set_target_properties( exampleImageSequence PROPERTIES FOLDER "examples")
+add_dependencies( exampleImageSequence VideoMan )

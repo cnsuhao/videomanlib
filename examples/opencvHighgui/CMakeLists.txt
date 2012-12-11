@@ -1,0 +1,6 @@
+FIND_PACKAGE( OpenCV REQUIRED )
+INCLUDE_DIRECTORIES( ${OpenCV_INCLUDE_DIRS} )
+ADD_EXECUTABLE( exampleOpencvHighgui opencvHighgui.cpp )
+TARGET_LINK_LIBRARIES( exampleOpencvHighgui VideoMan ${OpenCV_LIBS} )
+set_target_properties( exampleOpencvHighgui PROPERTIES FOLDER "examples")
+add_dependencies( exampleOpencvHighgui VideoMan )

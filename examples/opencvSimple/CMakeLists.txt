@@ -1,0 +1,8 @@
+FIND_PACKAGE( OpenCV REQUIRED )
+FIND_PACKAGE( GLUT REQUIRED )
+FIND_PACKAGE( OpenGL REQUIRED )
+INCLUDE_DIRECTORIES( ${OpenCV_INCLUDE_DIRS} ${GLUT_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR} )
+ADD_EXECUTABLE( exampleOpencvSimple opencvSimple.cpp )
+TARGET_LINK_LIBRARIES( exampleOpencvSimple VideoMan ${GLUT_glut_LIBRARY}  ${OPENGL_LIBRARIES} ${OpenCV_LIBS})
+set_target_properties( exampleOpencvSimple PROPERTIES FOLDER "examples")
+add_dependencies( exampleOpencvSimple VideoMan )
