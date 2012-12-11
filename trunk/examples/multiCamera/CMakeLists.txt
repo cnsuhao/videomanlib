@@ -1,0 +1,7 @@
+FIND_PACKAGE( GLUT REQUIRED )
+FIND_PACKAGE( OpenGL REQUIRED )
+INCLUDE_DIRECTORIES( ${GLUT_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
+ADD_EXECUTABLE( exampleMultiCamera multiCamera.cpp )
+TARGET_LINK_LIBRARIES( exampleMultiCamera VideoMan ${GLUT_glut_LIBRARY} ${OPENGL_LIBRARIES})
+set_target_properties( exampleMultiCamera PROPERTIES FOLDER "examples")
+add_dependencies( exampleMultiCamera VideoMan )

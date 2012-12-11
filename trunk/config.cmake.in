@@ -1,0 +1,55 @@
+# ===================================================================================
+#  VideoMan CMake configuration file
+#
+#             ** File generated automatically, do not modify **
+#
+#  Usage from an external project:
+#    In your CMakeLists.txt, add these lines:
+#
+#    FIND_PACKAGE(VideoMan REQUIRED )
+#    TARGET_LINK_LIBRARIES(MY_TARGET_NAME ${VideoMan_LIBS})
+#
+#    This file will define the following variables:
+#      - VideoMan_LIBS          : The list of libraries to links against.
+#      - VideoMan_LIB_DIR       : The directory where lib files are. Calling LINK_DIRECTORIES
+#                                with this path is NOT needed.
+#      - VideoMan_VERSION       : The  version of this gu build. Example: "1.2.0"
+#      - VideoMan_VERSION_MAJOR : Major version part of gu_VERSION. Example: "1"
+#      - VideoMan_VERSION_MINOR : Minor version part of gu_VERSION. Example: "2"
+#      - VideoMan_VERSION_PATCH : Patch version part of gu_VERSION. Example: "0"
+#
+# ===================================================================================
+
+# Extract the directory where *this* file has been installed (determined at cmake run-time)
+#  This variable may or may not be used below, depending on the parsing of VideoManConfig.cmake
+get_filename_component(THIS_VideoMan_CONFIG_PATH "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+# ======================================================
+# Include directories to add to the user project:
+# ======================================================
+INCLUDE_DIRECTORIES(@CMAKE_INCLUDE_DIRS_CONFIGCMAKE@)
+
+# ======================================================
+# Link directories to add to the user project:
+# ======================================================
+LINK_DIRECTORIES("${CMAKE_BINARY_DIR}/bin" )
+
+# Provide the libs directory anyway, it may be needed in some cases.
+SET(VideoMan_LIB_DIR "${CMAKE_BINARY_DIR}/bin" )
+
+# ====================================================================
+# Link libraries
+# ====================================================================
+if (CMAKE_MAJOR_VERSION GREATER 2  OR  CMAKE_MINOR_VERSION GREATER 4) # CMake>=2.6 supports the notation "debug XXd optimized XX"
+	SET(VideoMan_LIBS debug VideoMan@VideoMan_DLLVERSION@@VideoMan_DEBUG_POSTFIX@ optimized VideoMan@VideoMan_DLLVERSION@)
+else() # Old CMake:
+	SET(VideoMan_LIBS VideoMan@VideoMan_DLLVERSION@)
+endif()
+
+# ======================================================
+#  Version variables:
+# ======================================================
+SET(VideoMan_VERSION 		  @VideoMan_VERSION@)
+SET(VideoMan_VERSION_MAJOR  @VideoMan_VERSION_MAJOR@)
+SET(VideoMan_VERSION_MINOR  @VideoMan_VERSION_MINOR@)
+SET(VideoMan_VERSION_PATCH  @VideoMan_VERSION_PATCH@)
