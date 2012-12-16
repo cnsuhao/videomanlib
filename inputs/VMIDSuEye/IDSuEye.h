@@ -25,6 +25,10 @@ public:
 	bool linkController( VideoManPrivate::VideoManInputController *acontroller );
 
 private:
+
+	int colorModeFromPixelFormat( VideoMan::VMPixelFormat pixelFormat );
+	VideoMan::VMPixelFormat pixelFormatFromColorMode( int colorMode );
+
 	VideoManPrivate::VideoManInputController *controller;
 
 	HIDS m_hCam;
