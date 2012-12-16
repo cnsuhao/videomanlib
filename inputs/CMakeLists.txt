@@ -42,6 +42,13 @@ SUBDIRS(
 )
 ENDIF(BUILD_INPUT_VMImageSequence)
 
+option(BUILD_INPUT_VMImageFile "Build VMImageFile input module for a single image file" OFF)
+IF (BUILD_INPUT_VMImageFile)
+SUBDIRS(
+ VMImageFile
+)
+ENDIF(BUILD_INPUT_VMImageFile)
+
 option(BUILD_INPUT_VMHighgui "Build VMHighgui input module for input devices and video files using OpenCV-Highgui" OFF)
 IF(BUILD_INPUT_VMHighgui)	
 SUBDIRS(
