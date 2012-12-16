@@ -52,6 +52,56 @@ IDSuEye::~IDSuEye(void)
 	}
 }
 
+int IDSuEye::colorModeFromPixelFormat( VMPixelFormat pixelFormat )
+{
+	switch (pixelFormat)
+	{
+	case GREY8:
+		return IS_CM_MONO8;
+	case GREY16:
+		return IS_CM_MONO16;
+	case RAW8:
+		return IS_CM_SENSOR_RAW8;
+	case RGB24:	
+		return IS_CM_RGB8_PACKED;
+	case BGR24:
+		return IS_CM_BGR8_PACKED;
+	case RGB32:	
+		return IS_CM_RGBA8_PACKED;
+	case BGR32:
+		return IS_CM_BGRA8_PACKED;
+	case YUV422:
+		return IS_CM_UYVY_PACKED;
+	default:
+		return IS_CM_RGB8_PACKED;
+	}
+}
+
+VMPixelFormat IDSuEye::pixelFormatFromColorMode( int colorMode )
+{
+	switch (colorMode)
+	{
+	case IS_CM_MONO8:
+		return GREY8;
+	case IS_CM_MONO16:
+		return GREY16;
+	case IS_CM_SENSOR_RAW8:
+		return RAW8;
+	case IS_CM_RGB8_PACKED:
+		return RGB24;
+	case IS_CM_BGR8_PACKED:
+		return BGR24;
+	case IS_CM_RGBA8_PACKED:
+		return RGB32;
+	case IS_CM_BGRA8_PACKED:
+		return BGR32;
+	case IS_CM_UYVY_PACKED:
+		return YUV422;	
+	default:
+		return UNKNOWN;
+	}
+}
+
 bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *aformat )
 {
 	int cameraId = 0;
@@ -62,11 +112,11 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 	}
 	
 	if ( cameraId >= 1 || cameraId <= 254 )
-		m_hCam = (HIDS)cameraId;						// open next camera
+		m_hCam = (HIDS)cameraId; // open next camera
 	else 
-		m_hCam = (HIDS)0;						// open next camera
-	int nRet = is_InitCamera( &m_hCam, NULL );		// init camera - no window handle required
-	if (nRet == IS_SUCCESS)
+		m_hCam = (HIDS)0; // open next camera
+	int nRet = is_InitCamera( &m_hCam, NULL ); // init camera - no window handle required
+	if ( nRet == IS_SUCCESS )
 	{
 		// retrieve original image size
 		is_GetSensorInfo(m_hCam, &m_sInfo);
@@ -91,15 +141,12 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 	// Set display mode to DIB
     nRet = is_SetDisplayMode(m_hCam, IS_SET_DM_DIB);	
 	if ( !aformat || aformat->getPixelFormatIn() == UNKNOWN )
-	{
+	{		
 		if (m_sInfo.nColorMode == IS_COLORMODE_BAYER)
 		{
-			// setup the color depth to the current windows setting
-			//is_GetColorDepth(m_hCam, &m_nBitsPerPixel, &m_nColorMode);
 			m_nColorMode = IS_CM_RGB8_PACKED;
 			m_nBitsPerPixel = 24;
 			format.SetFormat( m_nSizeX, m_nSizeY, 30.0, RGB24, RGB24 );
-
 		}
 		else
 		{
@@ -112,48 +159,12 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 	{
 		//Set the desired format
 		format.setPixelFormat( aformat->getPixelFormatIn(),aformat->getPixelFormatIn() );
-		switch( format.getPixelFormatIn() )
-		{
-			// YUV422, YUV411, IYUV, , UNKNOWN
-			case RGB24:
-			case BGR24:
-				{
-					m_nColorMode = IS_CM_RGB8_PACKED;
-					m_nBitsPerPixel = 24;
-					break;
-				}
-			case BGR32:
-			case RGB32:
-				{
-					m_nColorMode = IS_CM_RGBA8_PACKED;
-					 m_nBitsPerPixel = 32;
-					break;
-				}
-			case GREY8:
-				{
-					m_nColorMode = IS_CM_MONO8;
-					 m_nBitsPerPixel = 8;
-					break;
-				}
-			case GREY16:
-				{
-					m_nColorMode = IS_CM_MONO16;
-					 m_nBitsPerPixel = 16;
-					break;
-				}
-			case RAW8:
-				{
-					m_nColorMode = IS_CM_SENSOR_RAW8;
-					 m_nBitsPerPixel = 8;
-					break;
-				}
-		}
+		m_nColorMode = colorModeFromPixelFormat( aformat->getPixelFormatIn() );		
 		m_nSizeX = aformat->width;
 		m_nSizeY = aformat->height;
 		format.width = m_nSizeX;
 		format.height = m_nSizeY;
 		format.fps = aformat->fps;
-
 		if ( is_SetFrameRate(m_hCam, format.fps, &format.fps ) != IS_SUCCESS )
 		{
 			cerr << "Invalid frame rate" << endl;
@@ -168,16 +179,8 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 		cerr << "Invalid color mode" << endl;
 		return false;
 	}
-	// set the image size to capture
-	/*if ( is_SetImageSize(m_hCam, m_nSizeX, m_nSizeY ) != IS_SUCCESS )
-	{
-		cerr << "Invalid image size" << endl;
-		return false;
-	}*/	
-
-	//Get the format	
-	/*m_nSizeX = is_SetImageSize(m_hCam, IS_GET_IMAGE_SIZE_X, 0 );
-	m_nSizeY = is_SetImageSize(m_hCam, IS_GET_IMAGE_SIZE_Y, 0 );	*/
+	
+	//Get Image size
 	IS_RECT rectAOI; 
 	nRet = is_AOI(m_hCam, IS_AOI_IMAGE_GET_AOI, (void*)&rectAOI, sizeof(rectAOI));
 	if (nRet == IS_SUCCESS)
@@ -187,61 +190,30 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 	  m_nSizeX = rectAOI.s32Width;
 	  m_nSizeY = rectAOI.s32Height;
 	}
+	else	
+	{
+		cerr << "Error getting AOI" << endl;
+		return false;
+	}
 	
 	
 	format.width = m_nSizeX;
 	format.height = m_nSizeY;
 	int m_nColorMode = is_SetColorMode(m_hCam, IS_GET_COLOR_MODE );
-	switch( m_nColorMode )
-	{
-		case IS_CM_RGB8_PACKED:		
-			{
-				format.setPixelFormat( BGR24, BGR24 );
-				break;
-			}
-		case IS_CM_RGBA8_PACKED:		
-			{				
-				format.setPixelFormat( BGR32, BGR32 );
-				break;
-			}
-		case IS_CM_MONO8:
-			{
-				format.setPixelFormat( GREY8, GREY8 );
-				break;
-			}
-		case IS_CM_MONO16:
-			{
-				format.setPixelFormat( GREY16, GREY16 );
-				break;
-			}
-		case IS_CM_SENSOR_RAW8:
-			{
-				format.setPixelFormat( RAW8, RAW8 );
-				break;
-			} 
-	}
- 
-
+	VMPixelFormat pixelFormat = pixelFormatFromColorMode( m_nColorMode );
+	format.setPixelFormat( pixelFormat, pixelFormat );
 	m_nBitsPerPixel = format.depth * format.nChannels;
 	 // allocate an image memory.
-    if (is_AllocImageMem(m_hCam, m_nSizeX, m_nSizeY, m_nBitsPerPixel, &m_pcImageMemory[0], &m_lMemoryId[0] ) != IS_SUCCESS)
-    {
-        cerr << "Memory allocation failed!" << endl;
-		return false;
-    }
-	
-	//is_SetImageMem( m_hCam, m_pcImageMemory, m_lMemoryId );
-	is_AddToSequence( m_hCam, m_pcImageMemory[0], m_lMemoryId[0] );
+	for ( int i = 0; i < 2; ++i )
+	{
+		if (is_AllocImageMem(m_hCam, m_nSizeX, m_nSizeY, m_nBitsPerPixel, &m_pcImageMemory[i], &m_lMemoryId[i] ) != IS_SUCCESS)
+		{
+			cerr << "Memory allocation failed!" << endl;
+			return false;
+		}
+		is_AddToSequence( m_hCam, m_pcImageMemory[i], m_lMemoryId[i] );
+	}	
 
-	if (is_AllocImageMem(m_hCam, m_nSizeX, m_nSizeY, m_nBitsPerPixel, &m_pcImageMemory[1], &m_lMemoryId[1] ) != IS_SUCCESS)
-    {
-        cerr << "Memory allocation failed!" << endl;
-		return false;
-    }
-
-	//is_SetImageMem( m_hCam, m_pcImageMemory, m_lMemoryId );
-	is_AddToSequence( m_hCam, m_pcImageMemory[1], m_lMemoryId[1] );
-		
     // Enable Messages
     //is_InitEvent()
 	//is_EnableEvent()
