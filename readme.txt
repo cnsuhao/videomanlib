@@ -3,7 +3,7 @@ SETUP
 Download cmake and create the solution for your building system
 http://www.cmake.org/
 
-EXTERNAL DEPENDENCIES
+EXTERNAL DEPENDENCIES 
 =========
 Optional:
 -OpenGL: Necessary to build VideoMan OpenGL Renderer
