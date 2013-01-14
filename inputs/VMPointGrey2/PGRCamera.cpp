@@ -313,7 +313,7 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 	{
 		CameraControlDlg controlDlg;
 		controlDlg.Connect( &cam );
-		controlDlg.ShowModal( NULL );
+		controlDlg.Show( NULL );
 		controlDlg.Hide();
 		controlDlg.Disconnect();
 		//int		iDialogStatus;
@@ -326,28 +326,58 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 	{
 		videoMode = buildVideoMode( *aFormat );
 
-		//Select frame rate	
-		if ( aFormat != NULL && !aFormat->showDlg )
+		if (videoMode == VIDEOMODE_FORMAT7)
 		{
-			if ( aFormat->fps == 1.875 )
-				frameRate = FRAMERATE_1_875;
-			else if ( aFormat->fps == 3.75 )
-				frameRate = FRAMERATE_3_75;
-			else if ( aFormat->fps == 7.5 )
-				frameRate = FRAMERATE_7_5;
-			else if ( aFormat->fps == 15.0 )
-				frameRate = FRAMERATE_15;
-			else if ( aFormat->fps == 30.0 )
-				frameRate = FRAMERATE_30;
-			else if ( aFormat->fps == 60.0 )
-				frameRate = FRAMERATE_60;
-			else if ( aFormat->fps == 120.0 )
-				frameRate = FRAMERATE_120;
-			else if ( aFormat->fps == 240.0 )
-				frameRate = FRAMERATE_240;
-			else
-				frameRate = FRAMERATE_FORMAT7;
+			Format7PacketInfo pPacketInfo;
+			Format7ImageSettings pImageSettings;
+			float pPercentage;
+
+			pImageSettings.height=aFormat->height;
+			pImageSettings.width=aFormat->width;
+			pImageSettings.offsetX=0;
+			pImageSettings.offsetY=0;
+			if (aFormat->getPixelFormatIn()==VideoMan::RAW16) 
+				pImageSettings.pixelFormat = PIXEL_FORMAT_RAW16;
+			else if (aFormat->getPixelFormatIn()==VideoMan::RAW8) 
+				pImageSettings.pixelFormat = PIXEL_FORMAT_RAW8;
+			else if (aFormat->getPixelFormatIn()==VideoMan::GREY8) 
+				pImageSettings.pixelFormat = PIXEL_FORMAT_MONO8;
+			else if (aFormat->getPixelFormatIn()==VideoMan::GREY16) 
+				pImageSettings.pixelFormat = PIXEL_FORMAT_MONO16;
+			bool valid;
+			if (cam.ValidateFormat7Settings(&pImageSettings,&valid,&pPacketInfo)!= PGRERROR_OK)
+			{
+				unsigned int pPacketSize;
+				Error error = cam.SetFormat7Configuration( &pImageSettings, pPercentage);
+				
+			}
+		
 		}
+			if ( aFormat != NULL && !aFormat->showDlg )
+			{
+				if ( aFormat->fps == 1.875 )
+					frameRate = FRAMERATE_1_875;
+				else if ( aFormat->fps == 3.75 )
+					frameRate = FRAMERATE_3_75;
+				else if ( aFormat->fps == 7.5 )
+					frameRate = FRAMERATE_7_5;
+				else if	( aFormat->fps == 15.0 )
+					frameRate = FRAMERATE_15;
+				else if ( aFormat->fps == 30.0 )
+					frameRate = FRAMERATE_30;
+				else if ( aFormat->fps == 60.0 )
+					frameRate = FRAMERATE_60;
+				else if ( aFormat->fps == 120.0 )
+					frameRate = FRAMERATE_120;
+				else if ( aFormat->fps == 240.0 )
+					frameRate = FRAMERATE_240;
+				else
+					frameRate = FRAMERATE_FORMAT7;
+				
+			
+
+		}
+		
 		error = cam.SetVideoModeAndFrameRate( videoMode, frameRate );
 		if (error != PGRERROR_OK)
 		{
