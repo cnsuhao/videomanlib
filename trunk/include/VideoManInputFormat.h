@@ -30,7 +30,7 @@ struct VMInputIdentification
 	}
 };
 
-enum VMPixelFormat { RGB24, RGB32, BGR24, BGR32, YUV422, YUV411, IYUV, GREY8, GREY16, RAW8, UNKNOWN};
+enum VMPixelFormat { RGB24, RGB32, BGR24, BGR32, YUV422, YUV411, IYUV, GREY8, GREY16, RAW8, RAW16, UNKNOWN};
 
 class VIDEOMAN_API VMInputFormat
 {
