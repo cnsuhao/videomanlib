@@ -18,7 +18,13 @@ HighguiDeviceInput::~HighguiDeviceInput(void)
 
 bool HighguiDeviceInput::initInput( const VMInputIdentification &device, VMInputFormat *aformat )
 {	
-	capture = cvCreateCameraCapture(0);
+	int id = 0;
+	if ( device.uniqueName )
+	{
+		istringstream ss( device.uniqueName );
+		ss >> id;
+	}
+	capture = cvCreateCameraCapture( id );
 	if( capture )
 	{
 		if ( aformat )
