@@ -8,6 +8,7 @@
 	#include <stddef.h>
 	#include <sys/stat.h>
 	#include <stdio.h>
+	#include <link.h>
 	#include <sys/types.h>
 	#include <dirent.h>
     #include <string.h>
@@ -371,7 +372,6 @@ void VideoManFactory::loadModules()
 	#ifdef linux
 		void *handle = dlopen("libVideoMan.so", RTLD_LAZY); 
 		link_map *map;
-		std::string path = "";
 		if ( dlinfo( handle,  RTLD_DI_LINKMAP, &map ) != -1 )
 		{
 			path = map->l_name;
