@@ -1,7 +1,7 @@
 #ifdef WIN32
 	#include <windows.h>
 #endif
-#include <GL/glut.h>
+#include <GL/freeglut.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -100,8 +100,8 @@ void glutKeyboard(unsigned char key, int x, int y)
 	{
 		case 27:
 		{
-			clear();
-			exit(0);
+			glutLeaveMainLoop();
+			break;
 		}
 		case 's':
 		{
@@ -265,7 +265,6 @@ void glutDisplay(void)
 	videoMan.releaseFrame( inputID );
 	videoMan.renderFrame( inputID );
     glutSwapBuffers();
-	//glutPostRedisplay();
 }
 
 void showHelp()
@@ -299,19 +298,16 @@ int main(int argc, char** argv)
     glutKeyboardFunc(glutKeyboard);
 	glutSpecialFunc(glutSpecialKeyboard);
 	glutMouseFunc( glutMouseFunc );
+	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
 
 	if ( !InitializeVideoMan() )
 		return -1; 
 
 	if ( !useFrameCallback )
-		glutIdleFunc(glutDisplay);
-	else
-		glutIdleFunc(glutIdle);
+		glutIdleFunc(glutIdle);	
 
-	fullScreened = false;
-	
-	showHelp();
-    
+	fullScreened = false;	
+	showHelp();    
 	glutMainLoop();
 	clear();
 	return 0;
