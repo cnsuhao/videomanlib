@@ -1,7 +1,7 @@
 #ifdef WIN32
 	#include <windows.h>
 #endif
-#include <GL/glut.h>
+#include <GL/freeglut.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -35,6 +35,7 @@ std::vector<CvPoint2D32f> pointsList; //List of created points
 #include "FreeType.h"
 
 freetype::font_data font;
+bool freetypeFontFound = false;
 
 void glutResize(int width, int height)
 {
@@ -64,9 +65,9 @@ void glutMouseFunc( int button, int mouseState, int x, int y )
 		if ( videoMan.screenToImageCoords( xf, yf ) == inputID )
 		{
 			//Draw the circle in the image			
-			int xi = xf;
-			int yi = yf;
-			cvCircle( img, cvPoint( (int)xi, (int)yi ), 6, CV_RGB( 0, 255, 0 ), 2 );
+			int xi = (int)xf;
+			int yi = (int)yf;
+			cvCircle( img, cvPoint( xi, yi ), 6, CV_RGB( 0, 255, 0 ), 2 );
 			cout << "Screen coords: " << x << " " << y << endl;
 			cout << "Image coords: " << xf << " " << yf << endl;
 			
@@ -84,8 +85,8 @@ void glutKeyboard(unsigned char key, int x, int y)
 	{
 		case 27:
 		{
-			clear();
-			exit(0);
+			glutLeaveMainLoop();
+			break;
 		}
 		case 'a':
 		case 'A':
@@ -209,6 +210,8 @@ bool InitializeVideoMan()
 	}
 	if ( ( inputID = videoMan.addVideoInput( device, &format ) ) != -1 )	
 		videoMan.setUserInputImage( inputID, img->imageData );
+	else
+		return false;
 	videoMan.setKeepAspectRatio( inputID, true );
 	videoMan.activateAllVideoInputs();
 	videoMan.updateTexture( inputID );
@@ -284,7 +287,14 @@ void glutDisplay(void)
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
 	glColor4f( 1.0f, 1.0f, 1.0f, 0.9f);
-	freetype::print( font, 10, 70, "VideoMan Library 2010 \nhttp://videomanlib.sourceforge.net \nJavier Barandiaran Martirena" );
+	string txt = "VideoMan Library 2010 \nhttp://videomanlib.sourceforge.net \nJavier Barandiaran Martirena";
+	if ( freetypeFontFound )
+		freetype::print( font, 10, 70, txt.c_str() );
+	else
+	{
+		glRasterPos2i( 10, 70 );
+		glutBitmapString( GLUT_BITMAP_TIMES_ROMAN_24, (const unsigned char*)txt.c_str() );
+	}
 	glDisable( GL_BLEND );
 
     glutSwapBuffers();
@@ -340,17 +350,28 @@ int main(int argc, char** argv)
     glutKeyboardFunc(glutKeyboard);
 	glutSpecialFunc(glutSpecialKeyboard);
 	glutMouseFunc( glutMouseFunc );
+	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
+	videoMan.setTextureFiltering( 0 );
 
 	if ( !InitializeVideoMan() )
-		return -1; 
-
-	fullScreened = false;
+		return -1;
 
 	//Load the font	
-	font.init( "font.ttf", 16 );
-	
-	showHelp();
-    
+	try
+	{
+		font.init( "font.ttf", 16 );
+		freetypeFontFound = true;
+	}
+	catch(runtime_error e)
+	{
+		cerr << e.what() << endl;
+		cerr << "Font file font.ttf not found. Copy that file to the working directory of the example" << e.what() << endl;
+		freetypeFontFound = false;		
+	}
+
+	fullScreened = false;	
+	showHelp();    
 	glutMainLoop();
+	clear();
 	return 0;
 }
