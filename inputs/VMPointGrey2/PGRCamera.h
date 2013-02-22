@@ -116,7 +116,7 @@ protected:
 
 	bool fireSoftwareTrigger( bool broadcast );
 
-	bool setStrobeOutput();
+	bool setStrobeOutput( bool onOff, float delay, float duration,	unsigned int polarity, unsigned int source );
 
 	void stop();
 

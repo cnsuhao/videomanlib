@@ -57,6 +57,8 @@ public:
 
 	void convertRawToColor( const unsigned char* imgSrc, unsigned char *imgDst, int width, int height );
 
+	bool setStrobeOutput( bool onOff, float delay, float duration,	unsigned int polarity, unsigned int source );
+
 private:
 	std::vector< PGRCamera* > cameraList;
 //	std::vector<FlyCaptureContext> contexts;

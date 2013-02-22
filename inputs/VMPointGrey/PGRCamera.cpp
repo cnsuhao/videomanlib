@@ -59,14 +59,14 @@ PGRCamera::PGRCamera(void)
 PGRCamera::~PGRCamera(void)
 {
 	FlyCaptureError capError;
-	
+	//Power off
+	setRegister( CAMERA_POWER, 0x00000000 );
 	if ( started )
 	{
 		capError = flycaptureStop( context );
 		checkCaptureError( capError, "flycaptureStop()" );
 	}
-	started = false;
-	
+	started = false;	
 
 	capError = flycaptureDestroyContext( context );
 	checkCaptureError( capError, "flycaptureDestroyContext()" );
@@ -282,24 +282,7 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 	//Select frame rate	
 	if ( aFormat != NULL && !aFormat->showDlg )
 	{
-		if ( aFormat->fps == 1.875 )
-			frameRate = FLYCAPTURE_FRAMERATE_1_875;
-		else if ( aFormat->fps == 3.75 )
-			frameRate = FLYCAPTURE_FRAMERATE_3_75;
-		else if ( aFormat->fps == 7.5 )
-			frameRate = FLYCAPTURE_FRAMERATE_7_5;
-		else if ( aFormat->fps == 15.0 )
-			frameRate = FLYCAPTURE_FRAMERATE_15;
-		else if ( aFormat->fps == 30.0 )
-			frameRate = FLYCAPTURE_FRAMERATE_30;
-		else if ( aFormat->fps == 60.0 )
-			frameRate = FLYCAPTURE_FRAMERATE_60;
-		else if ( aFormat->fps == 120.0 )
-			frameRate = FLYCAPTURE_FRAMERATE_120;
-		else if ( aFormat->fps == 240.0 )
-			frameRate = FLYCAPTURE_FRAMERATE_240;
-		else
-			frameRate = FLYCAPTURE_FRAMERATE_ANY;
+		setFrameRate( aFormat->fps );
 	}
 	//Check video mode
 	bool valid = false;

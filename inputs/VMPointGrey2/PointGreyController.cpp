@@ -213,3 +213,8 @@ bool PointGreyController::getBayerFormat(size_t &btf)
 	btf=camInfo.bayerTileFormat;
 	return true;
 }
+
+bool PointGreyController::setStrobeOutput( bool onOff, float delay, float duration,	unsigned int polarity, unsigned int source )
+{
+	return cameraList[0]->setStrobeOutput( onOff, delay, duration, polarity, source );
+}
