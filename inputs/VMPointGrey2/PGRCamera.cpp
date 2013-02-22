@@ -351,6 +351,7 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 			if (cam.ValidateFormat7Settings(&pImageSettings,&valid,&pPacketInfo)!= PGRERROR_OK)
 			{
 				unsigned int pPacketSize;
+				float pPercentage = 50;
 				Error error = cam.SetFormat7Configuration( &pImageSettings, pPercentage);
 			}
 		}
