@@ -19,8 +19,11 @@ ImgSeq::~ImgSeq(void)
 {
 	#ifdef WIN32		
 		FindClose( hFind);
-		TerminateThread(threadHandle, 0);
-		CloseHandle( threadHandle );
+		/*if ( threadHandle != NULL )
+		{
+			TerminateThread(threadHandle, 0);
+			CloseHandle( threadHandle );
+		}*/
 	#endif
 	#ifdef linux
 		closedir( dir );

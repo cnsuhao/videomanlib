@@ -104,6 +104,8 @@ PGRCamera::~PGRCamera(void)
 	//	CloseHandle( showControlDlgThread );
 	//	showControlDlgThread = NULL;
 	//}
+	//Power off
+	cam.WriteRegister( CAMERA_POWER, 0x00000000 );
 	if ( dlg )
 	{
 		dlg->Hide();
@@ -114,6 +116,7 @@ PGRCamera::~PGRCamera(void)
 	// Stop capturing images
     stop();
     // Disconnect the camera
+	
 	Error error = cam.Disconnect();
     if (error != PGRERROR_OK)
         PrintError( error );
@@ -304,6 +307,8 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 	resetCamera();
 	cam.WriteRegister( CAMERA_POWER, 0x80000000 );
 	//PrintCameraInfo(&camInfo);
+
+	setTrigger( false, 3, 14 );
 	 
 //	config.numBuffers = 100;
 //	cam.SetConfiguration( &config );
@@ -330,8 +335,6 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 		{
 			Format7PacketInfo pPacketInfo;
 			Format7ImageSettings pImageSettings;
-			float pPercentage;
-
 			pImageSettings.height=aFormat->height;
 			pImageSettings.width=aFormat->width;
 			pImageSettings.offsetX=0;
@@ -349,33 +352,29 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 			{
 				unsigned int pPacketSize;
 				Error error = cam.SetFormat7Configuration( &pImageSettings, pPercentage);
-				
 			}
-		
 		}
-			if ( aFormat != NULL && !aFormat->showDlg )
-			{
-				if ( aFormat->fps == 1.875 )
-					frameRate = FRAMERATE_1_875;
-				else if ( aFormat->fps == 3.75 )
-					frameRate = FRAMERATE_3_75;
-				else if ( aFormat->fps == 7.5 )
-					frameRate = FRAMERATE_7_5;
-				else if	( aFormat->fps == 15.0 )
-					frameRate = FRAMERATE_15;
-				else if ( aFormat->fps == 30.0 )
-					frameRate = FRAMERATE_30;
-				else if ( aFormat->fps == 60.0 )
-					frameRate = FRAMERATE_60;
-				else if ( aFormat->fps == 120.0 )
-					frameRate = FRAMERATE_120;
-				else if ( aFormat->fps == 240.0 )
-					frameRate = FRAMERATE_240;
-				else
-					frameRate = FRAMERATE_FORMAT7;
-				
-			
-
+		if ( aFormat != NULL && !aFormat->showDlg )
+		{
+			if ( aFormat->fps == 1.875 )
+				frameRate = FRAMERATE_1_875;
+			else if ( aFormat->fps == 3.75 )
+				frameRate = FRAMERATE_3_75;
+			else if ( aFormat->fps == 7.5 )
+				frameRate = FRAMERATE_7_5;
+			else if	( aFormat->fps == 15.0 )
+				frameRate = FRAMERATE_15;
+			else if ( aFormat->fps == 30.0 )
+				frameRate = FRAMERATE_30;
+			else if ( aFormat->fps == 60.0 )
+				frameRate = FRAMERATE_60;
+			else if ( aFormat->fps == 120.0 )
+				frameRate = FRAMERATE_120;
+			else if ( aFormat->fps == 240.0 )
+				frameRate = FRAMERATE_240;
+			else
+				frameRate = FRAMERATE_FORMAT7;
+			setFrameRate( aFormat->fps );
 		}
 		
 		error = cam.SetVideoModeAndFrameRate( videoMode, frameRate );
@@ -402,7 +401,7 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
     if (error != PGRERROR_OK)
     {
         PrintError( error );
-        //return false;
+        return false;
     }
 
 	VideoMode videoMode;
@@ -1056,27 +1055,33 @@ bool PGRCamera::fireSoftwareTrigger( bool broadcast )
 	return ( cam.FireSoftwareTrigger( broadcast ) == PGRERROR_OK );
 }
 
-bool PGRCamera::setStrobeOutput()
+bool PGRCamera::setStrobeOutput( bool onOff, float delay, float duration,	unsigned int polarity, unsigned int source )
 {
+	Error error = cam.WriteRegister( PIN_DIRECTION, 0xF0000000 ); //GPIO1 y GPIO2 salidas
+		PrintError( error );		
+	error = cam.WriteRegister( GPIO_STRPAT_CTRL, 0x80000100 ); //El periodo del patron es de 1 frame (stobe pattern)
+		PrintError( error );	
+	error = cam.WriteRegister( GPIO_CTRL_PIN_2, 0x80030000 ); //GPIO0 en modo strobe GPIO_MODE_3
+		PrintError( error );
+	error = cam.WriteRegister( GPIO_XTRA_PIN_2, 0x00001800 ); //GPIO_MODE_3: Duration of the pulse
+		PrintError( error );
+	error = cam.WriteRegister( GPIO_STRPAT_MASK_PIN_2, 0x8000FFFF ); //Patron del GPIO0: encendido siempre
+		PrintError( error );
+	return true;
 	/*StrobeControl strobeControl;
-	strobeControl.source = 2;
 	cam.GetStrobe( &strobeControl );
-	strobeControl.source = 2;
-	strobeControl.delay = 0;
-	strobeControl.duration = 6;
-	strobeControl.onOff = true;	
-	Error error = cam.SetStrobe( &strobeControl );
-	PrintError( error );
-	cam.GetStrobe( &strobeControl );
-	StrobeInfo strobeInfo;
-	strobeInfo.source = 2;
-	error = cam.GetStrobeInfo( &strobeInfo );*/
-
-	cam.WriteRegister( GPIO_STRPAT_CTRL, 0x80000100 ); //El periodo del patron es de 1 frame (stobe pattern)
-	cam.WriteRegister( GPIO_CTRL_PIN_2, 0x80030000 ); //GPIO0 en modo strobe GPIO_MODE_3
-	cam.WriteRegister( GPIO_XTRA_PIN_2, 0x00001800 ); //GPIO_MODE_3: Duration of the pulse
-	cam.WriteRegister( GPIO_STRPAT_MASK_PIN_2, 0x8000FFFF ); //Patron del GPIO0: encendido siempre
-
+	strobeControl.source = source;	
+	strobeControl.delay = delay;
+	strobeControl.duration = duration;
+	strobeControl.onOff =	 onOff;	
+	strobeControl.polarity = polarity;
+	error = cam.SetStrobe( &strobeControl );
+	if ( error != PGRERROR_OK )
+	{
+		PrintError( error );
+		return false;
+	}
+	return true;*/
 	return true;
 }
 

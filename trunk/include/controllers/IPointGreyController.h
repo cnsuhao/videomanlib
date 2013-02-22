@@ -19,8 +19,7 @@ public:
 	virtual bool setFrameRate( float frameRate ) = 0;	
 	virtual bool setTrigger( bool triggerOn, int source, int mode ) = 0;
 	virtual bool fireSoftwareTrigger( bool broadcast ) = 0;
-	
-
+	virtual bool setStrobeOutput( bool onOff, float delay, float duration,	unsigned int polarity, unsigned int source ) = 0;
 	
 	virtual bool moveImageROI( int x, int y ) = 0;
 	virtual bool setImageROI( int x, int y, int width, int height, int videoMode ) = 0;
