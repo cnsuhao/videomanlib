@@ -1,12 +1,12 @@
 #ifdef WIN32
 	#include <windows.h>
 #endif
-#include <GL/freeglut.h>
 #include <iostream>
 #include <string>
 #include <vector>
 #include "VideoManControl.h"
 #include "controllers/IPointGreyController.h"
+#include <SFML/Window.hpp>
 
 using namespace std;
 using namespace VideoMan;
@@ -18,12 +18,10 @@ You also need to build the VMPointGrey2 input
 */
 
 VideoManControl videoMan;
-bool fullScreened;
-
 int inputID; //Index of the video input
 
 //In order to use frame callback you must use PGR_CAMERA2 and POINTGREY_CONTROLLER2
-bool useFrameCallback = true;
+bool useFrameCallback = false;
 void frameCallback( char *frame, size_t input, double timeStamp, void *data );
 IPointGreyController *controller;
 
@@ -31,178 +29,10 @@ int xROI, yROI, widthROI, heightROI;
 int xNewROI, yNewROI;
 bool roiSelected = false;
 
-void glutResize(int width, int height)
+void frameCallback( char *frame, size_t input, double timeStamp, void *data )
 {
-	//Notify to VideoMan the change of the screen size
-	videoMan.changeScreenSize( 0, 0, width, height );
+	cout << timeStamp << endl;		
 }
-
-void glutMouseFunc( int button, int mouseState, int x, int y )
-{
-	float xf = (float)x;
-	float yf = (float)y;
-	//Transform from screen coordinates to image coordinates
-	int input = videoMan.screenToImageCoords( xf, yf );
-	//Draw a new point
-	if ( mouseState == GLUT_DOWN && button == GLUT_LEFT_BUTTON )
-	{
-		//Check if the point is inside the input region
-		if ( input == inputID )
-		{
-			xNewROI = xf;
-			yNewROI = yf;
-			//roiSelected = false;
-		}
-	}
-	else if ( mouseState == GLUT_UP && button == GLUT_LEFT_BUTTON )
-	{		
-		int Hmax, Vmax, Hunit, Vunit, Hpos, Vpos;
-		controller->getROIUnits( Hmax, Vmax, Hunit, Vunit, Hpos, Vpos, 0 );
-		/*
-		//ROI format restrictions
-		Hmax = Hunit * n = Hposunit*n3 (n, n3 are integers)
-		Vmax = Vunit * m = Vposunit*m3 (m, m3 are integers)
-		xROI = Hposunit * n1
-		yROI = Vposunit * m1
-		widthROI = Hunit * n2
-		heightROI = Vunit * m2 (n1, n2, m1, m2 are integers)
-		xROI + widthROI <= Hmax - Hunit * 2
-		yROI + heightROI <= Vmax - Vunit * 2*/
-		xNewROI = Hpos * ( xNewROI / Hpos );
-		yNewROI = Vpos * ( yNewROI / Vpos );
-		int newWidthROI = xf - xNewROI + 1;
-		newWidthROI = Hunit * ( newWidthROI / Hunit );
-		int newHeightROI = yf - yNewROI + 1;
-		newHeightROI = Vunit * ( newHeightROI / Vunit );
-		if ( newWidthROI > 0 && newHeightROI > 0 && 
-			xNewROI + newWidthROI <= Hmax - Hunit * 2 &&
-			yNewROI + newHeightROI <= Vmax - Vunit * 2 &&
-			controller->setImageROI( xNewROI, yNewROI, newWidthROI, newHeightROI, 0 ) )
-		{
-			xROI = xNewROI;
-			yROI = yNewROI;
-			widthROI = newWidthROI;
-			heightROI = newHeightROI;
-			videoMan.setImageROI( inputID, xROI, yROI, widthROI, heightROI );
-			roiSelected = true;
-		}
-	}
-}
-
-void clear()
-{
-	videoMan.deleteController( (VideoManPrivate::VideoManInputController**)&controller );
-}
-
-void glutKeyboard(unsigned char key, int x, int y)
-{
-	switch (key)
-	{
-		case 27:
-		{
-			glutLeaveMainLoop();
-			break;
-		}
-		case 's':
-		{
-			videoMan.showPropertyPage( inputID );
-			break;
-		}
-		case 'g':
-		case 'G':
-		{
-			bool autoGain = controller->getGainControl();
-			controller->setGainControl( !autoGain );
-			break;
-		}
-		case 'r':
-		case 'R':
-		{
-			if ( roiSelected && controller->resetImageROI() )
-			{
-				videoMan.resetImageROI( inputID );
-			}
-			break;
-		}
-	}
-}
-
-
-void glutSpecialKeyboard(int value, int x, int y)
-{
-	switch (value)
-    {		
-		case GLUT_KEY_F1:
-		{
-			if ( !fullScreened )
-				glutFullScreen();
-			else
-			{
-				glutPositionWindow( 0, 20 );
-				glutReshapeWindow( 640, 480 );
-			}
-			fullScreened = !fullScreened;
-			break;
-		}		
-		case GLUT_KEY_UP:
-		{
-			if ( roiSelected )
-			{
-				int Hmax, Vmax, Hunit, Vunit, Hpos, Vpos;
-				controller->getROIUnits( Hmax, Vmax, Hunit, Vunit, Hpos, Vpos, 0 );				
-				if ( yROI + Vpos + heightROI <= Vmax - Vunit * 2 && controller->moveImageROI( xROI, yROI + Vpos ) )
-				{
-					yROI += Vpos;
-					videoMan.setImageROI( inputID, xROI, yROI, widthROI, heightROI );
-				}
-			}
-			break;
-		}
-		case GLUT_KEY_DOWN:
-		{
-			if ( roiSelected )
-			{
-				int Hmax, Vmax, Hunit, Vunit, Hpos, Vpos;
-				controller->getROIUnits( Hmax, Vmax, Hunit, Vunit, Hpos, Vpos, 0 );				
-				if ( yROI - Vpos >= 0 && controller->moveImageROI( xROI, yROI - Vpos ) )
-				{
-					yROI -= Vpos;
-					videoMan.setImageROI( inputID, xROI, yROI, widthROI, heightROI );
-				}
-			}
-			break;
-		}
-		case GLUT_KEY_LEFT:
-		{
-			if ( roiSelected )
-			{
-				int Hmax, Vmax, Hunit, Vunit, Hpos, Vpos;
-				controller->getROIUnits( Hmax, Vmax, Hunit, Vunit, Hpos, Vpos, 0 );				
-				if ( xROI - Hpos >= 0 && controller->moveImageROI( xROI - Hpos, yROI ) )
-				{
-					xROI -= Hpos;
-					videoMan.setImageROI( inputID, xROI, yROI, widthROI, heightROI );
-				}
-			}
-			break;
-		}
-		case GLUT_KEY_RIGHT:
-		{
-			if ( roiSelected )
-			{
-				int Hmax, Vmax, Hunit, Vunit, Hpos, Vpos;
-				controller->getROIUnits( Hmax, Vmax, Hunit, Vunit, Hpos, Vpos, 0 );				
-				if ( xROI + Hpos + widthROI <= Hmax - Hunit * 2 && controller->moveImageROI( xROI + Hpos, yROI ) )
-				{
-					xROI += Hpos;
-					videoMan.setImageROI( inputID, xROI, yROI, widthROI, heightROI );					
-				}
-			}
-			break;
-		}
-    }
-}
-
 
 bool InitializeVideoMan()
 {
@@ -211,14 +41,23 @@ bool InitializeVideoMan()
 	VMInputIdentification *deviceList;
 	int numDevices;
 
+	cout << "getAvailableDevices" << endl;
 	videoMan.getAvailableDevices( "PGR_CAMERA2", &deviceList, numDevices );//try also PGR_CAMERA
+	cout << "getAvailableDevices2" << endl;
 	cout << "Found " << numDevices << " PointGrey cameras:" << endl;
 	for ( int d = 0; d < numDevices; ++d )
 		cout << "-" << deviceList[d].friendlyName << " with serial " << deviceList[d].uniqueName << endl;
 	for ( int d = 0; d < numDevices; ++d )
 	{
 		format.showDlg = true;	//The user select the format with the Dialog
+		//format.SetFormat( 640, 480, 60, GREY8, GREY8 );		
+		//format.SetFormat( 640, 480, 30, GREY16, GREY16 );		
+		//format.SetFormat( 752, 240, 60, GREY8, GREY8 );		
+		//format.SetFormat( 752, 480, 60, RAW8, RAW8 );
+		//format.SetFormat( 376, 240, 60, GREY8, GREY8 );
+	cout << "addVideoInput" << endl;
 		inputID = videoMan.addVideoInput( deviceList[d], &format );
+	cout << "addVideoInput2" << endl;
 		if ( inputID != -1 )
 		{
 			cout << " Initialized camera " << deviceList[d].friendlyName << " " << deviceList[d].uniqueName << endl;
@@ -242,33 +81,157 @@ bool InitializeVideoMan()
 		++d;
 	}
 	videoMan.freeAvailableDevicesList( &deviceList, numDevices );	
-
 	return ( inputID != -1 );
 }
 
-void frameCallback( char *frame, size_t input, double timeStamp, void *data )
+void keyboardControl( sf::Window &App, sf::Clock &clock, const sf::Event &Event )
 {
-	glutPostRedisplay();
+	switch( Event.Key.Code )
+	{
+		case sf::Key::Escape:
+			App.Close();
+			break;					
+		case sf::Key::Left:
+		{
+			if ( roiSelected )
+			{
+				int Hmax, Vmax, Hunit, Vunit, Hpos, Vpos;
+				controller->getROIUnits( Hmax, Vmax, Hunit, Vunit, Hpos, Vpos );				
+				if ( xROI - Hpos >= 0 && controller->moveImageROI( xROI - Hpos, yROI ) )
+				{
+					xROI -= Hpos;
+					videoMan.setImageROI( inputID, xROI, yROI, widthROI, heightROI );
+				}
+			}
+			break;
+		}
+		case sf::Key::Right:
+		{
+			if ( roiSelected )
+			{
+				int Hmax, Vmax, Hunit, Vunit, Hpos, Vpos;
+				controller->getROIUnits( Hmax, Vmax, Hunit, Vunit, Hpos, Vpos );				
+				if ( xROI + Hpos + widthROI <= Hmax - Hunit * 2 && controller->moveImageROI( xROI + Hpos, yROI ) )
+				{
+					xROI += Hpos;
+					videoMan.setImageROI( inputID, xROI, yROI, widthROI, heightROI );					
+				}
+			}
+			break;
+		}
+		case sf::Key::Up:
+		{
+			if ( roiSelected )
+			{
+				int Hmax, Vmax, Hunit, Vunit, Hpos, Vpos;
+				controller->getROIUnits( Hmax, Vmax, Hunit, Vunit, Hpos, Vpos );				
+				if ( yROI + Vpos + heightROI <= Vmax - Vunit * 2 && controller->moveImageROI( xROI, yROI + Vpos ) )
+				{
+					yROI += Vpos;
+					videoMan.setImageROI( inputID, xROI, yROI, widthROI, heightROI );
+				}
+			}
+			break;
+		}
+		case sf::Key::Down:
+		{
+			if ( roiSelected )
+			{
+				int Hmax, Vmax, Hunit, Vunit, Hpos, Vpos;
+				controller->getROIUnits( Hmax, Vmax, Hunit, Vunit, Hpos, Vpos );				
+				if ( yROI - Vpos >= 0 && controller->moveImageROI( xROI, yROI - Vpos ) )
+				{
+					yROI -= Vpos;
+					videoMan.setImageROI( inputID, xROI, yROI, widthROI, heightROI );
+				}
+			}
+			break;
+		}
+		case sf::Key::S:
+		{
+			videoMan.showPropertyPage( inputID );
+			break;
+		}
+		case sf::Key::G:
+		{
+			bool autoGain = controller->getGainControl();
+			controller->setGainControl( !autoGain );
+			break;
+		}
+		case sf::Key::R:
+		{
+			if ( controller->resetImageROI() )
+			{
+				//give time to the camera to switch the image ROI
+				videoMan.resetImageROI( inputID );							
+				clock.Reset();
+			}		
+			break;
+		}
+	}
 }
 
-void glutIdle()
+void mouseControl( VideoManControl &videoMan, sf::Clock &clock, const sf::Event &Event )
 {
-	//Get a new frame
-	if ( videoMan.getFrame( inputID ) != NULL )
-		glutPostRedisplay();
+	float xf = (float)Event.MouseButton.X;
+	float yf = (float)Event.MouseButton.Y;
+	//Transform from screen coordinates to image coordinates
+	int input = videoMan.screenToImageCoords( xf, yf );
+	//Check if the point is inside the input region
+	if ( input == inputID )
+	{
+		if ( Event.Type == sf::Event::MouseButtonPressed )
+		{
+			xNewROI = (int)xf;
+			yNewROI = (int)yf;
+		}			
+		else if ( Event.Type == sf::Event::MouseButtonReleased )
+		{
+			if ( clock.GetElapsedTime() < 0.5 )
+				return;
+			int Hmax, Vmax, Hunit, Vunit, Hpos, Vpos;
+			if ( controller->getROIUnits( Hmax, Vmax, Hunit, Vunit, Hpos, Vpos ) )
+			{
+				/*
+				//ROI format restrictions
+				Hmax = Hunit * n = Hposunit*n3 (n, n3 are integers)
+				Vmax = Vunit * m = Vposunit*m3 (m, m3 are integers)
+				xROI = Hposunit * n1
+				yROI = Vposunit * m1
+				widthROI = Hunit * n2
+				heightROI = Vunit * m2 (n1, n2, m1, m2 are integers)
+				xROI + widthROI <= Hmax - Hunit * 2
+				yROI + heightROI <= Vmax - Vunit * 2*/
+				xNewROI = Hpos * ( xNewROI / Hpos );
+				yNewROI = Vpos * ( yNewROI / Vpos );
+				int newWidthROI = static_cast<int>( xf - xNewROI + 1 );
+				newWidthROI = Hunit * ( newWidthROI / Hunit );
+				int newHeightROI = static_cast<int>( yf - yNewROI + 1 );
+				newHeightROI = Vunit * ( newHeightROI / Vunit );
+				if ( newWidthROI > 0 && newHeightROI > 0 && 
+					xNewROI + newWidthROI <= Hmax - Hunit * 2 &&
+					yNewROI + newHeightROI <= Vmax - Vunit * 2 &&
+					controller->setImageROI( xNewROI, yNewROI, newWidthROI, newHeightROI ) )
+				{
+					//give time to the camera to switch the image ROI			
+					xROI = xNewROI;
+					yROI = yNewROI;
+					widthROI = newWidthROI;
+					heightROI = newHeightROI;
+					videoMan.setImageROI( inputID, xROI, yROI, widthROI, heightROI );
+					roiSelected = true;
+					clock.Reset();
+				}
+			}
+		}
+	}
 }
 
-void glutDisplay(void)
+int main(int argc, char** argv)
 {
-	glClear( GL_COLOR_BUFFER_BIT );	
-	videoMan.updateTexture( inputID );
-	videoMan.releaseFrame( inputID );
-	videoMan.renderFrame( inputID );
-    glutSwapBuffers();
-}
-
-void showHelp()
-{
+	cout << endl << "=====================================================" << endl;	
+	cout << "This is an example that shows how to use PointGrey cameras and the advanced functionality" << endl;	
+	cout << "Works with VMPointGrey (using FlyCapture v1) and VMPointGrey2 (using FlyCapture v2)" << endl;	
 	cout << "========" << endl;
 	cout << "Controls:" << endl;
 	cout << "Esc->Exit" << endl;
@@ -280,35 +243,41 @@ void showHelp()
 	cout << "LEFT/RIGHT->Move the ROI left/right" << endl;		
 	cout << "R->Reset image ROI" << endl;	
 	cout << "========" << endl;
-}
 
-int main(int argc, char** argv)
-{
-	cout << endl << "=====================================================" << endl;	
-	cout << "This is an example that shows how to use PointGrey cameras and the advanced functionality" << endl;	
-	cout << "Works with VMPointGrey (using FlyCapture v1) and VMPointGrey2 (using FlyCapture v2)" << endl;	
-	glutInitDisplayMode( GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA | GLUT_MULTISAMPLE );
-	glutInitWindowPosition( 0, 0 );
-	glutInitWindowSize( 640, 480 );
-    glutInit( &argc, argv );
-    glutCreateWindow("VideoMan with PointGrey");
-	glutReshapeFunc(glutResize );  
-	//glutIdleFunc(glutDisplay);
-    glutDisplayFunc(glutDisplay);	
-    glutKeyboardFunc(glutKeyboard);
-	glutSpecialFunc(glutSpecialKeyboard);
-	glutMouseFunc( glutMouseFunc );
-	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
-
+	sf::Window app(sf::VideoMode(800, 600, 24), "VideoMan with PointGrey");
+	
 	if ( !InitializeVideoMan() )
-		return -1; 
+		return EXIT_FAILURE; 
+	videoMan.changeScreenSize( 0, 0, app.GetWidth(), app.GetHeight() );
 
-	if ( !useFrameCallback )
-		glutIdleFunc(glutIdle);	
+	sf::Clock clock;
+	while ( app.IsOpened() )
+	{
+		sf::Event newEvent;
+		while ( app.GetEvent( newEvent ) )
+		{
+			if ( newEvent.Type == sf::Event::Closed )
+				app.Close();        
+			else if ( ( newEvent.Type == sf::Event::MouseButtonPressed || newEvent.Type == sf::Event::MouseButtonReleased ) && newEvent.MouseButton.Button == sf::Mouse::Left )
+				mouseControl( videoMan, clock, newEvent );
+			else if ( newEvent.Type == sf::Event::KeyPressed )
+				keyboardControl( app, clock, newEvent );				
+			else if ( newEvent.Type == sf::Event::Resized)
+				videoMan.changeScreenSize( 0, 0, newEvent.Size.Width, newEvent.Size.Height );
+		}
+		
+		glClear( GL_COLOR_BUFFER_BIT );
+		videoMan.getFrame( inputID );
+		cout << clock.GetElapsedTime() << endl;
+		if ( clock.GetElapsedTime() > 0.2 )
+			videoMan.updateTexture( inputID );
+		videoMan.releaseFrame( inputID );
+		videoMan.renderFrame( inputID );
 
-	fullScreened = false;	
-	showHelp();    
-	glutMainLoop();
-	clear();
-	return 0;
+		app.Display();
+	}
+
+	videoMan.deleteController( (VideoManPrivate::VideoManInputController**)&controller );
+
+	return EXIT_SUCCESS;
 }
