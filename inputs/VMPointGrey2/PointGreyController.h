@@ -44,9 +44,9 @@ public:
 
 	bool moveImageROI( int x, int y );
 
-	bool setImageROI( int x, int y, int width, int height, int videoMode );
+	bool setImageROI( int x, int y, int width, int height );
 
-	bool getROIUnits( int &Hmax, int &Vmax, int &Hunit, int &Vunit, int &HPosUnit, int &VPosUnit, int videoMode );
+	bool getROIUnits( int &Hmax, int &Vmax, int &imageHStepSize, int &imageVStepSize, int &offsetHStepSize, int &offsetVStepSize );
 
 	bool resetImageROI();
 	bool getBayerFormat(size_t &btf);

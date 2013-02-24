@@ -90,9 +90,9 @@ public:
 protected: 
 	FlyCapture2::Camera cam;
 
-	bool setImageROI( int x, int y, int width, int height, int videoMode );
+	bool setImageROI( int x, int y, int width, int height );
 
-	bool getROIUnits( int &Hmax, int &Vmax, int &Hunit, int &Vunit, int &HPosUnit, int &VPosUnit, int videoMode );
+	bool getROIUnits( int &Hmax, int &Vmax, int &imageHStepSize, int &imageVStepSize, int &offsetHStepSize, int &offsetVStepSize );
 
 	bool moveImageROI( int x, int y );
 
@@ -110,7 +110,7 @@ protected:
 
 	bool setShutterTime( float shutterTime );
 	
-	bool setFrameRate( float frameRate );
+	bool setFrameRate( double frameRate );
 
 	bool setTrigger( bool triggerOn, int source, int mode );
 
@@ -127,6 +127,10 @@ private:
 	VideoMan::VMPixelFormat resolvePixelFormat( FlyCapture2::PixelFormat );
 	
 	FlyCapture2::VideoMode buildVideoMode( VideoMan::VMInputFormat format );
+
+	FlyCapture2::FrameRate buildFrameRate( double fps );
+
+	FlyCapture2::PixelFormat buildPixelFormat( VideoMan::VMPixelFormat pixelFormat );
 
 	unsigned int getRegisterValue(unsigned long _register );
 
@@ -177,8 +181,12 @@ private:
 
 	unsigned long serialNumber; //The serial number of the camera
 
-	FlyCapture2::VideoMode videoMode;
-	FlyCapture2::FrameRate frameRate;
+	FlyCapture2::VideoMode m_videoMode;
+	FlyCapture2::FrameRate m_frameRate;
+	FlyCapture2::Format7Info m_fmt7Info;
+	FlyCapture2::Format7ImageSettings m_fmt7ImageSettings;
+	FlyCapture2::Format7PacketInfo m_fmt7PacketInfo;				
+
 
 	VideoManPrivate::VideoManInputController *controller;
 
