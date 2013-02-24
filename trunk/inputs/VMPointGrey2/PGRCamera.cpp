@@ -126,6 +126,28 @@ PGRCamera::~PGRCamera(void)
 	convertedImage.ReleaseBuffer();	
 }
 
+FlyCapture2::FrameRate PGRCamera::buildFrameRate( double fps )
+{
+	if ( fps == 1.875 )
+		return FRAMERATE_1_875;
+	else if ( fps == 3.75 )
+		return FRAMERATE_3_75;
+	else if ( fps == 7.5 )
+		return FRAMERATE_7_5;
+	else if	( fps == 15.0 )
+		return FRAMERATE_15;
+	else if ( fps == 30.0 )
+		return FRAMERATE_30;
+	else if ( fps == 60.0 )
+		return FRAMERATE_60;
+	else if ( fps == 120.0 )
+		return FRAMERATE_120;
+	else if ( fps == 240.0 )
+		return FRAMERATE_240;
+	else
+		return FRAMERATE_FORMAT7;
+}
+
 FlyCapture2::VideoMode PGRCamera::buildVideoMode( VMInputFormat format )
 {	
 	if ( format.width == 1600 && format.height == 1200 )
@@ -212,6 +234,44 @@ FlyCapture2::VideoMode PGRCamera::buildVideoMode( VMInputFormat format )
 	return VIDEOMODE_FORMAT7;
 }
 
+FlyCapture2::PixelFormat PGRCamera::buildPixelFormat( VMPixelFormat pixelFormat )
+{
+	switch( pixelFormat )
+	{
+		case RGB24:
+			return PIXEL_FORMAT_RGB;
+		case RGB32:
+			return PIXEL_FORMAT_RGBU;
+		case BGR24:
+			return PIXEL_FORMAT_BGR;
+		case BGR32:
+			return PIXEL_FORMAT_BGRU;
+		case YUV422:
+			return PIXEL_FORMAT_422YUV8;
+		case YUV411:
+			return PIXEL_FORMAT_411YUV8;
+		case GREY8:
+			return PIXEL_FORMAT_MONO8;
+		case GREY16:
+			return PIXEL_FORMAT_MONO16;
+		case RAW8:
+			return PIXEL_FORMAT_RAW8;
+		case RAW16:
+			return PIXEL_FORMAT_RAW16;
+	}
+	return PIXEL_FORMAT_RGB;		
+	/*PIXEL_FORMAT_RGB16
+	PIXEL_FORMAT_S_MONO16
+	PIXEL_FORMAT_S_RGB16
+	PIXEL_FORMAT_RAW16
+	PIXEL_FORMAT_MONO12
+	PIXEL_FORMAT_RAW12
+	PIXEL_FORMAT_BGR16
+	PIXEL_FORMAT_BGRU16
+	PIXEL_FORMAT_422YUV8_JPEG*/
+}
+
+
 void frameCallback( Image* pImage, const void* pCallbackData )
 {
 	PGRCamera *pgrCamerap = (PGRCamera*)pCallbackData;
@@ -239,9 +299,9 @@ void frameCallback( Image* pImage, const void* pCallbackData )
 	{
 		pgrCamerap->pixelBuffer = (char*)pImage->GetData();	
 		pgrCamerap->lastImage = pImage;
-		;
+		
 		if( pgrCamerap->callback )
-			(*pgrCamerap->callback)( pgrCamerap->pixelBuffer, pgrCamerap->inputID, pImage->GetTimeStamp().cycleSeconds,  pgrCamerap->frameCallbackData );			
+			(*pgrCamerap->callback)( pgrCamerap->pixelBuffer, pgrCamerap->inputID, pImage->GetTimeStamp().seconds, pgrCamerap->frameCallbackData );			
 	}
 }
 
@@ -266,125 +326,154 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 {	
 	serialNumber = aSerialNumber;
 
-	//FC2Config config;
-	//config.grabMode = BUFFER_FRAMES;
-
-	/*PGRGuid guid[64];
-	unsigned int psize = 64;
-	CameraSelectionDlg selectionDlg;
-	bool ok;	
-	selectionDlg.ShowModal( &ok, guid, &psize );
-	if ( !ok || psize != 1 ) 
-		return false;
-	error = cam.Connect(&guid[0]);*/
-
-	Error error;
-	BusManager busMgr;
-	PGRGuid guid;
-	error = busMgr.GetCameraFromSerialNumber( aSerialNumber, &guid );
-	if (error != PGRERROR_OK)
+	if ( aSerialNumber == 0 )
 	{
-		PrintError( error );
-		return false;
-	}
-
-	error = cam.Connect(&guid);
-    if (error != PGRERROR_OK)
-    {
-        PrintError( error );
-        return false;
-    }
-
-	// Get the camera information
-    CameraInfo camInfo;
-    error = cam.GetCameraInfo(&camInfo);
-    if (error != PGRERROR_OK)
-    {
-        PrintError( error );
-        return false;
-    }
-
-	resetCamera();
-	cam.WriteRegister( CAMERA_POWER, 0x80000000 );
-	//PrintCameraInfo(&camInfo);
-
-	setTrigger( false, 3, 14 );
-	 
-//	config.numBuffers = 100;
-//	cam.SetConfiguration( &config );
-	
-	// Show the camera configuration dialog.		
-	if ( aFormat == NULL || aFormat->showDlg )
-	{
-		CameraControlDlg controlDlg;
-		controlDlg.Connect( &cam );
-		controlDlg.Show( NULL );
-		controlDlg.Hide();
-		controlDlg.Disconnect();
-		//int		iDialogStatus;
-		//The user must select the camera
-		//guiError = ::pgrcamguiShowCameraSelectionModal(	guiContext, context, &serialNumber,	&iDialogStatus );
-		//if ( !checkGuiError( guiError, "pgrcamguiShowCameraSelectionModal() Error showing camera selection dialog." ) || serialNumber == 0 )
-		//	return false;
-	}
-	else if ( aFormat != NULL )
-	{
-		videoMode = buildVideoMode( *aFormat );
-
-		if (videoMode == VIDEOMODE_FORMAT7)
-		{
-			Format7PacketInfo pPacketInfo;
-			Format7ImageSettings pImageSettings;
-			pImageSettings.height=aFormat->height;
-			pImageSettings.width=aFormat->width;
-			pImageSettings.offsetX=0;
-			pImageSettings.offsetY=0;
-			if (aFormat->getPixelFormatIn()==VideoMan::RAW16) 
-				pImageSettings.pixelFormat = PIXEL_FORMAT_RAW16;
-			else if (aFormat->getPixelFormatIn()==VideoMan::RAW8) 
-				pImageSettings.pixelFormat = PIXEL_FORMAT_RAW8;
-			else if (aFormat->getPixelFormatIn()==VideoMan::GREY8) 
-				pImageSettings.pixelFormat = PIXEL_FORMAT_MONO8;
-			else if (aFormat->getPixelFormatIn()==VideoMan::GREY16) 
-				pImageSettings.pixelFormat = PIXEL_FORMAT_MONO16;
-			bool valid;
-			if (cam.ValidateFormat7Settings(&pImageSettings,&valid,&pPacketInfo)!= PGRERROR_OK)
-			{
-				unsigned int pPacketSize;
-				float pPercentage = 50;
-				Error error = cam.SetFormat7Configuration( &pImageSettings, pPercentage);
-			}
-		}
-		if ( aFormat != NULL && !aFormat->showDlg )
-		{
-			if ( aFormat->fps == 1.875 )
-				frameRate = FRAMERATE_1_875;
-			else if ( aFormat->fps == 3.75 )
-				frameRate = FRAMERATE_3_75;
-			else if ( aFormat->fps == 7.5 )
-				frameRate = FRAMERATE_7_5;
-			else if	( aFormat->fps == 15.0 )
-				frameRate = FRAMERATE_15;
-			else if ( aFormat->fps == 30.0 )
-				frameRate = FRAMERATE_30;
-			else if ( aFormat->fps == 60.0 )
-				frameRate = FRAMERATE_60;
-			else if ( aFormat->fps == 120.0 )
-				frameRate = FRAMERATE_120;
-			else if ( aFormat->fps == 240.0 )
-				frameRate = FRAMERATE_240;
-			else
-				frameRate = FRAMERATE_FORMAT7;
-			setFrameRate( aFormat->fps );
-		}
-		
-		error = cam.SetVideoModeAndFrameRate( videoMode, frameRate );
+		PGRGuid guid[64];
+		unsigned int psize = 64;
+		CameraSelectionDlg selectionDlg;
+		bool ok;
+		selectionDlg.ShowModal( &ok, guid, &psize );
+		if ( !ok || psize != 1 ) 
+			return false;
+		Error error = cam.Connect(&guid[0]);
 		if (error != PGRERROR_OK)
 		{
 			PrintError( error );
 			return false;
 		}
-	}	
+	}
+	else
+	{
+		Error error;
+		BusManager busMgr;
+		PGRGuid guid;
+		error = busMgr.GetCameraFromSerialNumber( aSerialNumber, &guid );
+		if (error != PGRERROR_OK)
+		{
+			PrintError( error );
+			return false;
+		}
+
+		error = cam.Connect(&guid);
+		if (error != PGRERROR_OK)
+		{
+			PrintError( error );
+			return false;
+		}
+	}
+
+	resetCamera();
+	//cam.WriteRegister( CAMERA_POWER, 0x80000000 );
+	//setTrigger( false, 3, 14 );
+
+	if ( aFormat == NULL || aFormat->showDlg )
+	{
+		// Show the camera configuration dialog.		
+		CameraControlDlg controlDlg;
+		controlDlg.Connect( &cam );
+		controlDlg.ShowModal();
+		controlDlg.Hide();
+		controlDlg.Disconnect();
+		//Initialize the format		
+		cam.GetVideoModeAndFrameRate( &m_videoMode, &m_frameRate );
+		bool availableFormat = resolveFormat( m_videoMode, m_frameRate, format );	
+		if ( !availableFormat )
+			return false;
+	}
+	else if ( aFormat != NULL )
+	{
+		m_videoMode = buildVideoMode( *aFormat );		
+		m_frameRate = buildFrameRate( aFormat->fps );
+		bool supported = false;
+		if ( m_videoMode != VIDEOMODE_FORMAT7 && m_frameRate != FRAMERATE_FORMAT7 ) 
+		{
+			//Check if the combination videomode and framerate is supported
+			Error error = cam.GetVideoModeAndFrameRateInfo( m_videoMode, m_frameRate, &supported );
+			if ( error != PGRERROR_OK )
+			{
+				PrintError( error );
+				return false;
+			}
+		}
+		if ( supported )
+		{
+			//Set custom videomode and framerate						
+			Error error = cam.SetVideoModeAndFrameRate( m_videoMode, m_frameRate );
+			if (error != PGRERROR_OK)
+			{
+				PrintError( error );
+				return false;
+			}
+			//Initialize the format
+			bool availableFormat = resolveFormat( m_videoMode, m_frameRate, format );	
+			if ( !availableFormat )
+				return false;
+		}
+		else		
+		{
+			PixelFormat fmt7PixFmt = buildPixelFormat( aFormat->getPixelFormatOut() );
+			// Find the Format 7 mode that matches aFormat
+			// Query for available Format 7 modes			
+			bool found = false;
+			for ( int m = 0; !found && m < NUM_MODES; ++m )
+			{
+				m_fmt7Info.mode = static_cast<Mode>( MODE_0 + m );
+				bool supported;			
+				Error error = cam.GetFormat7Info( &m_fmt7Info, &supported );
+				if (error != PGRERROR_OK)
+				{
+					PrintError( error );
+					return false;
+				}
+				if ( supported && m_fmt7Info.maxWidth == aFormat->width && m_fmt7Info.maxHeight == aFormat->height &&
+					( m_fmt7Info.pixelFormatBitField & fmt7PixFmt ) )
+				{
+					//same resolution and pixelFormat
+					found = true;
+				}
+			}
+			if ( found )
+			{
+				format.SetFormat( m_fmt7Info.maxWidth, m_fmt7Info.maxHeight, aFormat->fps, aFormat->getPixelFormatOut(), aFormat->getPixelFormatOut() );				
+				m_fmt7ImageSettings.mode = m_fmt7Info.mode;
+				m_fmt7ImageSettings.offsetX = 0;
+				m_fmt7ImageSettings.offsetY = 0;
+				m_fmt7ImageSettings.width = m_fmt7Info.maxWidth;
+				m_fmt7ImageSettings.height = m_fmt7Info.maxHeight;
+				m_fmt7ImageSettings.pixelFormat = fmt7PixFmt;
+
+				// Validate the settings to make sure that they are valid
+				bool valid;
+				Error error = cam.ValidateFormat7Settings( &m_fmt7ImageSettings, &valid, &m_fmt7PacketInfo );
+				if (error != PGRERROR_OK)
+				{
+					PrintError( error );
+					return false;
+				}
+				if ( !valid )
+				{
+					// Settings are not valid
+					printf("Format7 settings are not valid\n");
+					return false;
+				}
+
+				// Set the settings to the camera
+				error = cam.SetFormat7Configuration( &m_fmt7ImageSettings, m_fmt7PacketInfo.recommendedBytesPerPacket );
+				if (error != PGRERROR_OK)
+				{
+					PrintError( error );
+					return false;
+				}
+
+				setFrameRate( aFormat->fps );
+			}
+			else
+			{
+				printf("Format7 settings are not valid\n");
+				return false;
+			}
+		}		
+	}
 
 	//Check Image Size and Sensor offset
 	/*unsigned int roiSize;
@@ -398,49 +487,55 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 	yOffset = roiPos & 0x0000FFFF;*/
 
     // Start capturing images
-	error = cam.StartCapture( ); //Start Isochronous image capture
+	Error error = cam.StartCapture(); //Start Isochronous image capture
     if (error != PGRERROR_OK)
     {
         PrintError( error );
         return false;
     }
 
-	VideoMode videoMode;
-	FrameRate frameRate;	
-	cam.GetVideoModeAndFrameRate( &videoMode, &frameRate );
+	// Retrieve frame rate property
+	Property frmRate;
+	frmRate.type = FRAME_RATE;
+	error = cam.GetProperty( &frmRate );
+	if (error != PGRERROR_OK)
+	{
+		PrintError( error );
+		return false;
+	}				
+	format.fps = frmRate.absValue;
 
 	//Check the video mode and initialize the format	
-	bool availableFormat = resolveFormat( videoMode, frameRate, format );	
+	/*bool availableFormat = resolveFormat( videoMode, frameRate, format );	
 	if ( !availableFormat )
-		return false;
+		return false;*/
 	
 	//Change the user's format
 	if ( aFormat != NULL )	
 		*aFormat = format; 
 	
+	// Get the camera information
+    CameraInfo camInfo;
+    error = cam.GetCameraInfo(&camInfo);
+    if (error != PGRERROR_OK)
+    {
+        PrintError( error );
+        return false;
+    }
+
 	ostringstream ss;
 	ss << aSerialNumber;
 	copyStringToChar( ss.str(), &identification.uniqueName );
 	copyStringToChar( "PGR_CAMERA2", &identification.identifier );
 	copyStringToChar( camInfo.modelName, &identification.friendlyName );
-//	act = 0;
-
 	return true;
 }
 
 void PGRCamera::releaseFrame()
 {
 	rawImage.ReleaseBuffer();
-	//if ( lastImage )
-	//	lastImage->ReleaseBuffer();
 	lastImage = NULL;
-	pixelBuffer = NULL;
-	/*Error error = convertedImage.Save("C:/kk2.pgm");
-	if (error != PGRERROR_OK)
-        PrintError( error );*/
-	//error = convertedImageCopy.ReleaseBuffer();
-	//if (error != PGRERROR_OK)
-        //PrintError( error );
+	pixelBuffer = NULL;	
 }
 
 inline char *PGRCamera::getFrame( bool wait )
@@ -515,8 +610,9 @@ VMPixelFormat PGRCamera::resolvePixelFormat( FlyCapture2::PixelFormat pFormat )
 	switch( pFormat )
 	{
 		case PIXEL_FORMAT_MONO8:
-		case PIXEL_FORMAT_RAW8:
 			return GREY8;
+		case PIXEL_FORMAT_RAW8:
+			return RAW8;
 		case PIXEL_FORMAT_411YUV8:
 			return YUV411;
 		case PIXEL_FORMAT_422YUV8:
@@ -525,12 +621,17 @@ VMPixelFormat PGRCamera::resolvePixelFormat( FlyCapture2::PixelFormat pFormat )
 			//return YUV444;
 		case PIXEL_FORMAT_MONO16:
 		case PIXEL_FORMAT_S_MONO16:
-		case PIXEL_FORMAT_RAW16:
 			return GREY16;
-		case PIXEL_FORMAT_RGB8:
+		case PIXEL_FORMAT_RAW16:
+			return RAW16;
+		case PIXEL_FORMAT_RGB8:		
 			return RGB24;
 		case PIXEL_FORMAT_BGR:
 			return BGR24;
+		case PIXEL_FORMAT_RGBU:		
+			return RGB32;
+		case PIXEL_FORMAT_BGRU:
+			return BGR32;
 	}
 	return UNKNOWN;
 }
@@ -651,17 +752,34 @@ bool PGRCamera::resolveFormat( VideoMode videoMode, FrameRate frameRate, VMInput
 			break;
 		}		
 		case VIDEOMODE_FORMAT7:
-		{	
-			Format7ImageSettings pImageSettings;
+		{
+			//Get the format 7 configuration
 			unsigned int pPacketSize;
 			float pPercentage;
-			Error error = cam.GetFormat7Configuration( &pImageSettings, &pPacketSize, &pPercentage );
+			Error error = cam.GetFormat7Configuration( &m_fmt7ImageSettings, &pPacketSize, &pPercentage );
 			if ( error != PGRERROR_OK )
 			{
 				PrintError( error );
 				return false;
-			}			
-			rFormat.SetFormat( pImageSettings.width, pImageSettings.height, 30, resolvePixelFormat( pImageSettings.pixelFormat ), resolvePixelFormat( pImageSettings.pixelFormat ) );
+			}
+			//Get the format 7 info
+			m_fmt7Info.mode = m_fmt7ImageSettings.mode;
+			bool supported;			
+			error = cam.GetFormat7Info( &m_fmt7Info, &supported );
+			if (error != PGRERROR_OK)
+			{
+				PrintError( error );
+				return false;
+			}
+			if ( m_fmt7ImageSettings.width != m_fmt7Info.maxWidth || m_fmt7ImageSettings.height != m_fmt7Info.maxHeight )
+			{
+				roiMode = true;
+				xRoi = m_fmt7ImageSettings.offsetX;
+				yRoi = m_fmt7ImageSettings.offsetY;
+				wRoi = m_fmt7ImageSettings.width;
+				hRoi = m_fmt7ImageSettings.height;
+			}
+			rFormat.SetFormat( m_fmt7Info.maxWidth, m_fmt7Info.maxHeight, 30, resolvePixelFormat( m_fmt7ImageSettings.pixelFormat ), resolvePixelFormat( m_fmt7ImageSettings.pixelFormat ) );
 			break;
 		}
 		default:
@@ -701,9 +819,27 @@ bool PGRCamera::resolveFormat( VideoMode videoMode, FrameRate frameRate, VMInput
 			rFormat.fps = 60.0f;
 			break;
 		}
+		case FRAMERATE_120:
+		{
+			rFormat.fps = 120.0f;
+			break;
+		}
+		case FRAMERATE_240:
+		{
+			rFormat.fps = 240.0f;
+			break;
+		}
 		case FRAMERATE_FORMAT7:
 		{
-			//previously initialized
+			Property frmRate;
+			frmRate.type = FRAME_RATE;
+			Error error = cam.GetProperty( &frmRate );
+			if (error != PGRERROR_OK)
+			{
+				PrintError( error );
+				return false;
+			}
+			rFormat.fps = frmRate.absValue;
 			break;
 		}
 		default:
@@ -718,7 +854,7 @@ void PGRCamera::getAvailableDevices(  VMInputIdentification **deviceList, int &n
 	*deviceList = NULL;
 
 	BusManager busMgr;
-	unsigned int numCameras;
+	unsigned int numCameras;	
 	Error error = busMgr.GetNumOfCameras(&numCameras);
 	if ( error != PGRERROR_OK )
 	{
@@ -734,7 +870,7 @@ void PGRCamera::getAvailableDevices(  VMInputIdentification **deviceList, int &n
     {
 		VMInputIdentification device;
 
-        PGRGuid guid;
+        PGRGuid guid;	
         error = busMgr.GetCameraFromIndex(i, &guid);
         if (error != PGRERROR_OK)
         {
@@ -750,7 +886,7 @@ void PGRCamera::getAvailableDevices(  VMInputIdentification **deviceList, int &n
 			return;
 		}*/
 
-		Camera cam;
+		Camera cam;	
 		error = cam.Connect(&guid);
 		if (error != PGRERROR_OK)
 		{
@@ -759,7 +895,7 @@ void PGRCamera::getAvailableDevices(  VMInputIdentification **deviceList, int &n
 		}
 
 		 // Get the camera information
-		CameraInfo camInfo;
+		CameraInfo camInfo;	
 		error = cam.GetCameraInfo(&camInfo);
 		if (error != PGRERROR_OK)
 		{
@@ -773,125 +909,72 @@ void PGRCamera::getAvailableDevices(  VMInputIdentification **deviceList, int &n
 		copyStringToChar( "PGR_CAMERA2", &device.identifier );
 		copyStringToChar( camInfo.modelName, &device.friendlyName );
 		(*deviceList)[i] = device;		
-
 		error = cam.Disconnect();
 		if (error != PGRERROR_OK)
 			PrintError( error );
     }
 }
 
-bool PGRCamera::setImageROI( int x, int y, int width, int height, int videoMode )
+bool PGRCamera::setImageROI( int x, int y, int width, int height )
 {	
-	cam.StopCapture();
-
-	int Hmax, Vmax, Hunit, Vunit, HPosUnit, VPosUnit;
-	getROIUnits( Hmax, Vmax, Hunit, Vunit, HPosUnit, VPosUnit, videoMode );
-
-	// Put the camera into custom image mode:
-	cam.WriteRegister( CURRENT_VIDEO_FORMAT, 0xE0000000 );	
-	unsigned long videoModeReg = videoMode << 29;
-	cam.WriteRegister( CURRENT_VIDEO_MODE, videoModeReg );
-
-	// Specify position, dimensions & pixel depth:
-	unsigned long position = 0; 
-	position |= x + Hunit;
-	position = ( position << 16 ) | y + Vunit;
-	cam.WriteRegister( videoModeBase[videoMode] + IMAGE_POSITION, position );
-	
-	unsigned long size = 0; 
-	size |= width;
-	size = ( size << 16 ) | height;
-	cam.WriteRegister( videoModeBase[videoMode] + IMAGE_SIZE, size);
-
-	cam.WriteRegister( videoModeBase[videoMode] + COLOR_CODING, buildColorCoding( format.getPixelFormatIn() ) << 24 );
-
-	// Update the TOTAL_BYTES_HI_INQ, TOTAL_BYTES_LO_INQ, PACKET_PARA_INQ and  BYTE_PER_PACKET registers
-	// VALUE_SETTING (0xA7C)
-	cam.WriteRegister( videoModeBase[videoMode] + VALUE_SETTING, 0x40000000 );   
-
-	// Poll Setting_1 (wait for it to clear)
-	unsigned int tempValue;
-	do{		
-		cam.ReadRegister( videoModeBase[videoMode] + VALUE_SETTING, &tempValue );
-	} while ((tempValue & 0x40000000) != 0);
-
-   // Check ErrorFlag_1
-   cam.ReadRegister( videoModeBase[videoMode] +  VALUE_SETTING, &tempValue );
-
-   if((tempValue & 0x00800000) != 0)
-   {
-      printf("Invalid custom image parameters specified.\n");
-      return false;
-   }
-
-	// Choose max packet size: 
-	// Read MaxBytePerPacket field from the PACKET_PARA_INQ register (A40h) 
-	// Write the Max BytePerPacket size read above to the BytePerPacket field of the BYTE_PER_PACKET register (A44h) 
-
-	cam.ReadRegister( videoModeBase[videoMode] + PACKET_PARA_INQ, &tempValue );	
-	cam.WriteRegister( videoModeBase[videoMode] + BYTE_PER_PACKET, (tempValue & 0xFFFF) << 16);
-	
-	// Set frame rate:
-	// Read the FRAME_RATE register (0x83C) and write it back with bit1 & bit7 cleared and bit6 set.
-	// Set the frame rate using the absolute value frame rate control (register 0x968)
-	/*error = flycaptureGetCameraRegister( context, REG_FRAME_RATE, &tempValue );
-	checkCaptureError( error, "flycaptureGetCameraRegister()" );
-	error = flycaptureSetCameraRegister( context, REG_FRAME_RATE, ((tempValue | 0x20000000) | (tempValue & 0xBE000000)));
-	checkCaptureError( error, "flycaptureGetCameraRegister()" );
-	error = flycaptureSetCameraAbsPropertyEx(context, FLYCAPTURE_FRAME_RATE, false, true, false, 30.0);
-	checkCaptureError( error, "flycaptureGetCameraRegister()" );*/
-
-	cam.StartCapture();		
-	return true;
-
-	Format7ImageSettings imageSettings;
-	imageSettings.width = width;
-	imageSettings.height = height;
-	imageSettings.offsetX = x + Hunit;
-	imageSettings.offsetY = y + Vunit;
-	imageSettings.pixelFormat = PIXEL_FORMAT_MONO8;
-
-    // Validate the settings to make sure that they are valid
-	bool valid;
-    Format7PacketInfo fmt7PacketInfo;
-    Error error = cam.ValidateFormat7Settings( &imageSettings, &valid, &fmt7PacketInfo );
-    if (error != PGRERROR_OK)
-    {
-        PrintError( error );
-        return false;
-    }
-    if ( !valid )
-    {
-        // Settings are not valid
-		printf("Format7 settings are not valid\n");
-        return false;
-    }
-	cam.StopCapture();
-    // Set the settings to the camera
-    /*error = cam.SetFormat7Configuration( &imageSettings, fmt7PacketInfo.recommendedBytesPerPacket );
-    if (error != PGRERROR_OK)
-    {
-        PrintError( error );
-        return false;
-    }*/
-
-	unsigned long yr = 0; 
-	yr |= width;
-	yr = ( yr << 16 ) | height;
-	error = cam.WriteRegister( 0xa0c, yr );
-	if ( error != PGRERROR_OK )
+	if ( m_videoMode == VIDEOMODE_FORMAT7 )
 	{
-		PrintError( error );
-		return false;
-	}
+		Error error = cam.StopCapture();
+		if (error != PGRERROR_OK)
+		{
+			PrintError( error );
+			return false;
+		}
+		m_fmt7ImageSettings.offsetX = x;
+		m_fmt7ImageSettings.offsetY = y;
+		m_fmt7ImageSettings.width = width;
+		m_fmt7ImageSettings.height = height;
+		// Validate the settings to make sure that they are valid
+		bool valid;
+		error = cam.ValidateFormat7Settings( &m_fmt7ImageSettings, &valid, &m_fmt7PacketInfo );
+		if (error != PGRERROR_OK)
+		{
+			PrintError( error );
+			return false;
+		}
+		if ( !valid )
+		{
+			// Settings are not valid
+			printf("Format7 settings are not valid\n");
+			return false;
+		}
+		error = cam.SetFormat7Configuration( &m_fmt7ImageSettings, m_fmt7PacketInfo.recommendedBytesPerPacket );
+		if (error != PGRERROR_OK)
+		{
+			PrintError( error );
+			return false;
+		}
 
-	error = cam.StartCapture();
-	if ( error != PGRERROR_OK )
-	{
-		PrintError( error );
-		return false;
+		if ( m_fmt7ImageSettings.width != m_fmt7Info.maxWidth || m_fmt7ImageSettings.height != m_fmt7Info.maxHeight )
+		{
+			roiMode = true;
+			xRoi = x;
+			yRoi = y;
+			wRoi = width;
+			hRoi = height;
+		}
+		else
+			roiMode = false;
+
+		//Restart the camera
+		if ( callback )
+			error = cam.StartCapture( frameCallback, this );
+		else
+			error = cam.StartCapture();
+	    if (error != PGRERROR_OK)
+	    {
+			PrintError( error );
+			return false;
+		}
+		return true;
 	}
-	return true;
+	cout << "Camera is not initialized with Format 7" << endl;
+	return false;
 }
 
 bool PGRCamera::setGainControl( bool autoGain )
@@ -953,17 +1036,10 @@ bool PGRCamera::setShutterTime( float shutterTime )
 
 bool PGRCamera::moveImageROI( int x, int y )
 {
-	unsigned int videoModeReg;
-	cam.ReadRegister( CURRENT_VIDEO_MODE, &videoModeReg );
-	int videoMode = videoModeReg >> 29;
-	int Hmax, Vmax, Hunit, Vunit, HPosUnit, VPosUnit;
-	getROIUnits( Hmax, Vmax, Hunit, Vunit, HPosUnit, VPosUnit, videoMode );
-
 	unsigned long position = 0; 
-	position |= x + Hunit;
-	position = ( position << 16 ) | y + Vunit;	
-	
-	Error error = cam.WriteRegister( videoModeBase[videoMode] + IMAGE_POSITION, position );
+	position |= x + m_fmt7Info.imageHStepSize;
+	position = ( position << 16 ) | y + m_fmt7Info.imageVStepSize;
+	Error error = cam.WriteRegister( videoModeBase[m_fmt7Info.mode] + IMAGE_POSITION, position );
 	return ( error == PGRERROR_OK );
 }
 
@@ -974,45 +1050,24 @@ unsigned int PGRCamera::getRegisterValue(unsigned long _register )
 	return value;
 }
 
-bool PGRCamera::getROIUnits( int &Hmax, int &Vmax, int &Hunit, int &Vunit, int &HPosUnit, int &VPosUnit, int videoMode )
+bool PGRCamera::getROIUnits( int &Hmax, int &Vmax, int &Hunit, int &Vunit, int &HPosUnit, int &VPosUnit )
 {
-	if ( videoMode < 0 || videoMode > 5 )
+	if ( m_videoMode == VIDEOMODE_FORMAT7 )
 	{
-		cout <<"getROIUnits(): Invalid mode" << endl;
-		return false;
+		Hmax = m_fmt7Info.maxWidth;
+		Vmax = m_fmt7Info.maxHeight;
+		Hunit = m_fmt7Info.imageHStepSize;
+		Vunit = m_fmt7Info.imageVStepSize;
+		HPosUnit = m_fmt7Info.offsetHStepSize;
+		VPosUnit = m_fmt7Info.offsetVStepSize;
+		return true;
 	}
-
-	unsigned long unit, unitPos, max;
-	
-	//Maximum image size
-	max = getRegisterValue( videoModeBase[videoMode] + MAX_IMAGE_SIZE_INQ );
-	Hmax = max >> 16;
-	Vmax = max & 0x0000FFFF;
-
-	//Unit Size
-	unit = getRegisterValue( videoModeBase[videoMode] + UNIT_SIZE_INQ );
-	Hunit = unit >> 16;
-	Vunit = unit & 0x0000FFFF;
-
-	//Unit position
-	unitPos = getRegisterValue( videoModeBase[videoMode] + UNIT_POSITION_INQ );
-	HPosUnit = unitPos >> 16;
-	VPosUnit = unitPos & 0x0000FFFF;
-	return true;
+	return false;
 }
 
 bool PGRCamera::resetImageROI()
 {
-	unsigned int videoFormatReg;
-	cam.ReadRegister( CURRENT_VIDEO_FORMAT, &videoFormatReg );
-	if ( videoFormatReg != 0xE0000000 )
-		return false;
-	unsigned int videoModeReg;
-	cam.ReadRegister( CURRENT_VIDEO_MODE, &videoModeReg );
-	int videoMode = videoModeReg >> 29;
-	int Hmax, Vmax, Hunit, Vunit, HPosUnit, VPosUnit;
-	getROIUnits( Hmax, Vmax, Hunit, Vunit, HPosUnit, VPosUnit, videoMode );
-	return setImageROI( 0, 0, Hmax - Hunit * 2, Vmax - Vunit * 2, videoMode );
+	return setImageROI( 0, 0, m_fmt7Info.maxWidth, m_fmt7Info.maxHeight );
 }
 
 int PGRCamera::buildColorCoding( VMPixelFormat pixelFormat )
@@ -1093,7 +1148,7 @@ void PGRCamera::stop()
         PrintError( error );
 }
 
-bool PGRCamera::setFrameRate( float frameRate )
+bool PGRCamera::setFrameRate( double frameRate )
 {
 	Property prop;
 	prop.type = FRAME_RATE;
@@ -1101,6 +1156,6 @@ bool PGRCamera::setFrameRate( float frameRate )
 	prop.autoManualMode = false;
 	prop.absControl = true;
 	prop.onOff = true;
-	prop.absValue = frameRate;
+	prop.absValue = (float)frameRate;
 	return ( cam.SetProperty( &prop ) == PGRERROR_OK );	
 }

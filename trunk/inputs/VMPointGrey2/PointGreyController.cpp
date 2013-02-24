@@ -169,14 +169,14 @@ bool PointGreyController::moveImageROI( int x, int y )
 	return cameraList[0]->moveImageROI( x, y );
 }
 
-bool PointGreyController::setImageROI( int x, int y, int width, int height, int videoMode )
+bool PointGreyController::setImageROI( int x, int y, int width, int height )
 {
-	return cameraList[0]->setImageROI( x, y, width, height, videoMode );
+	return cameraList[0]->setImageROI( x, y, width, height );
 }
 
-bool PointGreyController::getROIUnits( int &Hmax, int &Vmax, int &Hunit, int &Vunit, int &HPosUnit, int &VPosUnit, int videoMode )
+bool PointGreyController::getROIUnits( int &Hmax, int &Vmax, int &imageHStepSize, int &imageVStepSize, int &offsetHStepSize, int &offsetVStepSize )
 {
-	return cameraList[0]->getROIUnits( Hmax, Vmax, Hunit, Vunit, HPosUnit, VPosUnit, videoMode );
+	return cameraList[0]->getROIUnits( Hmax, Vmax, imageHStepSize, imageVStepSize, offsetHStepSize, offsetVStepSize );
 }
 
 bool PointGreyController::resetImageROI()
