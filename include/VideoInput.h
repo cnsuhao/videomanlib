@@ -16,6 +16,7 @@ public:
 	{
 		pixelBuffer = NULL;
 		callback = NULL;
+		roiMode = false;
 	}
 
 	virtual ~VideoInput( void )
@@ -97,6 +98,16 @@ public:
 
 	void setInputID( size_t input ){inputID = input;}
 
+	bool isRoiModeEnabled(){ return roiMode; }
+
+	void getImageRoi( int &x, int &y, int &width, int &height )
+	{
+		x = xRoi;
+		y = yRoi;
+		width = wRoi;
+		height = hRoi;
+	}
+
 protected:
 
 	VideoMan::VMInputFormat format;	//The internal format of the frames
@@ -114,6 +125,9 @@ protected:
 	size_t inputID;
 
 	void *frameCallbackData;
+
+	bool roiMode;
+	int xRoi, yRoi, wRoi, hRoi;
 
 };
 };
