@@ -70,6 +70,12 @@ int VideoManControl::addVideoInput( const VMInputIdentification &identifier, VMI
 			videoManPrivate->factory.deleteInput( &video );
 			return -1;
 		}
+		if ( video->isRoiModeEnabled() )
+		{
+			int x, y, w, h;
+			video->getImageRoi( x, y, w, h );
+			videoManPrivate->renderer->setImageROI( videoManPrivate->nextInputID, x, y, w, h );
+		}
 	}
 
     videoManPrivate->videoList[videoManPrivate->nextInputID] = video;	
