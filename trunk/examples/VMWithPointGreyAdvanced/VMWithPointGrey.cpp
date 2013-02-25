@@ -19,22 +19,11 @@ You also need to build the VMPointGrey2 input
 
 VideoManControl videoMan;
 int inputID; //Index of the video input
-
-//In order to use frame callback you must use PGR_CAMERA2 and POINTGREY_CONTROLLER2
-bool useFrameCallback = false;
-void frameCallback( char *frame, size_t input, double timeStamp, void *data );
 IPointGreyController *controller;
-
 int xROI, yROI, widthROI, heightROI;
 int xNewROI, yNewROI;
 bool roiSelected = false;
 bool selectingROI = false;
-
-
-void frameCallback( char *frame, size_t input, double timeStamp, void *data )
-{
-	cout << timeStamp << endl;		
-}
 
 bool InitializeVideoMan()
 {
@@ -56,11 +45,6 @@ bool InitializeVideoMan()
 		{
 			cout << " Initialized camera " << deviceList[d].friendlyName << " " << deviceList[d].uniqueName << endl;
 			videoMan.setVerticalFlip( inputID, true );
-			
-			//setFrameCallback only woks for PGR_CAMERA2
-			if ( useFrameCallback )
-				videoMan.setFrameCallback( inputID, frameCallback, NULL );
-			
 			//Get the controller to access advanced functionality
 			controller = (IPointGreyController*)videoMan.createController( inputID, "POINTGREY_CONTROLLER2" );//try POINTGREY_CONTROLLER2
 			//The controller must be destroyed with deleteController
@@ -269,7 +253,6 @@ int main(int argc, char** argv)
 			videoMan.updateTexture( inputID );
 		videoMan.releaseFrame( inputID );
 		videoMan.renderFrame( inputID );
-
 		app.Display();
 	}
 
