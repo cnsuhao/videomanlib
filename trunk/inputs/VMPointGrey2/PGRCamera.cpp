@@ -1103,7 +1103,13 @@ bool PGRCamera::setTrigger( bool triggerOn, int source, int mode )
 		triger.source = source;
 		triger.mode = mode;
 	}
-	return ( cam.SetTriggerMode( &triger ) == PGRERROR_OK );
+	Error error = cam.SetTriggerMode( &triger );
+	if ( error != PGRERROR_OK )
+	{
+		PrintError( error );
+		return false;
+	}
+	return true;
 }
 
 bool PGRCamera::fireSoftwareTrigger( bool broadcast )
@@ -1114,15 +1120,35 @@ bool PGRCamera::fireSoftwareTrigger( bool broadcast )
 bool PGRCamera::setStrobeOutput( bool onOff, float delay, float duration,	unsigned int polarity, unsigned int source )
 {
 	Error error = cam.WriteRegister( PIN_DIRECTION, 0xF0000000 ); //GPIO1 y GPIO2 salidas
-		PrintError( error );		
+	if ( error != PGRERROR_OK )
+	{
+		PrintError( error );
+		return false;
+	}
 	error = cam.WriteRegister( GPIO_STRPAT_CTRL, 0x80000100 ); //El periodo del patron es de 1 frame (stobe pattern)
-		PrintError( error );	
+	if ( error != PGRERROR_OK )
+	{
+		PrintError( error );
+		return false;
+	}
 	error = cam.WriteRegister( GPIO_CTRL_PIN_2, 0x80030000 ); //GPIO0 en modo strobe GPIO_MODE_3
+	if ( error != PGRERROR_OK )
+	{
 		PrintError( error );
+		return false;
+	}
 	error = cam.WriteRegister( GPIO_XTRA_PIN_2, 0x00001800 ); //GPIO_MODE_3: Duration of the pulse
+	if ( error != PGRERROR_OK )
+	{
 		PrintError( error );
+		return false;
+	}
 	error = cam.WriteRegister( GPIO_STRPAT_MASK_PIN_2, 0x8000FFFF ); //Patron del GPIO0: encendido siempre
+	if ( error != PGRERROR_OK )
+	{
 		PrintError( error );
+		return false;
+	}
 	return true;
 	/*StrobeControl strobeControl;
 	cam.GetStrobe( &strobeControl );
