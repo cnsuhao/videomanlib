@@ -28,6 +28,8 @@ IPointGreyController *controller;
 int xROI, yROI, widthROI, heightROI;
 int xNewROI, yNewROI;
 bool roiSelected = false;
+bool selectingROI = false;
+
 
 void frameCallback( char *frame, size_t input, double timeStamp, void *data )
 {
@@ -41,23 +43,15 @@ bool InitializeVideoMan()
 	VMInputIdentification *deviceList;
 	int numDevices;
 
-	cout << "getAvailableDevices" << endl;
 	videoMan.getAvailableDevices( "PGR_CAMERA2", &deviceList, numDevices );//try also PGR_CAMERA
-	cout << "getAvailableDevices2" << endl;
 	cout << "Found " << numDevices << " PointGrey cameras:" << endl;
 	for ( int d = 0; d < numDevices; ++d )
 		cout << "-" << deviceList[d].friendlyName << " with serial " << deviceList[d].uniqueName << endl;
 	for ( int d = 0; d < numDevices; ++d )
 	{
 		format.showDlg = true;	//The user select the format with the Dialog
-		//format.SetFormat( 640, 480, 60, GREY8, GREY8 );		
-		//format.SetFormat( 640, 480, 30, GREY16, GREY16 );		
-		//format.SetFormat( 752, 240, 60, GREY8, GREY8 );		
-		//format.SetFormat( 752, 480, 60, RAW8, RAW8 );
-		//format.SetFormat( 376, 240, 60, GREY8, GREY8 );
-	cout << "addVideoInput" << endl;
+	
 		inputID = videoMan.addVideoInput( deviceList[d], &format );
-	cout << "addVideoInput2" << endl;
 		if ( inputID != -1 )
 		{
 			cout << " Initialized camera " << deviceList[d].friendlyName << " " << deviceList[d].uniqueName << endl;
@@ -184,11 +178,13 @@ void mouseControl( VideoManControl &videoMan, sf::Clock &clock, const sf::Event 
 		{
 			xNewROI = (int)xf;
 			yNewROI = (int)yf;
+			selectingROI = true;
 		}			
 		else if ( Event.Type == sf::Event::MouseButtonReleased )
-		{
-			if ( clock.GetElapsedTime() < 0.5 )
+		{	
+			if ( !selectingROI || clock.GetElapsedTime() < 0.5 )
 				return;
+			selectingROI = false;
 			int Hmax, Vmax, Hunit, Vunit, Hpos, Vpos;
 			if ( controller->getROIUnits( Hmax, Vmax, Hunit, Vunit, Hpos, Vpos ) )
 			{
