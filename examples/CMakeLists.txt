@@ -1,7 +1,4 @@
-option(BUILD_EXAMPLES_OPENCV "Build examples using OpenCV" ON)
 IF(BUILD_OPENGL_RENDERER)
-
-	option(BUILD_EXAMPLES_GLUT "Build examples based on GLUT" ON)
 	IF (BUILD_EXAMPLES_GLUT)
 		
 		IF(BUILD_INPUT_VMDirectShow)
