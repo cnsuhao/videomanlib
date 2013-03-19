@@ -9,8 +9,8 @@ PROJECT( VideoMan )
 SET ( CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules )
 SET ( CMAKE_DEBUG_POSTFIX d )
 
-SET ( LIBRARY_OUTPUT_PATH ${VideoMan_BINARY_DIR}/bin/ CACHE PATH "Single output directory for building all libraries." FORCE )
-SET ( EXECUTABLE_OUTPUT_PATH ${VideoMan_BINARY_DIR}/bin/ CACHE PATH "Single output directory for building all executables." FORCE )
+#SET ( LIBRARY_OUTPUT_PATH ${VideoMan_BINARY_DIR}/bin/ CACHE PATH "Single output directory for building all libraries." FORCE )
+#SET ( EXECUTABLE_OUTPUT_PATH ${VideoMan_BINARY_DIR}/bin/ CACHE PATH "Single output directory for building all executables." FORCE )
 
 set_property(GLOBAL PROPERTY USE_FOLDERS On)
 
@@ -39,6 +39,7 @@ SET( VideoMan_SRCS
 SET( VideoMan_SRCS_INPUTS
 	control/inputs/UserInput.cpp
 	control/inputs/UserInput.h
+	control/inputs/VideoManInputController.cpp
 	include/VideoManInputController.h
 	include/VideoInput.h
 )
@@ -76,17 +77,6 @@ IF(BUILD_EXAMPLES)
 	add_subdirectory( examples )
 ENDIF(BUILD_EXAMPLES)
 
-# Variables for thrid party inclusion
-IF ( VideoMan_3rdParty )
-SET(VideoMan_INCLUDE_DIR1 ${VideoMan_SOURCE_DIR}/include/  PARENT_SCOPE)
-SET(VideoMan_LIB_DIR1 "${VideoMan_BINARY_DIR}/bin/" PARENT_SCOPE)
-if (CMAKE_MAJOR_VERSION GREATER 2  OR  CMAKE_MINOR_VERSION GREATER 4) # CMake>=2.6 supports the notation "debug XXd optimized XX"
-	SET(VideoMan_LIBS1 debug VideoMand optimized VideoMan PARENT_SCOPE)
-else() # Old CMake:
-	SET(VideoMan_LIBS1 VideoMan PARENT_SCOPE)
-endif()
-ENDIF ( VideoMan_3rdParty )
-
 #------ FindVideoMan.cmake ---------
 set(${PROJECT_NAME}_VERSION "1.0.0" )
 string(REGEX MATCHALL "[0-9]" ${PROJECT_NAME}_VERSION_PARTS "${${PROJECT_NAME}_VERSION}" )
@@ -102,6 +92,6 @@ set(CMAKE_LIB_DIRS_CONFIGCMAKE ${VideoMan_BINARY_DIR}/bin/  )
 
 set( VideoMan_DEBUG_POSTFIX d)
 
-CONFIGURE_FILE("${PROJECT_SOURCE_DIR}/config.cmake.in" "${VideoMan_BINARY_DIR}/${PROJECT_NAME}Config.cmake" )
+CONFIGURE_FILE("${PROJECT_SOURCE_DIR}/config.cmake.in" "${VideoMan_BINARY_DIR}/${PROJECT_NAME}Config.cmake" @ONLY)
 
 SET( $ENV{VideoMan_DIR} ${PROJECT_BINARY_DIR} )
