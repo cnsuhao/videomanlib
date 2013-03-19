@@ -20,6 +20,8 @@
 #
 # ===================================================================================
 
+OPTION (VIDEOMAN_INCLUDE_PROJECT "Include VideoMan project to the solution" OFF )
+
 # Extract the directory where *this* file has been installed (determined at cmake run-time)
 #  This variable may or may not be used below, depending on the parsing of VideoManConfig.cmake
 get_filename_component(THIS_VideoMan_CONFIG_PATH "${CMAKE_CURRENT_LIST_FILE}" PATH)
@@ -32,10 +34,15 @@ INCLUDE_DIRECTORIES(@CMAKE_INCLUDE_DIRS_CONFIGCMAKE@)
 # ======================================================
 # Link directories to add to the user project:
 # ======================================================
-LINK_DIRECTORIES("${CMAKE_BINARY_DIR}/bin" )
-
-# Provide the libs directory anyway, it may be needed in some cases.
-SET(VideoMan_LIB_DIR "${CMAKE_BINARY_DIR}/bin" )
+IF (VIDEOMAN_INCLUDE_PROJECT)
+	LINK_DIRECTORIES("${CMAKE_BINARY_DIR}/bin" )
+	# Provide the libs directory anyway, it may be needed in some cases.
+	SET(VideoMan_LIB_DIR "${CMAKE_BINARY_DIR}/bin" )
+ELSE(VIDEOMAN_INCLUDE_PROJECT)
+	LINK_DIRECTORIES( @CMAKE_BINARY_DIR@/bin )
+	# Provide the libs directory anyway, it may be needed in some cases.
+	SET(VideoMan_LIB_DIR "@CMAKE_BINARY_DIR@/bin" )
+ENDIF(VIDEOMAN_INCLUDE_PROJECT)
 
 # ====================================================================
 # Link libraries
@@ -53,3 +60,9 @@ SET(VideoMan_VERSION 		  @VideoMan_VERSION@)
 SET(VideoMan_VERSION_MAJOR  @VideoMan_VERSION_MAJOR@)
 SET(VideoMan_VERSION_MINOR  @VideoMan_VERSION_MINOR@)
 SET(VideoMan_VERSION_PATCH  @VideoMan_VERSION_PATCH@)
+
+IF (NOT TARGET VideoMan)
+IF (VIDEOMAN_INCLUDE_PROJECT)
+	add_subdirectory("@PROJECT_SOURCE_DIR@" ${CMAKE_BINARY_DIR}/VideoMan)
+ENDIF(VIDEOMAN_INCLUDE_PROJECT)
+ENDIF (NOT TARGET VideoMan)
