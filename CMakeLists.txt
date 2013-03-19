@@ -39,7 +39,6 @@ SET( VideoMan_SRCS
 SET( VideoMan_SRCS_INPUTS
 	control/inputs/UserInput.cpp
 	control/inputs/UserInput.h
-	control/inputs/VideoManInputController.cpp
 	include/VideoManInputController.h
 	include/VideoInput.h
 )
