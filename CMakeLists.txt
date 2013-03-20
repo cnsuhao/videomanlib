@@ -39,7 +39,7 @@ SET( VideoMan_SRCS
 SET( VideoMan_SRCS_INPUTS
 	control/inputs/UserInput.cpp
 	control/inputs/UserInput.h
-	include/VideoManInputController.h
+	include/VideoManInputController.h	
 	include/VideoInput.h
 )
 
@@ -64,6 +64,7 @@ ADD_LIBRARY( VideoMan SHARED
   ${VideoMan_SRCS_INPUTS}
   ${VideoMan_SRCS_RENDERER}
 )
+SET_PROPERTY(TARGET VideoMan PROPERTY LINK_INTERFACE_LIBRARIES "")
 
 IF ( BUILD_OPENGL_RENDERER )
 	TARGET_LINK_LIBRARIES( VideoMan ${OPENGL_LIBRARIES} )
