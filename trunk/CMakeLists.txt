@@ -9,8 +9,8 @@ PROJECT( VideoMan )
 SET ( CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules )
 SET ( CMAKE_DEBUG_POSTFIX d )
 
-#SET ( LIBRARY_OUTPUT_PATH ${VideoMan_BINARY_DIR}/bin/ CACHE PATH "Single output directory for building all libraries." FORCE )
-#SET ( EXECUTABLE_OUTPUT_PATH ${VideoMan_BINARY_DIR}/bin/ CACHE PATH "Single output directory for building all executables." FORCE )
+SET ( LIBRARY_OUTPUT_PATH ${VideoMan_BINARY_DIR}/bin/ CACHE PATH "Single output directory for building all libraries." FORCE )
+SET ( EXECUTABLE_OUTPUT_PATH ${VideoMan_BINARY_DIR}/bin/ CACHE PATH "Single output directory for building all executables." FORCE )
 
 set_property(GLOBAL PROPERTY USE_FOLDERS On)
 
@@ -39,6 +39,7 @@ SET( VideoMan_SRCS
 SET( VideoMan_SRCS_INPUTS
 	control/inputs/UserInput.cpp
 	control/inputs/UserInput.h
+	control/inputs/VideoManInputController.cpp
 	include/VideoManInputController.h	
 	include/VideoInput.h
 )
