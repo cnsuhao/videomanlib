@@ -26,6 +26,8 @@ OPTION (VIDEOMAN_INCLUDE_PROJECT "Include VideoMan project to the solution" OFF 
 #  This variable may or may not be used below, depending on the parsing of VideoManConfig.cmake
 get_filename_component(THIS_VideoMan_CONFIG_PATH "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
+SET( VideoMan_3rdParty TRUE )
+
 # ======================================================
 # Include directories to add to the user project:
 # ======================================================
@@ -34,15 +36,11 @@ INCLUDE_DIRECTORIES(@CMAKE_INCLUDE_DIRS_CONFIGCMAKE@)
 # ======================================================
 # Link directories to add to the user project:
 # ======================================================
-IF (VIDEOMAN_INCLUDE_PROJECT)
-	LINK_DIRECTORIES("${CMAKE_BINARY_DIR}/bin" )
-	# Provide the libs directory anyway, it may be needed in some cases.
-	SET(VideoMan_LIB_DIR "${CMAKE_BINARY_DIR}/bin" )
-ELSE(VIDEOMAN_INCLUDE_PROJECT)
+IF (NOT VIDEOMAN_INCLUDE_PROJECT)
 	LINK_DIRECTORIES( @CMAKE_BINARY_DIR@/bin )
 	# Provide the libs directory anyway, it may be needed in some cases.
 	SET(VideoMan_LIB_DIR "@CMAKE_BINARY_DIR@/bin" )
-ENDIF(VIDEOMAN_INCLUDE_PROJECT)
+ENDIF()
 
 # ====================================================================
 # Link libraries

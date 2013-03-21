@@ -9,8 +9,11 @@ PROJECT( VideoMan )
 SET ( CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules )
 SET ( CMAKE_DEBUG_POSTFIX d )
 
-SET ( LIBRARY_OUTPUT_PATH ${VideoMan_BINARY_DIR}/bin/ CACHE PATH "Single output directory for building all libraries." FORCE )
-SET ( EXECUTABLE_OUTPUT_PATH ${VideoMan_BINARY_DIR}/bin/ CACHE PATH "Single output directory for building all executables." FORCE )
+IF ( NOT VideoMan_3rdParty )
+	SET ( LIBRARY_OUTPUT_PATH ${VideoMan_BINARY_DIR}/bin/ CACHE PATH "Single output directory for building all libraries." FORCE )
+	SET ( EXECUTABLE_OUTPUT_PATH ${VideoMan_BINARY_DIR}/bin/ CACHE PATH "Single output directory for building all executables." FORCE )
+ENDIF()
+
 
 set_property(GLOBAL PROPERTY USE_FOLDERS On)
 
