@@ -36,11 +36,15 @@ INCLUDE_DIRECTORIES(@CMAKE_INCLUDE_DIRS_CONFIGCMAKE@)
 # ======================================================
 # Link directories to add to the user project:
 # ======================================================
-IF (NOT VIDEOMAN_INCLUDE_PROJECT)
+IF (VIDEOMAN_INCLUDE_PROJECT)
+	LINK_DIRECTORIES("${CMAKE_BINARY_DIR}/bin" )
+	# Provide the libs directory anyway, it may be needed in some cases.
+	SET(VideoMan_LIB_DIR "${CMAKE_BINARY_DIR}/bin" )
+ELSE(VIDEOMAN_INCLUDE_PROJECT)
 	LINK_DIRECTORIES( @CMAKE_BINARY_DIR@/bin )
 	# Provide the libs directory anyway, it may be needed in some cases.
 	SET(VideoMan_LIB_DIR "@CMAKE_BINARY_DIR@/bin" )
-ENDIF()
+ENDIF(VIDEOMAN_INCLUDE_PROJECT)
 
 # ====================================================================
 # Link libraries
