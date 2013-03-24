@@ -54,6 +54,9 @@ private:
 	bool paused;
 	double LastSampleTime;
 	double avgTimePerFrame;
+	HANDLE ghSemaphore;
+	HANDLE ghMutex;
+
 };
 
 #endif
