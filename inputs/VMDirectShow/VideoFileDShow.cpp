@@ -29,11 +29,13 @@ VideoFileDShow::~VideoFileDShow(void)
 		long event;
 		pMediaEvent->WaitForCompletion( INFINITE, &event );
 	}*/
-	FILTER_STATE state;
-	do{
-	pMC->GetState( 100, (OAFilterState*)&state );
-
-	}while( state != State_Stopped );
+	if ( pMC )
+	{
+		FILTER_STATE state;
+		do{
+			pMC->GetState( 100, (OAFilterState*)&state );
+		}while( state != State_Stopped );
+	}
 	callback = NULL;
 	SAFE_RELEASE( mediaSample );
 
