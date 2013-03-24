@@ -69,7 +69,5 @@ protected:
 	#endif
 
 	IMediaSample* mediaSample;
-
-	bool dropFrames;
 };
 #endif

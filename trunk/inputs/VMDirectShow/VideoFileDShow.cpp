@@ -14,13 +14,32 @@ VideoFileDShow::VideoFileDShow(void)
 {
 	paused = true;
 	LastSampleTime = 0;
+
+	ghSemaphore = CreateSemaphore( NULL, 0, 1, NULL);
+	ghMutex = CreateMutex( NULL, FALSE, NULL);
 }
 
 VideoFileDShow::~VideoFileDShow(void)
 {
 	stopMedia();
+	/*IMediaEvent *pMediaEvent = NULL;
+	HRESULT hr = pMC->QueryInterface(IID_IMediaEvent, (void**)&pMediaEvent);
+	if ( !FAILED(hr) )
+	{
+		long event;
+		pMediaEvent->WaitForCompletion( INFINITE, &event );
+	}*/
+	FILTER_STATE state;
+	do{
+	pMC->GetState( 100, (OAFilterState*)&state );
+
+	}while( state != State_Stopped );
 	callback = NULL;
 	SAFE_RELEASE( mediaSample );
+
+	ReleaseSemaphore( ghSemaphore, 1, NULL );
+	CloseHandle( ghSemaphore );
+	CloseHandle( ghMutex );
 }
 
 
@@ -313,7 +332,7 @@ HRESULT VideoFileDShow::prepareMedia( const std::string &name, VMInputFormat *aF
 	}
 	SAFE_RELEASE( pVideoRenderer );
 
-	IMediaEvent *pMediaEvent = NULL;
+	/*IMediaEvent *pMediaEvent = NULL;
 	hr = pGB->QueryInterface(IID_IMediaEvent, (void**)&pMediaEvent);
 	if ( !FAILED(hr) )
 	{
@@ -322,11 +341,9 @@ HRESULT VideoFileDShow::prepareMedia( const std::string &name, VMInputFormat *aF
 		//if ( EC_COMPLETE == event )
 		//	int a = 0;
 		SAFE_RELEASE( pMediaEvent );
-	}
+	}*/
 
 	hr = EnableMemoryBuffer();
-	if ( aFormat != NULL )
-		dropFrames = aFormat->dropFrames;
 
 	//pMS->SetRate(2);
 	
@@ -353,20 +370,28 @@ char *VideoFileDShow::getFrame( bool wait)
 		return pixelBuffer;
 	}	
 	return NULL;*/
-	return pixelBuffer;
+    if ( WaitForSingleObject( ghSemaphore, 100 ) == WAIT_OBJECT_0 )
+		return pixelBuffer;	
+	else
+		return NULL;
 }
 
 void VideoFileDShow::releaseFrame()
 {
 	//using sampleCB
+	DWORD dwWaitResult = WaitForSingleObject( ghMutex, INFINITE );
+	if ( dwWaitResult == WAIT_OBJECT_0 )
+	{
 	if ( mediaSample != NULL )
 	{
 		pixelBuffer = NULL;		
 		mediaSample->Release();
-		mediaSample = NULL;
 		frameCaptured = false;		
-		if ( !dropFrames && !paused )
+		mediaSample = NULL;
+		if ( !format.clock && !paused )
 			pMC->Run();
+	}
+	ReleaseMutex( ghMutex );
 	}
 	
 	//using BufferCB
@@ -547,27 +572,31 @@ HRESULT WINAPI VideoFileDShow::SampleCB( double SampleTime, IMediaSample *pSampl
 	std::cout << "nuevo sample " << static_cast<double>( time  ) << std::endl;
 	return(S_OK);
 */
-	if ( !dropFrames )
-	{
+	if ( !format.clock )
 		pMC->Pause();
-	}
-	
-	if ( mediaSample == NULL )
+	DWORD dwWaitResult = WaitForSingleObject( ghMutex, INFINITE );
+	if ( dwWaitResult == WAIT_OBJECT_0 )
 	{
-		//const int frame = static_cast<int>( ( (double)seconds2referenceTime( SampleTime )  / avgTimePerFrame ) );
-		//cout << "mediaSample " << SampleTime <<endl;
-		LastSampleTime = SampleTime;
-		pSample->AddRef();
-		mediaSample = pSample;
+		if ( mediaSample == NULL )
+		{
+			//const int frame = static_cast<int>( ( (double)seconds2referenceTime( SampleTime )  / avgTimePerFrame ) );
+			//cout << "mediaSample " << SampleTime <<endl;
+			LastSampleTime = SampleTime;
+			pSample->AddRef();
+			mediaSample = pSample;
 
-		mediaSample->GetPointer((BYTE**)&pixelBuffer);
-		frameCaptured = true;
-		if ( callback )
-			(*callback)( pixelBuffer, inputID, SampleTime, frameCallbackData );
-
-		//LONGLONG time, endT;
-		//pSample->GetMediaTime( &time, &endT );
-		return(S_OK);		
+			mediaSample->GetPointer((BYTE**)&pixelBuffer);
+			frameCaptured = true;
+			if ( callback )
+				(*callback)( pixelBuffer, inputID, SampleTime, frameCallbackData );
+			else
+  				ReleaseSemaphore( ghSemaphore, 1, NULL );
+			//LONGLONG time, endT;
+			//pSample->GetMediaTime( &time, &endT );
+			ReleaseMutex(ghMutex);
+			return(S_OK);
+		}
+		ReleaseMutex(ghMutex);
 	}
 	/*else
 	{
@@ -609,7 +638,7 @@ HRESULT WINAPI VideoFileDShow::SampleCB( double SampleTime, IMediaSample *pSampl
 
 HRESULT WINAPI VideoFileDShow::BufferCB(double sampleTimeSec, BYTE* bufferPtr, long bufferLength)
 {
-	if ( !dropFrames )
+	if ( !format.clock )
 		pMC->Pause();
 	if ( pixelBuffer == NULL )
 	{

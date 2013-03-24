@@ -17,7 +17,6 @@ VideoInputDShow::VideoInputDShow(void)
 	pSG = NULL;
 	sampleGrabber = NULL;
 	videoSource = NULL;
-	dropFrames = true;
 	mediaSample = NULL;
 }
 

@@ -332,8 +332,6 @@ HRESULT CaptureDeviceDShow::prepareMedia( std::string &friendlyName, std::string
 	freeMediaType(outputMediaType);	
 
 	hr = EnableMemoryBuffer();
-	if ( aFormat != NULL )
-		dropFrames = aFormat->dropFrames;
 	
 	//pMS->SetRate(2);
 
@@ -380,9 +378,7 @@ void CaptureDeviceDShow::releaseFrame()
 		pixelBuffer = NULL;		
 		mediaSample->Release();
 		mediaSample = NULL;
-		frameCaptured = false;		
-		if ( !dropFrames )
-			play();
+		frameCaptured = false;
 	}
 	//using BufferCB
 	/*if ( pixelBuffer != NULL )
@@ -742,10 +738,6 @@ HRESULT WINAPI CaptureDeviceDShow::SampleCB( double SampleTime, IMediaSample *pS
 	std::cout << "nuevo sample " << static_cast<double>( time  ) << std::endl;
 	return(S_OK);
 */
-	if ( !dropFrames )
-	{
-		pMC->Pause();
-	}
 	if ( mediaSample == NULL )
 	{
 		pSample->AddRef();
