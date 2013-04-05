@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <time.h>
 
 using namespace std;
 using namespace VideoMan;
@@ -23,8 +24,8 @@ void copyStringToChar( const std::string &src, char **dst )
 IDSuEye::IDSuEye(void)
 {
 	m_hCam = NULL;
-	m_pcImageMemory[0] = NULL;
-	m_pcImageMemory[1] = NULL;
+	m_pcImageMemory = NULL;	
+	lastPixelBuffer = NULL;
 }
 
 IDSuEye::~IDSuEye(void)
@@ -37,18 +38,17 @@ IDSuEye::~IDSuEye(void)
 		// Stop live video
 		is_StopLiveVideo( m_hCam, IS_WAIT );
 		
-		// Free the allocated buffer
-		if( m_pcImageMemory[0] != NULL )
-  			is_FreeImageMem( m_hCam, m_pcImageMemory[0], m_lMemoryId[0] );
-		if( m_pcImageMemory[1] != NULL )
-  			is_FreeImageMem( m_hCam, m_pcImageMemory[1], m_lMemoryId[1] );
-        
-		m_pcImageMemory[0] = NULL;
-		m_pcImageMemory[1] = NULL;
+		// Free the allocated buffer		
+		if( m_pcImageMemory != NULL )
+  			is_FreeImageMem( m_hCam, m_pcImageMemory, m_lMemoryId );
+		m_pcImageMemory = NULL;		
+
+		is_DisableEvent( m_hCam, IS_SET_EVENT_FRAME );
+		is_ExitEvent( m_hCam, IS_SET_EVENT_FRAME );
 		
 		// Close camera
 		is_ExitCamera( m_hCam );
-        m_hCam = NULL;
+        m_hCam = NULL;		
 	}
 }
 
@@ -203,16 +203,14 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 	VMPixelFormat pixelFormat = pixelFormatFromColorMode( m_nColorMode );
 	format.setPixelFormat( pixelFormat, pixelFormat );
 	m_nBitsPerPixel = format.depth * format.nChannels;
-	 // allocate an image memory.
-	for ( int i = 0; i < 2; ++i )
+	 // allocate an image memory.	
+	if (is_AllocImageMem(m_hCam, m_nSizeX, m_nSizeY, m_nBitsPerPixel, &m_pcImageMemory, &m_lMemoryId ) != IS_SUCCESS)
 	{
-		if (is_AllocImageMem(m_hCam, m_nSizeX, m_nSizeY, m_nBitsPerPixel, &m_pcImageMemory[i], &m_lMemoryId[i] ) != IS_SUCCESS)
-		{
-			cerr << "Memory allocation failed!" << endl;
-			return false;
-		}
-		is_AddToSequence( m_hCam, m_pcImageMemory[i], m_lMemoryId[i] );
-	}	
+		cerr << "Memory allocation failed!" << endl;
+		return false;
+	}
+	//is_AddToSequence( m_hCam, m_pcImageMemory[i], m_lMemoryId[i] );
+	is_SetImageMem( m_hCam, m_pcImageMemory, m_lMemoryId );	
 
     // Enable Messages
     //is_InitEvent()
@@ -221,19 +219,37 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 	//is_ExitEvent()
 	//IS_SET_EVENT_FRAME
 	//is_WaitEvent
-	/*
+	
 	//Activate and initialise FRAME event
-	is_EnableEvent (hCam, IS_SET_EVENT_FRAME);
-	is_InitEvent (hCam, IS_SET_EVENT_FRAME);
+	m_hEvent = CreateEvent(NULL, TRUE, FALSE, "");
+	is_EnableEvent( m_hCam, IS_SET_EVENT_FRAME);
+	is_InitEvent( m_hCam, m_hEvent, IS_SET_EVENT_FRAME);
 	//Start image capture and wait 1000 ms for event to occur
-	is_FreezeVideo (hCam, IS_DONT_WAIT);
+	/*is_FreezeVideo (hCam, IS_DONT_WAIT);
 	is_WaitEvent (hCam, IS_SET_EVENT_FRAME, 1000);
 	*/
 
-    // start live video
-    is_CaptureVideo( m_hCam, IS_WAIT );
-	//is_FreezeVideo( m_hCam, IS_WAIT );
+  	
 
+	UINT nRange[3];
+	ZeroMemory(nRange, sizeof(nRange));
+	nRet = is_PixelClock( m_hCam, IS_PIXELCLOCK_CMD_GET_RANGE, (void*)nRange, sizeof(nRange) );
+	/*UINT nPixelClockDefault;
+	nRet = is_PixelClock(m_hCam, IS_PIXELCLOCK_CMD_GET_DEFAULT,
+                        (void*)&nPixelClockDefault, sizeof(nPixelClockDefault));
+	nPixelClockDefault = 30;*/
+	is_PixelClock( m_hCam, IS_PIXELCLOCK_CMD_SET, (void*)&nRange[1], sizeof(nRange[1]) );
+	//is_PixelClock( m_hCam, IS_PIXELCLOCK_CMD_SET, (void*)&nPixelClockDefault, sizeof(nPixelClockDefault) );
+	//is_PixelClock( m_hCam, IS_PIXELCLOCK_CMD_GET, (void*)&nPixelClockDefault, sizeof(nPixelClockDefault) );
+	//is_SetFrameRate( m_hCam, 30, &format.fps );	
+	double exposure = 0;
+	is_Exposure( m_hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, &exposure, sizeof(exposure)  );
+	
+	// start live video
+	is_CaptureVideo( m_hCam, IS_WAIT );
+	//is_FreezeVideo( m_hCam, IS_DONT_WAIT );
+
+	//after start live video query framerate
 	is_GetFramesPerSecond( m_hCam, &format.fps );	
 	
 	if ( aformat )
@@ -254,18 +270,21 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 }
 
 void IDSuEye::releaseFrame( )
-{	
-	is_UnlockSeqBuf( m_hCam, IS_IGNORE_PARAMETER, pixelBuffer );
+{
+	lastPixelBuffer = pixelBuffer;
 	pixelBuffer = NULL;
 }
 
 char *IDSuEye::getFrame( bool wait)
-{	
-	INT nNum;
-	char *pcMem;
-	is_GetActSeqBuf(m_hCam, &nNum, &pcMem, &pixelBuffer);	
-	is_LockSeqBuf( m_hCam, IS_IGNORE_PARAMETER, pixelBuffer );
-	return pixelBuffer;
+{
+	if ( WaitForSingleObject( m_hEvent, 100 ) == WAIT_OBJECT_0 )	
+	{
+		CloseHandle(m_hEvent);
+		m_hEvent = CreateEvent(NULL, TRUE, FALSE, "");
+		is_InitEvent( m_hCam, m_hEvent, IS_SET_EVENT_FRAME);	
+		return m_pcImageMemory;
+	}
+	return NULL;
 }
 
 void IDSuEye::getAvailableDevices( VMInputIdentification **deviceList, int &numDevices  )
@@ -323,14 +342,9 @@ bool IDSuEye::setImageROI( int x, int y, int width, int height )
 {
 	is_StopLiveVideo( m_hCam, IS_WAIT );
 		
-	// Free the allocated buffer
-	if( m_pcImageMemory[0] != NULL )
-		is_FreeImageMem( m_hCam, m_pcImageMemory[0], m_lMemoryId[0] );
-	if( m_pcImageMemory[1] != NULL )
-		is_FreeImageMem( m_hCam, m_pcImageMemory[1], m_lMemoryId[1] );
-    
-	m_pcImageMemory[0] = NULL;
-	m_pcImageMemory[1] = NULL;
+	if( m_pcImageMemory != NULL )
+		is_FreeImageMem( m_hCam, m_pcImageMemory, m_lMemoryId );
+	m_pcImageMemory = NULL;	
 
 	
 	/*if ( is_SetImageSize( m_hCam, width, height ) != IS_SUCCESS )
@@ -353,23 +367,13 @@ bool IDSuEye::setImageROI( int x, int y, int width, int height )
 		cerr << "Invalid AOI" << endl;
 		return false;
 	}
-	if (is_AllocImageMem(m_hCam, width, height, m_nBitsPerPixel, &m_pcImageMemory[0], &m_lMemoryId[0] ) != IS_SUCCESS)
-    {
-        cerr << "Memory allocation failed!" << endl;
+	if (is_AllocImageMem(m_hCam, width, height, m_nBitsPerPixel, &m_pcImageMemory, &m_lMemoryId ) != IS_SUCCESS)
+	{
+		cerr << "Memory allocation failed!" << endl;
 		return false;
-    }
-	
-	//is_SetImageMem( m_hCam, m_pcImageMemory, m_lMemoryId );
-	is_AddToSequence( m_hCam, m_pcImageMemory[0], m_lMemoryId[0] );
-
-	if (is_AllocImageMem(m_hCam, width, height, m_nBitsPerPixel, &m_pcImageMemory[1], &m_lMemoryId[1] ) != IS_SUCCESS)
-    {
-        cerr << "Memory allocation failed!" << endl;
-		return false;
-    }
-
-	//is_SetImageMem( m_hCam, m_pcImageMemory, m_lMemoryId );
-	is_AddToSequence( m_hCam, m_pcImageMemory[1], m_lMemoryId[1] );
+	}		
+	is_SetImageMem( m_hCam, m_pcImageMemory, m_lMemoryId );
+	//is_AddToSequence( m_hCam, m_pcImageMemory[i], m_lMemoryId[i] );	
 
 	if ( is_CaptureVideo( m_hCam, IS_WAIT ) != IS_SUCCESS )
 		return false;
