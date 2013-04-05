@@ -30,10 +30,12 @@ private:
 	VideoMan::VMPixelFormat pixelFormatFromColorMode( int colorMode );
 
 	VideoManPrivate::VideoManInputController *controller;
+	char* lastPixelBuffer;	//The last captured frame
 
 	HIDS m_hCam;
-	int m_lMemoryId[2];		// camera memory - buffer ID
-	char*	m_pcImageMemory[2];	// camera memory - pointer to buffer
+	HANDLE m_hEvent;
+	int m_lMemoryId;		// camera memory - buffer ID
+	char*	m_pcImageMemory;	// camera memory - pointer to buffer
 	SENSORINFO m_sInfo;			// sensor information struct
 	
 	INT		m_nColorMode;		// Y8/RGB16/RGB24/REG32
