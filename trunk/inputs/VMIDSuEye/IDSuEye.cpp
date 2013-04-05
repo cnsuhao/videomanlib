@@ -139,9 +139,25 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
         return false;
 
 	// Set display mode to DIB
-    nRet = is_SetDisplayMode(m_hCam, IS_SET_DM_DIB);	
+    nRet = is_SetDisplayMode(m_hCam, IS_SET_DM_DIB);		
 	if ( !aformat || aformat->getPixelFormatIn() == UNKNOWN )
-	{		
+	{	
+		//Get Image size
+		IS_RECT rectAOI; 
+		nRet = is_AOI(m_hCam, IS_AOI_IMAGE_GET_AOI, (void*)&rectAOI, sizeof(rectAOI));
+		if (nRet == IS_SUCCESS)
+		{
+		  int x     = rectAOI.s32X;
+		  int y     = rectAOI.s32Y;
+		  m_nSizeX = rectAOI.s32Width;
+		  m_nSizeY = rectAOI.s32Height;
+		}
+		else	
+		{
+			cerr << "Error getting AOI" << endl;
+			return false;
+		}
+
 		if (m_sInfo.nColorMode == IS_COLORMODE_BAYER)
 		{
 			m_nColorMode = IS_CM_RGB8_PACKED;
@@ -157,6 +173,18 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 	}
 	else
 	{
+		// Get number of available formats and size of list		
+		UINT count;
+		UINT bytesNeeded = sizeof(IMAGE_FORMAT_LIST);
+		nRet = is_ImageFormat( m_hCam, IMGFRMT_CMD_GET_NUM_ENTRIES, &count, sizeof(count) );
+		bytesNeeded += (count - 1) * sizeof(IMAGE_FORMAT_INFO);
+		void* ptr = malloc(bytesNeeded);
+		// Create and fill list
+		IMAGE_FORMAT_LIST* pformatList = (IMAGE_FORMAT_LIST*) ptr;
+		pformatList->nSizeOfListEntry = sizeof(IMAGE_FORMAT_INFO);
+		pformatList->nNumListElements = count;
+		nRet = is_ImageFormat( m_hCam, IMGFRMT_CMD_GET_LIST, pformatList, bytesNeeded );
+
 		//Set the desired format
 		format.setPixelFormat( aformat->getPixelFormatIn(),aformat->getPixelFormatIn() );
 		m_nColorMode = colorModeFromPixelFormat( aformat->getPixelFormatIn() );		
@@ -164,12 +192,20 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 		m_nSizeY = aformat->height;
 		format.width = m_nSizeX;
 		format.height = m_nSizeY;
-		format.fps = aformat->fps;
-		if ( is_SetFrameRate(m_hCam, format.fps, &format.fps ) != IS_SUCCESS )
+		format.fps = aformat->fps;	
+
+		//Check if an image size matches the format
+		bool encontrado = false;
+		for ( int f = 0; !encontrado && f < pformatList->nNumListElements; ++f )
 		{
-			cerr << "Invalid frame rate" << endl;
-			return false;
+			if ( pformatList->FormatInfo[f].nWidth == aformat->width && pformatList->FormatInfo[f].nHeight == aformat->height )
+			{
+				encontrado = true;
+				nRet = is_ImageFormat( m_hCam, IMGFRMT_CMD_SET_FORMAT, &pformatList->FormatInfo[f].nFormatID, sizeof(pformatList->FormatInfo[f].nFormatID) );
+			}
 		}
+		if ( !encontrado )
+			return false;
 	}
 
 //	is_SetImagePos( m_hCam, 0, 0 );
@@ -179,24 +215,6 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 		cerr << "Invalid color mode" << endl;
 		return false;
 	}
-	
-	//Get Image size
-	IS_RECT rectAOI; 
-	nRet = is_AOI(m_hCam, IS_AOI_IMAGE_GET_AOI, (void*)&rectAOI, sizeof(rectAOI));
-	if (nRet == IS_SUCCESS)
-	{
-	  int x     = rectAOI.s32X;
-	  int y     = rectAOI.s32Y;
-	  m_nSizeX = rectAOI.s32Width;
-	  m_nSizeY = rectAOI.s32Height;
-	}
-	else	
-	{
-		cerr << "Error getting AOI" << endl;
-		return false;
-	}
-	
-	
 	format.width = m_nSizeX;
 	format.height = m_nSizeY;
 	int m_nColorMode = is_SetColorMode(m_hCam, IS_GET_COLOR_MODE );
@@ -210,7 +228,9 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 		return false;
 	}
 	//is_AddToSequence( m_hCam, m_pcImageMemory[i], m_lMemoryId[i] );
-	is_SetImageMem( m_hCam, m_pcImageMemory, m_lMemoryId );	
+	nRet = is_SetImageMem( m_hCam, m_pcImageMemory, m_lMemoryId );	
+	if ( nRet != IS_SUCCESS )
+		return false;
 
     // Enable Messages
     //is_InitEvent()
@@ -222,35 +242,55 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 	
 	//Activate and initialise FRAME event
 	m_hEvent = CreateEvent(NULL, TRUE, FALSE, "");
-	is_EnableEvent( m_hCam, IS_SET_EVENT_FRAME);
-	is_InitEvent( m_hCam, m_hEvent, IS_SET_EVENT_FRAME);
+	if ( m_hEvent == NULL )
+		return false;
+
+	nRet = is_EnableEvent( m_hCam, IS_SET_EVENT_FRAME);
+	if ( nRet != IS_SUCCESS )
+		return false;
+
+	nRet = is_InitEvent( m_hCam, m_hEvent, IS_SET_EVENT_FRAME);
+	if ( nRet != IS_SUCCESS )
+		return false;
 	//Start image capture and wait 1000 ms for event to occur
 	/*is_FreezeVideo (hCam, IS_DONT_WAIT);
 	is_WaitEvent (hCam, IS_SET_EVENT_FRAME, 1000);
 	*/
 
-  	
-
+	//Get Pixel clock range
 	UINT nRange[3];
 	ZeroMemory(nRange, sizeof(nRange));
 	nRet = is_PixelClock( m_hCam, IS_PIXELCLOCK_CMD_GET_RANGE, (void*)nRange, sizeof(nRange) );
-	/*UINT nPixelClockDefault;
+	//Get default Pixel clock
+	UINT nPixelClockDefault;
 	nRet = is_PixelClock(m_hCam, IS_PIXELCLOCK_CMD_GET_DEFAULT,
-                        (void*)&nPixelClockDefault, sizeof(nPixelClockDefault));
-	nPixelClockDefault = 30;*/
-	is_PixelClock( m_hCam, IS_PIXELCLOCK_CMD_SET, (void*)&nRange[1], sizeof(nRange[1]) );
-	//is_PixelClock( m_hCam, IS_PIXELCLOCK_CMD_SET, (void*)&nPixelClockDefault, sizeof(nPixelClockDefault) );
-	//is_PixelClock( m_hCam, IS_PIXELCLOCK_CMD_GET, (void*)&nPixelClockDefault, sizeof(nPixelClockDefault) );
-	//is_SetFrameRate( m_hCam, 30, &format.fps );	
-	double exposure = 0;
-	is_Exposure( m_hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, &exposure, sizeof(exposure)  );
-	
+						(void*)&nPixelClockDefault, sizeof(nPixelClockDefault));
+	//is_PixelClock( m_hCam, IS_PIXELCLOCK_CMD_SET, (void*)&nRange[0], sizeof(nRange[1]) );
+	//Set default Pixel clock	
+	is_PixelClock( m_hCam, IS_PIXELCLOCK_CMD_SET, (void*)&nPixelClockDefault, sizeof(nPixelClockDefault) );	
+
+
 	// start live video
-	is_CaptureVideo( m_hCam, IS_WAIT );
+	nRet = is_CaptureVideo( m_hCam, IS_WAIT );
+	if ( nRet != IS_SUCCESS )
+		return false;
 	//is_FreezeVideo( m_hCam, IS_DONT_WAIT );
 
+	if ( is_SetFrameRate(m_hCam, format.fps, &format.fps ) != IS_SUCCESS )
+	{
+		cerr << "Invalid frame rate" << endl;
+		return false;
+	}
+	
+	//Exposure = 1/FrameRate
+	double exposure = 4;
+	nRet = is_Exposure( m_hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, &exposure, sizeof(exposure)  );
+	if ( nRet != IS_SUCCESS )
+		return false;
 	//after start live video query framerate
-	is_GetFramesPerSecond( m_hCam, &format.fps );	
+	nRet = is_GetFramesPerSecond( m_hCam, &format.fps );
+	if ( nRet != IS_SUCCESS || format.fps == 0 )
+		return false;
 	
 	if ( aformat )
 		*aformat = format;
