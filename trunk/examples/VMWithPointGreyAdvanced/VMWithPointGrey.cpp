@@ -6,7 +6,7 @@
 #include <vector>
 #include "VideoManControl.h"
 #include "controllers/IPointGreyController.h"
-#include <SFML/Window.hpp>
+#include <SFML/Graphics.hpp>
 
 using namespace std;
 using namespace VideoMan;
@@ -64,12 +64,12 @@ bool InitializeVideoMan()
 
 void keyboardControl( sf::Window &App, sf::Clock &clock, const sf::Event &Event )
 {
-	switch( Event.Key.Code )
+	switch( Event.key.code )
 	{
-		case sf::Key::Escape:
-			App.Close();
+		case sf::Keyboard::Escape:
+			App.close();
 			break;					
-		case sf::Key::Left:
+		case sf::Keyboard::Left:
 		{
 			if ( roiSelected )
 			{
@@ -83,7 +83,7 @@ void keyboardControl( sf::Window &App, sf::Clock &clock, const sf::Event &Event 
 			}
 			break;
 		}
-		case sf::Key::Right:
+		case sf::Keyboard::Right:
 		{
 			if ( roiSelected )
 			{
@@ -97,7 +97,7 @@ void keyboardControl( sf::Window &App, sf::Clock &clock, const sf::Event &Event 
 			}
 			break;
 		}
-		case sf::Key::Up:
+		case sf::Keyboard::Up:
 		{
 			if ( roiSelected )
 			{
@@ -111,7 +111,7 @@ void keyboardControl( sf::Window &App, sf::Clock &clock, const sf::Event &Event 
 			}
 			break;
 		}
-		case sf::Key::Down:
+		case sf::Keyboard::Down:
 		{
 			if ( roiSelected )
 			{
@@ -125,24 +125,24 @@ void keyboardControl( sf::Window &App, sf::Clock &clock, const sf::Event &Event 
 			}
 			break;
 		}
-		case sf::Key::S:
+		case sf::Keyboard::S:
 		{
 			videoMan.showPropertyPage( inputID );
 			break;
 		}
-		case sf::Key::G:
+		case sf::Keyboard::G:
 		{
 			bool autoGain = controller->getGainControl();
 			controller->setGainControl( !autoGain );
 			break;
 		}
-		case sf::Key::R:
+		case sf::Keyboard::R:
 		{
 			if ( controller->resetImageROI() )
 			{
 				//give time to the camera to switch the image ROI
 				videoMan.resetImageROI( inputID );							
-				clock.Reset();
+				clock.restart();
 			}		
 			break;
 		}
@@ -151,22 +151,22 @@ void keyboardControl( sf::Window &App, sf::Clock &clock, const sf::Event &Event 
 
 void mouseControl( VideoManControl &videoMan, sf::Clock &clock, const sf::Event &Event )
 {
-	float xf = (float)Event.MouseButton.X;
-	float yf = (float)Event.MouseButton.Y;
+	float xf = (float)Event.mouseButton.x;
+	float yf = (float)Event.mouseButton.y;
 	//Transform from screen coordinates to image coordinates
 	int input = videoMan.screenToImageCoords( xf, yf );
 	//Check if the point is inside the input region
 	if ( input == inputID )
 	{
-		if ( Event.Type == sf::Event::MouseButtonPressed )
+		if ( Event.type == sf::Event::MouseButtonPressed )
 		{
 			xNewROI = (int)xf;
 			yNewROI = (int)yf;
 			selectingROI = true;
 		}			
-		else if ( Event.Type == sf::Event::MouseButtonReleased )
+		else if ( Event.type == sf::Event::MouseButtonReleased )
 		{	
-			if ( !selectingROI || clock.GetElapsedTime() < 0.5 )
+			if ( !selectingROI || clock.getElapsedTime().asSeconds() < 0.5 )
 				return;
 			selectingROI = false;
 			int Hmax, Vmax, Hunit, Vunit, Hpos, Vpos;
@@ -200,7 +200,7 @@ void mouseControl( VideoManControl &videoMan, sf::Clock &clock, const sf::Event 
 					heightROI = newHeightROI;
 					videoMan.setImageROI( inputID, xROI, yROI, widthROI, heightROI );
 					roiSelected = true;
-					clock.Reset();
+					clock.restart();
 				}
 			}
 		}
@@ -224,36 +224,35 @@ int main(int argc, char** argv)
 	cout << "R->Reset image ROI" << endl;	
 	cout << "========" << endl;
 
-	sf::Window app(sf::VideoMode(800, 600, 24), "VideoMan with PointGrey");
+	sf::RenderWindow app(sf::VideoMode(800, 600, 24), "VideoMan with PointGrey");
 	
 	if ( !InitializeVideoMan() )
 		return EXIT_FAILURE; 
-	videoMan.changeScreenSize( 0, 0, app.GetWidth(), app.GetHeight() );
+	videoMan.changeScreenSize( 0, 0, app.getSize().x, app.getSize().y );
 
 	sf::Clock clock;
-	while ( app.IsOpened() )
+	while ( app.isOpen() )
 	{
 		sf::Event newEvent;
-		while ( app.GetEvent( newEvent ) )
+		while ( app.pollEvent( newEvent ) )
 		{
-			if ( newEvent.Type == sf::Event::Closed )
-				app.Close();        
-			else if ( ( newEvent.Type == sf::Event::MouseButtonPressed || newEvent.Type == sf::Event::MouseButtonReleased ) && newEvent.MouseButton.Button == sf::Mouse::Left )
+			if ( newEvent.type == sf::Event::Closed )
+				app.close();        
+			else if ( ( newEvent.type == sf::Event::MouseButtonPressed || newEvent.type == sf::Event::MouseButtonReleased ) && newEvent.mouseButton.button == sf::Mouse::Left )
 				mouseControl( videoMan, clock, newEvent );
-			else if ( newEvent.Type == sf::Event::KeyPressed )
+			else if ( newEvent.type == sf::Event::KeyPressed )
 				keyboardControl( app, clock, newEvent );				
-			else if ( newEvent.Type == sf::Event::Resized)
-				videoMan.changeScreenSize( 0, 0, newEvent.Size.Width, newEvent.Size.Height );
+			else if ( newEvent.type == sf::Event::Resized)
+				videoMan.changeScreenSize( 0, 0, newEvent.size.width, newEvent.size.height );
 		}
 		
-		glClear( GL_COLOR_BUFFER_BIT );
+		app.clear();
 		videoMan.getFrame( inputID );
-		cout << clock.GetElapsedTime() << endl;
-		if ( clock.GetElapsedTime() > 0.2 )
+		if ( clock.getElapsedTime().asSeconds() > 0.2 )
 			videoMan.updateTexture( inputID );
 		videoMan.releaseFrame( inputID );
 		videoMan.renderFrame( inputID );
-		app.Display();
+		app.display();
 	}
 
 	videoMan.deleteController( (VideoManPrivate::VideoManInputController**)&controller );
