@@ -323,7 +323,7 @@ bool PGRCamera::resetCamera( )
 }
 
 bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat )
-{	
+{
 	serialNumber = aSerialNumber;
 
 	if ( aSerialNumber == 0 )
@@ -397,14 +397,14 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 		}
 		if ( supported )
 		{
-			//Set custom videomode and framerate						
+			//Set standard videomode and framerate						
 			Error error = cam.SetVideoModeAndFrameRate( m_videoMode, m_frameRate );
 			if (error != PGRERROR_OK)
 			{
 				PrintError( error );
 				return false;
 			}
-			//Initialize the format
+			//Initialize the format member
 			bool availableFormat = resolveFormat( m_videoMode, m_frameRate, format );	
 			if ( !availableFormat )
 				return false;
@@ -415,9 +415,9 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 			// Find the Format 7 mode that matches aFormat
 			// Query for available Format 7 modes			
 			bool found = false;
-			for ( int m = 0; !found && m < NUM_MODES; ++m )
+			for ( int currentMode = 0; !found && currentMode < NUM_MODES; ++currentMode )
 			{
-				m_fmt7Info.mode = static_cast<Mode>( MODE_0 + m );
+				m_fmt7Info.mode = static_cast<Mode>( MODE_0 + currentMode );
 				bool supported;			
 				Error error = cam.GetFormat7Info( &m_fmt7Info, &supported );
 				if (error != PGRERROR_OK)
@@ -522,6 +522,7 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
         PrintError( error );
         return false;
     }
+	m_bayerTileFormat = camInfo.bayerTileFormat;
 
 	ostringstream ss;
 	ss << aSerialNumber;
