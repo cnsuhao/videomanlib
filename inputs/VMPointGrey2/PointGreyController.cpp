@@ -198,9 +198,7 @@ void PointGreyController::convertRawToColor( const unsigned char* imgSrc, unsign
 {
 	FlyCapture2::Image rawImage;
 	rawImage.SetData( imgSrc, width * height );
-	CameraInfo camInfo;
-	cameraList[0]->cam.GetCameraInfo(&camInfo);	
-	rawImage.SetDimensions( height, width, width, PIXEL_FORMAT_RAW8, camInfo.bayerTileFormat );
+	rawImage.SetDimensions( height, width, width, PIXEL_FORMAT_RAW8, cameraList[0]->m_bayerTileFormat );
 	FlyCapture2::Image rgbImage;
 	rgbImage.SetData( imgDst, width * height * 3 );
 	rgbImage.SetDimensions( height, width, width * 3, PIXEL_FORMAT_RGB8, NONE );
@@ -209,9 +207,7 @@ void PointGreyController::convertRawToColor( const unsigned char* imgSrc, unsign
 
 bool PointGreyController::getBayerFormat(size_t &btf)
 {
-	CameraInfo camInfo;
-	Error error = cameraList[0]->cam.GetCameraInfo(&camInfo);
-	btf=camInfo.bayerTileFormat;
+	btf = cameraList[0]->m_bayerTileFormat;
 	return true;
 }
 

@@ -89,6 +89,7 @@ public:
 
 protected: 
 	FlyCapture2::Camera cam;
+	FlyCapture2::BayerTileFormat m_bayerTileFormat;
 
 	bool setImageROI( int x, int y, int width, int height );
 
@@ -185,7 +186,7 @@ private:
 	FlyCapture2::FrameRate m_frameRate;
 	FlyCapture2::Format7Info m_fmt7Info;
 	FlyCapture2::Format7ImageSettings m_fmt7ImageSettings;
-	FlyCapture2::Format7PacketInfo m_fmt7PacketInfo;				
+	FlyCapture2::Format7PacketInfo m_fmt7PacketInfo;
 
 
 	VideoManPrivate::VideoManInputController *controller;
