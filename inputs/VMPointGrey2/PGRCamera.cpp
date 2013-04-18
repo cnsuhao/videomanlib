@@ -233,6 +233,20 @@ FlyCapture2::VideoMode PGRCamera::buildVideoMode( VMInputFormat format )
 	}
 	return VIDEOMODE_FORMAT7;
 }
+void PGRCamera::getFirstPixelFormatSupported(const FlyCapture2::Format7Info &fmt7Info,FlyCapture2::PixelFormat &fmt7PixFmt)
+{
+	if (fmt7Info.pixelFormatBitField & PIXEL_FORMAT_RGB) fmt7PixFmt=PIXEL_FORMAT_RGB;
+	else if (fmt7Info.pixelFormatBitField & PIXEL_FORMAT_RGBU) fmt7PixFmt=PIXEL_FORMAT_RGBU;
+	else if (fmt7Info.pixelFormatBitField & PIXEL_FORMAT_BGR) fmt7PixFmt=PIXEL_FORMAT_BGR;
+	else if (fmt7Info.pixelFormatBitField & PIXEL_FORMAT_BGRU) fmt7PixFmt=PIXEL_FORMAT_BGRU;
+	else if (fmt7Info.pixelFormatBitField & PIXEL_FORMAT_422YUV8) fmt7PixFmt=PIXEL_FORMAT_422YUV8;
+	else if (fmt7Info.pixelFormatBitField & PIXEL_FORMAT_411YUV8) fmt7PixFmt=PIXEL_FORMAT_411YUV8;
+	else if (fmt7Info.pixelFormatBitField & PIXEL_FORMAT_MONO8) fmt7PixFmt=PIXEL_FORMAT_MONO8;
+	else if (fmt7Info.pixelFormatBitField & PIXEL_FORMAT_MONO16) fmt7PixFmt=PIXEL_FORMAT_MONO16;
+	else if (fmt7Info.pixelFormatBitField & PIXEL_FORMAT_RAW8) fmt7PixFmt=PIXEL_FORMAT_RAW8;
+	else if (fmt7Info.pixelFormatBitField & PIXEL_FORMAT_RAW16) fmt7PixFmt=PIXEL_FORMAT_RAW16;
+
+}
 
 FlyCapture2::PixelFormat PGRCamera::buildPixelFormat( VMPixelFormat pixelFormat )
 {
@@ -428,12 +442,16 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 				if ( supported && m_fmt7Info.maxWidth == aFormat->width && m_fmt7Info.maxHeight == aFormat->height &&
 					( aFormat->getPixelFormatOut() == UNKNOWN || m_fmt7Info.pixelFormatBitField & fmt7PixFmt ) )
 				{
+					
 					//same resolution and pixelFormat
 					found = true;
 				}
 			}
 			if ( found )
 			{
+				if (aFormat->getPixelFormatOut() == UNKNOWN ) 
+					getFirstPixelFormatSupported(m_fmt7Info,fmt7PixFmt);
+
 				format.SetFormat( m_fmt7Info.maxWidth, m_fmt7Info.maxHeight, aFormat->fps, resolvePixelFormat( fmt7PixFmt ), resolvePixelFormat( fmt7PixFmt ) );
 				m_fmt7ImageSettings.mode = m_fmt7Info.mode;
 				m_fmt7ImageSettings.offsetX = 0;
