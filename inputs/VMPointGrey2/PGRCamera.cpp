@@ -434,7 +434,7 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 			}
 			if ( found )
 			{
-				format.SetFormat( m_fmt7Info.maxWidth, m_fmt7Info.maxHeight, aFormat->fps, aFormat->getPixelFormatOut(), aFormat->getPixelFormatOut() );				
+				format.SetFormat( m_fmt7Info.maxWidth, m_fmt7Info.maxHeight, aFormat->fps, resolvePixelFormat( fmt7PixFmt ), resolvePixelFormat( fmt7PixFmt ) );
 				m_fmt7ImageSettings.mode = m_fmt7Info.mode;
 				m_fmt7ImageSettings.offsetX = 0;
 				m_fmt7ImageSettings.offsetY = 0;
