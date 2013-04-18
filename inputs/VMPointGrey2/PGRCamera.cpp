@@ -235,16 +235,16 @@ FlyCapture2::VideoMode PGRCamera::buildVideoMode( VMInputFormat format )
 }
 void PGRCamera::getFirstPixelFormatSupported(const FlyCapture2::Format7Info &fmt7Info,FlyCapture2::PixelFormat &fmt7PixFmt)
 {
-	if (fmt7Info.pixelFormatBitField & PIXEL_FORMAT_RGB) fmt7PixFmt=PIXEL_FORMAT_RGB;
-	else if (fmt7Info.pixelFormatBitField & PIXEL_FORMAT_RGBU) fmt7PixFmt=PIXEL_FORMAT_RGBU;
-	else if (fmt7Info.pixelFormatBitField & PIXEL_FORMAT_BGR) fmt7PixFmt=PIXEL_FORMAT_BGR;
-	else if (fmt7Info.pixelFormatBitField & PIXEL_FORMAT_BGRU) fmt7PixFmt=PIXEL_FORMAT_BGRU;
-	else if (fmt7Info.pixelFormatBitField & PIXEL_FORMAT_422YUV8) fmt7PixFmt=PIXEL_FORMAT_422YUV8;
-	else if (fmt7Info.pixelFormatBitField & PIXEL_FORMAT_411YUV8) fmt7PixFmt=PIXEL_FORMAT_411YUV8;
-	else if (fmt7Info.pixelFormatBitField & PIXEL_FORMAT_MONO8) fmt7PixFmt=PIXEL_FORMAT_MONO8;
-	else if (fmt7Info.pixelFormatBitField & PIXEL_FORMAT_MONO16) fmt7PixFmt=PIXEL_FORMAT_MONO16;
-	else if (fmt7Info.pixelFormatBitField & PIXEL_FORMAT_RAW8) fmt7PixFmt=PIXEL_FORMAT_RAW8;
-	else if (fmt7Info.pixelFormatBitField & PIXEL_FORMAT_RAW16) fmt7PixFmt=PIXEL_FORMAT_RAW16;
+	if ((fmt7Info.pixelFormatBitField & PIXEL_FORMAT_RGB)==PIXEL_FORMAT_RGB) fmt7PixFmt=PIXEL_FORMAT_RGB;
+	else if ((fmt7Info.pixelFormatBitField & PIXEL_FORMAT_RGBU) == PIXEL_FORMAT_RGBU) fmt7PixFmt=PIXEL_FORMAT_RGBU;
+	else if ((fmt7Info.pixelFormatBitField & PIXEL_FORMAT_BGR )==PIXEL_FORMAT_BGR) fmt7PixFmt=PIXEL_FORMAT_BGR;
+	else if ((fmt7Info.pixelFormatBitField & PIXEL_FORMAT_BGRU) == PIXEL_FORMAT_BGRU ) fmt7PixFmt=PIXEL_FORMAT_BGRU;
+	else if ((fmt7Info.pixelFormatBitField & PIXEL_FORMAT_422YUV8) == PIXEL_FORMAT_422YUV8) fmt7PixFmt=PIXEL_FORMAT_422YUV8;
+	else if ((fmt7Info.pixelFormatBitField & PIXEL_FORMAT_411YUV8) == PIXEL_FORMAT_411YUV8) fmt7PixFmt=PIXEL_FORMAT_411YUV8;
+	else if ((fmt7Info.pixelFormatBitField & PIXEL_FORMAT_MONO8) == PIXEL_FORMAT_MONO8) fmt7PixFmt=PIXEL_FORMAT_MONO8;
+	else if ((fmt7Info.pixelFormatBitField & PIXEL_FORMAT_MONO16) == PIXEL_FORMAT_MONO16) fmt7PixFmt=PIXEL_FORMAT_MONO16;
+	else if ((fmt7Info.pixelFormatBitField & PIXEL_FORMAT_RAW8) == PIXEL_FORMAT_RAW8) fmt7PixFmt=PIXEL_FORMAT_RAW8;
+	else if ((fmt7Info.pixelFormatBitField & PIXEL_FORMAT_RAW16) == PIXEL_FORMAT_RAW16) fmt7PixFmt=PIXEL_FORMAT_RAW16;
 
 }
 
