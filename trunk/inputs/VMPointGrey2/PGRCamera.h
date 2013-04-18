@@ -131,6 +131,8 @@ private:
 
 	FlyCapture2::FrameRate buildFrameRate( double fps );
 
+	void getFirstPixelFormatSupported(const FlyCapture2::Format7Info &fmt7Info,FlyCapture2::PixelFormat &fmt7PixFmt);
+
 	FlyCapture2::PixelFormat buildPixelFormat( VideoMan::VMPixelFormat pixelFormat );
 
 	unsigned int getRegisterValue(unsigned long _register );
