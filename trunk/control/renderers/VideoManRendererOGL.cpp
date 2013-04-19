@@ -62,6 +62,7 @@ void printGLerror( std::string message, GLenum glErr )
 
 VideoManRendererOGL::VideoManRendererOGL(void)
 {
+	//supportedFormats.push_back(RGB15);
 	supportedFormats.push_back(RGB24);
 	supportedFormats.push_back(BGR24);
 	supportedFormats.push_back(RGB32);
@@ -210,19 +211,14 @@ bool VideoManRendererOGL::generateTexture( RendererOGLInput &inputOGL )
 	switch ( inputOGL.pixelFormat )
 	{
 		case GREY16:
+		case RAW16:
 		{
 			inputOGL.oglTextureFormat = GL_LUMINANCE;
 			inputOGL.internalFormat = GL_LUMINANCE16;
 			inputOGL.dataType = GL_UNSIGNED_SHORT;			
 			break;
 		}
-		case GREY8:	
-		{
-			inputOGL.oglTextureFormat = GL_LUMINANCE;
-			inputOGL.internalFormat = 1;
-			inputOGL.dataType = GL_UNSIGNED_BYTE;
-			break;
-		}
+		case GREY8:
 		case RAW8:
 		{
 			inputOGL.oglTextureFormat = GL_LUMINANCE;
@@ -244,6 +240,13 @@ bool VideoManRendererOGL::generateTexture( RendererOGLInput &inputOGL )
 			inputOGL.dataType = GL_UNSIGNED_BYTE;
 			break;
 		}
+		/*case RGB15:
+		{
+			inputOGL.oglTextureFormat = GL_RGB;
+			inputOGL.internalFormat = GL_RGB5;
+			inputOGL.dataType = GL_UNSIGNED_BYTE;
+			break;
+		}*/
 		case BGR32:
 		{
 			inputOGL.oglTextureFormat = GL_BGRA;

@@ -440,7 +440,7 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 					return false;
 				}
 				if ( supported && m_fmt7Info.maxWidth == aFormat->width && m_fmt7Info.maxHeight == aFormat->height &&
-					( aFormat->getPixelFormatOut() == UNKNOWN || m_fmt7Info.pixelFormatBitField & fmt7PixFmt ) )
+					( aFormat->getPixelFormatOut() == UNKNOWN || m_fmt7Info.pixelFormatBitField & fmt7PixFmt == fmt7PixFmt ) )
 				{
 					
 					//same resolution and pixelFormat
