@@ -2,6 +2,17 @@
 
 #include "VideoManInputController.h"
 
+/** \brief If you have a PointGrey camera you can access more features with this interface through PointGrey's SDK
+\par Demo Code:
+\code
+	IPointGreyController *controller = (IPointGreyController*)videoMan.createController( "POINTGREY_CONTROLLER2" );
+	if ( controller )			
+	{		
+		...
+		videoMan.deleteController( &controller ); //not required
+	}
+\endcode
+*/
 class IPointGreyController : public VideoManPrivate::VideoManInputController
 {
 public:
