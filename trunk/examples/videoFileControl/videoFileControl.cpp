@@ -117,11 +117,10 @@ bool InitializeVideoMan()
 		VMInputIdentification device;
 		//Initialize one input from a video file
 		device.fileName = videoFile;
-		#ifdef WIN32
+		if ( videoMan.supportedIdentifier( "DSHOW_VIDEO_FILE" ) )
 			device.identifier = "DSHOW_VIDEO_FILE"; //using directshow	
-		#elif linux
+		else if ( videoMan.supportedIdentifier( "HIGHGUI_VIDEO_FILE" ) )
 			device.identifier = "HIGHGUI_VIDEO_FILE"; //using highugui	
-		#endif
 		//play in real-time
 		format.clock = true;
 		//Render the audio stream
