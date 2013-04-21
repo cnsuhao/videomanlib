@@ -1,7 +1,8 @@
 #define _CRT_SECURE_NO_DEPRECATE //warning C4996: 'strcpy' was declared deprecated
 #include "GLWindow.h"
-#include <qapplication.h>
-#include <qtimer.h>
+#include <QApplication>
+#include <QString>
+#include <QTimer>
 #include <string>
 #include <iostream>
 #include "cameraSelector.h"
@@ -76,9 +77,8 @@ void GLWindow::openVideoFile()
 	int videoInputID;
 	VMInputFormat format;
 	VMInputIdentification device;	
-	string fileNameSt = QString(fileName.toAscii()).toStdString();
-	device.fileName = new char[fileNameSt.length() + 1];
-	strcpy( device.fileName, fileNameSt.c_str() );
+	device.fileName = new char[fileName.length() + 1];
+	strcpy( device.fileName, fileName.toAscii().data() );
 	if ( m_videoMan.supportedIdentifier( "DSHOW_VIDEO_FILE" ) )
 		device.identifier = "DSHOW_VIDEO_FILE"; //using directshow	
 	else if ( m_videoMan.supportedIdentifier( "HIGHGUI_VIDEO_FILE" ) )
@@ -177,7 +177,7 @@ void GLWindow::resizeGL( int width, int height )
 void GLWindow::paintGL()
 {
 	glClear( GL_COLOR_BUFFER_BIT );
-	for ( int i = 0; i < m_videoInputIDs.size(); ++i )
+	for ( int i = 0; i < (int)m_videoInputIDs.size(); ++i )
 	{
 		if ( m_videoMan.getFrame( m_videoInputIDs[i] ) )
 		{
