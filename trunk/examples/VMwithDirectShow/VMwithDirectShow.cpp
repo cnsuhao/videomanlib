@@ -120,7 +120,7 @@ bool InitializeVideoMan()
 		if ( ( inputID = videoMan.addVideoInput( device, &format ) ) != -1 )
 		{
 			videoInputIDs.push_back( inputID );
-			//videoMan.showPropertyPage( inputID );
+			videoMan.showPropertyPage( inputID );
 			videoMan.getFormat( inputID, format );
 			printf("Initilized camera: %s %s\n", device.friendlyName ? device.friendlyName : "", device.uniqueName ? device.uniqueName : "" );						
 			printf("resolution: %d %d\n", format.width, format.height );
