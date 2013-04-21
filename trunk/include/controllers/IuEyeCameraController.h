@@ -1,15 +1,20 @@
 #pragma once
 #include "VideoManInputController.h"
 
-/** \brief If you have an IDS uEye camera you can access more features with this interface trough uEye SDK
+/** \brief Advanced controller for IDS uEye cameras running with VMIDSuEye
 \par Demo Code:
 \code
-	IuEyeCameraController *controller = (IuEyeCameraController*)videoMan.createController( "DSHOW_uEYE_CAMERA_CONTROLLER" );
+	videoMan.getAvailableDevices( "IDS_uEye_CAMERA", list, numDevices );
+	inputID = videoMan.addVideoInput( list[0], &format );
+	...
+	IuEyeCameraController *controller = (IuEyeCameraController.h*)videoMan.createController( inputID, "uEye_CAMERA_CONTROLLER" );
 	if ( controller )			
-	{		
-		...
-		videoMan.deleteController( &controller ); //not required
+	{
+		controller->setFrameRate( 50 );				
+		controller->setShutterTime( 4 );
 	}
+	...
+	videoMan.deleteController( &controller );	 
 \endcode
 */
 class IuEyeCameraController :public VideoManPrivate::VideoManInputController

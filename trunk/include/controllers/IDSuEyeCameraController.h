@@ -1,16 +1,19 @@
 #pragma once
 #include "VideoManInputController.h"
 
-/** \brief If you have an IDS uEye camera you can access more features with this interface trough VMDirectShow
+/** \brief Advanced controller for IDS uEye cameras running with VMDirectShow
 \par Demo Code:
 \code
-	IDSuEyeCameraController *controller = (IDSuEyeCameraController*)videoMan.createController( "DSHOW_uEYE_CAMERA_CONTROLLER" );
+	videoMan.getAvailableDevices( "DSHOW_CAPTURE_DEVICE", list, numDevices );
+	inputID = videoMan.addVideoInput( list[0], &format ); //Suppose list[0] is a uEye camera
+	...
+	IDSuEyeCameraController *controller = (IDSuEyeCameraController.h*)videoMan.createController( inputID, "DSHOW_uEYE_CAMERA_CONTROLLER" );
 	if ( controller )			
 	{
-		controller->SetExposureTime( 1000000 );
-		...
-		videoMan.deleteController( &controller ); //not required
+		controller->SetExposureTime( 100 );				
 	}
+	...
+	videoMan.deleteController( &controller );
 \endcode
 */
 class IDSuEyeCameraController :public VideoManPrivate::VideoManInputController
@@ -27,7 +30,7 @@ public:
 	/** \brief Get the current possible min, max and interval for exposure time.		
 	 	\param 	min [out] Receives the minimum possible exposure time.
 		\param 	max [out] Receives the minimum possible exposure time.
-     	\param 	plInterval [out] Receives the current possible step width.     
+     	\param 	interval [out] Receives the current possible step width.     
 	*/
 	virtual void getExposureRange(long &min, long &max, long &interval) = 0;
 
@@ -37,7 +40,7 @@ public:
 	virtual void getExposureTime( long &val ) = 0;
 
 	/** \brief Returns the used bandwith
-		\param 	lClock      Receives the overall pixelclock sum.
+		\param 	bandWidth [out] Receives the used bandwitdh
 	 */
 	virtual void GetUsedBandwith(long &bandWidth) = 0;
 

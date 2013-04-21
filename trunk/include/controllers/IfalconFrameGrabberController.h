@@ -1,15 +1,19 @@
 #pragma once
 #include "VideoManInputController.h"
 
-/** \brief If you have an IDS Falcon frame grabber you can access more features with this interface trough IDS SDK
+/** \brief Advanced controller for IDS Falcon frame grabber running with VMIDSFalcon
 \par Demo Code:
 \code
-	IfalconFrameGrabberController *controller = (IfalconFrameGrabberController*)videoMan.createController( "IDS_FALCON_FRAME_GRABBER_CONTROLLER" );
+	videoMan.getAvailableDevices( "IDS_FALCON_FRAME_GRABBER", list, numDevices );
+	inputID = videoMan.addVideoInput( list[0], &format );
+	...
+	IfalconFrameGrabberController *controller = (IfalconFrameGrabberController.h*)videoMan.createController( inputID, "IDS_FALCON_FRAME_GRABBER_CONTROLLER" );
 	if ( controller )			
-	{		
-		...
-		videoMan.deleteController( &controller ); //not required
+	{
+		controller->SetExposureTime( 100 );				
 	}
+	...
+	videoMan.deleteController( &controller );
 \endcode
 */
 class IfalconFrameGrabberController :public VideoManPrivate::VideoManInputController

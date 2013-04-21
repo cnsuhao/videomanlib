@@ -1,15 +1,19 @@
 #pragma once
 #include "VideoManInputController.h"
 
-/** \brief If you have a PointGrey camera you can access more features with this interface trough VMDirectShow
+/** \brief Advanced controller for PointGrey cameras running with VMDirectShow
 \par Demo Code:
 \code
-	IDSPointGreyController *controller = (IDSPointGreyController.h*)videoMan.createController( "DSHOW_POINTGREY_CONTROLLER" );
+	videoMan.getAvailableDevices( "DSHOW_CAPTURE_DEVICE", list, numDevices );
+	inputID = videoMan.addVideoInput( list[0], &format ); //Suppose list[0] is a PointGrey camera
+	...
+	IDSPointGreyController *controller = (IDSPointGreyController.h*)videoMan.createController( inputID, "DSHOW_POINTGREY_CONTROLLER" );
 	if ( controller )			
 	{
-		...
-		videoMan.deleteController( &controller ); //not required
+		...		
 	}
+	...
+	videoMan.deleteController( &controller );
 \endcode
 */
 class IDSPointGreyController : public VideoManPrivate::VideoManInputController
