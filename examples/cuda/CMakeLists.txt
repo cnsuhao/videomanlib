@@ -1,12 +1,12 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 FIND_PACKAGE(CUDA)
-FIND_PACKAGE( GLUT REQUIRED )
+FIND_PACKAGE( Freeglut REQUIRED )
 FIND_PACKAGE( OpenGL REQUIRED )
 FIND_PACKAGE( Freetype REQUIRED )
 
-INCLUDE_DIRECTORIES( ${GLUT_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR} ${FREETYPE_INCLUDE_DIRS})
-CUDA_ADD_EXECUTABLE(exampleVMwithCuda VMwithCuda.cpp cudaEffect.cu cudaEffect.cuh FreeType.cpp FreeType.h)
+INCLUDE_DIRECTORIES( ${FREEGLUT_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR} ${FREETYPE_INCLUDE_DIRS})
+CUDA_ADD_EXECUTABLE(exCuda VMwithCuda.cpp cudaEffect.cu cudaEffect.cuh FreeType.cpp FreeType.h)
 
-TARGET_LINK_LIBRARIES( exampleVMwithCuda VideoMan ${GLUT_glut_LIBRARY} ${OPENGL_LIBRARIES} ${FREETYPE_LIBRARIES})
-set_target_properties( exampleVMwithCuda PROPERTIES FOLDER "examples")
-add_dependencies( exampleVMwithCuda VideoMan )
+TARGET_LINK_LIBRARIES( exCuda VideoMan ${FREEGLUT_LIBRARIES} ${OPENGL_LIBRARIES} ${FREETYPE_LIBRARIES})
+set_target_properties( exCuda PROPERTIES FOLDER "examples")
+add_dependencies( exCuda VideoMan )

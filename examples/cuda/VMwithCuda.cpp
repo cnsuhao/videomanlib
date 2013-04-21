@@ -1,7 +1,7 @@
 #ifdef WIN32
 	#include <windows.h>
 #endif
-#include <GL/glut.h>
+#include <GL/freeglut.h>
 #include <iostream>
 #include <math.h>
 
@@ -61,8 +61,8 @@ void glutKeyboard(unsigned char key, int x, int y)
 	{
 		case 27:
 		{
-			clear();			
-			exit(0);
+			glutLeaveMainLoop();
+			break;
 		}
 		case 'e':
 		case 'E':
@@ -75,15 +75,13 @@ void glutKeyboard(unsigned char key, int x, int y)
 		{
 			float x,y,zoom;
 			videoMan.getRendererZoom( inputID, x, y, zoom );
-			videoMan.setRendererZoom( inputID, x, y, zoom * 1.25f );
+			videoMan.setRendererZoom( inputID, slider, y, zoom * 1.25f );
 			break;
 		}
 		case 'r':
 		case 'R':
 		{
-			float x,y,zoom;
-			videoMan.getRendererZoom( inputID, x, y, zoom );
-			videoMan.setRendererZoom( inputID, x, y, 1 );
+			videoMan.resetRendererZoom( inputID );			
 			break;
 		}
 		case 'p':
@@ -154,11 +152,6 @@ void glutMouseMotionFunc(int x, int y)
 	}
 }
 
-void InitializeOpenGL()
-{
-}
-
-
 bool InitializeVideoMan()
 {
 	VMInputIdentification device;
@@ -175,7 +168,6 @@ bool InitializeVideoMan()
 		#endif
 		//play in real-time
 		format.clock = true;
-		format.dropFrames = true;
 		format.renderAudio = true;		
 		if ( ( inputID = videoMan.addVideoInput( device, &format ) ) != -1 )
 		{
@@ -186,24 +178,71 @@ bool InitializeVideoMan()
 			videoLength = videoMan.getLengthSeconds( inputID );
 			printf("duration: %f seconds\n\n", videoLength );
 
-			if ( format.nChannels != 3 || format.depth != 8 )
-				cout << "The video must have 3 channels 8bit" << endl;
-
-			videoMan.playVideo( inputID );		
-		
-			//Create a user input for the processed image
-			device.identifier = "USER_INPUT";
-			processedID = -1;
-			processedID = videoMan.addVideoInput( device, &format );
-			if ( processedID != -1 )
-			{
-				processedImg = new char[processedImg, format.width * format.height * format.nChannels];
-				inputImg = new char[processedImg, format.width * format.height * format.nChannels];
-				videoMan.setUserInputImage( processedID, processedImg );
-			}
+			videoMan.playVideo( inputID );
 		}
 		else
+		{
+			cout << "Video not initialized\n" << endl;
 			return false;
+		}
+	}
+	else
+	{
+		//Initialize one input from a camera	
+		//std::vector<VMInputIdentification> list;
+		//videoMan.getAvailableDevices( list ); //list all the available devices
+		VMInputIdentification *list;
+		int numDevices;
+		videoMan.getAvailableDevices( &list, numDevices ); //list all the available devices
+		if ( numDevices == 0 )			
+		{
+			cout << "There is no available camera\n" << endl;
+			videoMan.freeAvailableDevicesList(  &list, numDevices );
+			return false;
+		}
+		//Intialize on of the devices
+		int d = 0;
+		inputID = -1;
+		while ( d < numDevices && inputID == -1 )
+		{			
+			device = list[d];
+			//Show dialog to select the format
+			format.showDlg = true;
+			format.SetFormat( 640, 480, 30, VM_RGB24, VM_RGB24 );			
+			if ( ( inputID = videoMan.addVideoInput( device, &format ) ) != -1 )
+			{
+				videoMan.showPropertyPage( inputID );
+				videoMan.getFormat( inputID, format );
+				if ( device.friendlyName )
+					cout << "Initilized camera: " << device.friendlyName << endl;
+				cout << "resolution: " <<  format.width << " " << format.height << endl;
+				cout << "FPS: " << format.fps << endl;
+			}
+			++d;
+		}
+		videoMan.freeAvailableDevicesList(  &list, numDevices );
+		if ( inputID == -1 )
+		{
+			cout << "Camera not initialized\n" << endl;
+			return false;
+		}
+	}
+
+	if ( format.nChannels != 3 || format.depth != 8 )
+	{
+		cout << "The video must have 3 channels 8bit" << endl;
+		return false;
+	}
+
+	//Create a user input for the processed image
+	device.identifier = "USER_INPUT";
+	processedID = -1;
+	processedID = videoMan.addVideoInput( device, &format );
+	if ( processedID != -1 )
+	{
+		processedImg = new char[processedImg, format.width * format.height * format.nChannels];
+		inputImg = new char[processedImg, format.width * format.height * format.nChannels];
+		videoMan.setUserInputImage( processedID, processedImg );
 	}
 	
 	slider = format.width * 0.5f;
@@ -222,7 +261,7 @@ void printText( int vx, int vy, int vw, int vh, int x, int y, const char *text )
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
 	glColor4f( 1.0f, 1.0f, 1.0f, 0.9f);
-	freetype::print( font, x, y, text );
+	freetype::print( font, (float)x, (float)y, text );
 	glDisable( GL_BLEND );
 }
 
@@ -261,11 +300,11 @@ void glutDisplay(void)
 		glTexCoord2f( l, b );
 		glVertex2f( 0, 0 );
 		glTexCoord2f( l, u );
-		glVertex2f( 0, format.height );		
+		glVertex2f( 0.0f, (float)format.height );		
 		glTexCoord2f( r * slider / format.width, u );
-		glVertex2f( slider, format.height );
+		glVertex2f( slider, (float)format.height );
 		glTexCoord2f( r * slider / format.width, b );
-		glVertex2f( slider, 0 );		
+		glVertex2f( slider, 0.0f );		
 	glEnd();
 
 	//Render the slider
@@ -274,20 +313,20 @@ void glutDisplay(void)
 	glLineWidth( 4.0f );
 	glBegin( GL_LINES );
 		glVertex2f( slider, 0 );
-		glVertex2f( slider, format.height );
+		glVertex2f( slider, (float)format.height );
 	glEnd();
 	glColor3f( 1.0f, 1.0f, 1.0f );
 	glLineWidth( 1.0f );
 	glBegin( GL_LINES );
 		glVertex2f( slider, 0 );
-		glVertex2f( slider, format.height );
+		glVertex2f( slider, (float)format.height );
 	glEnd();
 
 	//Check if the video file (input number 0) has reached the end	
 	if ( videoMan.getPositionSeconds( inputID ) == videoLength )
 		videoMan.goToFrame( 0, 0 ); //restart from the begining
 
-	printText( 0, 0, slider, screenHeight, 0, screenHeight - 150, effectsname[effect] );	
+	printText( 0, 0, (int)slider, screenHeight, 0, screenHeight - 150, effectsname[effect] );	
 	printText( 0, 0, screenWidth, screenHeight, 10, 200, "VideoMan Library (CUDA example) 2011 \nhttp://videomanlib.sourceforge.net \nJavier Barandiaran Martirena" );
 	
     glutSwapBuffers();
@@ -309,36 +348,23 @@ void showHelp()
 
 int main(int argc, char** argv)
 {
-	cout << "This example initilizes one input from a video file" << endl;
+	cout << "This example initilizes a video input" << endl;
 	cout << "Usage: VMwithCuda.exe filePath(string)" << endl;	
 	cout << "Example: VMwithCuda.exe c:\\video.avi" << endl;	
+	cout << "If you don't specify a filepath, a camera will be initialized" << endl;
 	cout << "=====================================================" << endl;
 	if ( argc > 1 )
 		dirPath = argv[1];
-	else
-		return 0;
 	glutInitDisplayMode( GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA | GLUT_MULTISAMPLE );
     glutInitWindowPosition( 0, 0 );
-    glutInitWindowSize( 1280, 720 );
+    glutInitWindowSize( 800, 600 );
     glutInit( &argc, argv );
-
     glutCreateWindow("VideoMan with NVidia CUDA");
+	glutHideWindow();
+   
+    if ( !InitializeVideoMan() )
+		return -1;
 
-    glutReshapeFunc(glutResize);
-    glutDisplayFunc(glutDisplay);
-    glutIdleFunc(glutDisplay);
-    glutKeyboardFunc(glutKeyboard);
-	glutSpecialFunc(glutSpecialKeyboard);
-	glutMouseFunc( glutMouseFunc );
-	glutMotionFunc( glutMouseMotionFunc );
-
-    InitializeOpenGL();
-	
-	if ( !InitializeVideoMan() )
-	{
-		return 0;
-	}
-	
 	allocGPUMem( format.width, format.height, format.nChannels * format.depth / 8 );
 		
 	fullScreened = false;
@@ -351,15 +377,23 @@ int main(int argc, char** argv)
 	catch(runtime_error e)
 	{
 		cerr << e.what() << endl;
-		cerr << "Font file font.ttf not found. Copy that file to the working directory" << e.what() << endl;
+		cerr << "Font file font.ttf not found. Copy that file to the working directory /build_path/../examples/cuda" << endl;
 		clear();
 		return -1;
 	}
+
+	glutShowWindow();
+	glutReshapeFunc(glutResize);
+    glutDisplayFunc(glutDisplay);
+    glutIdleFunc(glutDisplay);
+    glutKeyboardFunc(glutKeyboard);
+	glutSpecialFunc(glutSpecialKeyboard);
+	glutMouseFunc( glutMouseFunc );
+	glutMotionFunc( glutMouseMotionFunc );
+	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
+
 	showHelp();
-
     glutMainLoop();
-
 	clear();
-
 	return 0;
 }

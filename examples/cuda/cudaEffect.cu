@@ -195,7 +195,7 @@ void executeCudaKernel( int effect, unsigned char *img, int width, int height, i
 	const int sizeBytes = sizeof(unsigned char) * width * height * BPP;
 	cudaError_t err = cudaMemcpy( srcd, img, sizeBytes, cudaMemcpyHostToDevice );
 	const int threads = 16;
-	dim3 dimGrid( width / (float)threads, height / (float)threads );	
+	dim3 dimGrid( static_cast<unsigned int>( width / (float)threads ), static_cast<unsigned int>( height / (float)threads ) );	
 	dim3 dimBlock( threads,  threads );
 	switch(effect)
 	{
