@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QMessageBox>
 #include "mainWindow.h"
 
 int main(int argc, char *argv[])
@@ -10,6 +11,8 @@ int main(int argc, char *argv[])
 
 	//window.showFullScreen();
 	window.show();
+
+	QMessageBox::about( NULL, "VideoMan Qt example", "This example shows how to create a MDI application with Qt. Each subwindow will contain a QGlWidget with its own VideoMan object" );
 
 	return app.exec();
 }

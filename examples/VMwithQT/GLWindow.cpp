@@ -4,6 +4,8 @@
 #include <qtimer.h>
 #include <string>
 #include <iostream>
+#include "cameraSelector.h"
+
 
 using namespace std;
 using namespace VideoMan;
@@ -62,13 +64,18 @@ void GLWindow::changeMode1()
 
 void GLWindow::openVideoFile()
 {	
-	QString fileName = QFileDialog::getOpenFileName();
+	QString fileName = QFileDialog::getOpenFileName( this, tr("Openg Video File"), m_dirPath );
 	if ( fileName.isEmpty() )
 		return;
+	//Get the path of the file
+	QDir dir( fileName );
+	dir.cdUp();
+	m_dirPath = dir.absolutePath();
+
+	//Initialize one input from a video file
 	int videoInputID;
 	VMInputFormat format;
-	VMInputIdentification device;
-	//Initialize one input from a video file
+	VMInputIdentification device;	
 	string fileNameSt = QString(fileName.toAscii()).toStdString();
 	device.fileName = new char[fileNameSt.length() + 1];
 	strcpy( device.fileName, fileNameSt.c_str() );
@@ -80,7 +87,6 @@ void GLWindow::openVideoFile()
 		QMessageBox::critical( this, tr("Video files not supported"), tr("You have to build VMDirectShow or VMHighgui" ) );
 	//play in real-time
 	format.clock = true;
-	format.dropFrames = true;
 	//Render the audio stream
 	format.renderAudio = true;
 	//Initialize the video file is the path 
@@ -99,26 +105,62 @@ void GLWindow::openCamera()
 	VMInputIdentification *deviceList;
 	int numDevices;
 	m_videoMan.getAvailableDevices( &deviceList, numDevices ); //list all the available devices
-	int inputID = -1;
+
+	//Show camera selector dialog
+	CameraSelector *cameraSelector = new CameraSelector( this, true, true );	
+	//fill the devices list
+	for ( int i = 0; i < numDevices; i++ )
+	{
+		QListWidgetItem *lst =new QListWidgetItem( QString( deviceList[i].identifier ) + QString( " - " ) + QString( deviceList[i].friendlyName ), cameraSelector->listWidget );
+		cameraSelector->listWidget->insertItem(i,lst);
+	}		
+	cameraSelector->listWidget->show();
+	bool error = false;
+	vector<VMInputIdentification> selected;	
+	if ( cameraSelector->listWidget->count() != 0 )
+	{
+		cameraSelector->exec();
+		if ( cameraSelector->isAccepted() )
+		{
+			vector<int> selectedIndexes;
+			cameraSelector->getSelectedIndexes( selectedIndexes );
+			for ( int s = 0; s < (int)selectedIndexes.size(); ++s )
+				selected.push_back( deviceList[selectedIndexes[s]] );
+		}
+		else
+			error = true;		
+	}
+	else
+	{
+		QMessageBox::warning( this, tr("Open Camera"), tr("No device available"), QMessageBox::Ok );
+		error = true;
+	}
+	delete cameraSelector;	
+	if ( error || selected.empty() )
+	{
+		m_videoMan.freeAvailableDevicesList( &deviceList, numDevices );
+		return;
+	}
+
+	//Initialize the selected devices
 	int d = 0;
 	makeCurrent();
-	while ( d < numDevices && inputID == -1 )
+	for ( int d = 0; d < (int)selected.size(); ++d )
 	{
 		VMInputFormat format;
-		VMInputIdentification device = deviceList[d];
+		VMInputIdentification device = selected[d];
 		format.showDlg = true;
 		format.clock = true;
-		format.dropFrames = true;
+		int inputID;
 		if ( ( inputID = m_videoMan.addVideoInput( device, &format ) ) != -1 )
 		{
 			m_videoMan.showPropertyPage( inputID );
 			m_videoInputIDs.push_back( inputID );
 		}
-		++d;
+		else
+			QMessageBox::critical( this, tr("Error"), tr("Initializing camera " ) + QString( device.friendlyName ) );
 	}	
-	m_videoMan.freeAvailableDevicesList( &deviceList, numDevices );
-	if ( inputID == -1 )
-		QMessageBox::critical( this, tr("Error"), tr("Camera not found" ) );
+	m_videoMan.freeAvailableDevicesList( &deviceList, numDevices );		
 }
 
 
@@ -137,9 +179,11 @@ void GLWindow::paintGL()
 	glClear( GL_COLOR_BUFFER_BIT );
 	for ( int i = 0; i < m_videoInputIDs.size(); ++i )
 	{
-		m_videoMan.getFrame( m_videoInputIDs[i] );
-		m_videoMan.updateTexture( m_videoInputIDs[i] );
-		m_videoMan.releaseFrame( m_videoInputIDs[i] );
+		if ( m_videoMan.getFrame( m_videoInputIDs[i] ) )
+		{
+			m_videoMan.updateTexture( m_videoInputIDs[i] );
+			m_videoMan.releaseFrame( m_videoInputIDs[i] );
+		}
 		m_videoMan.renderFrame( m_videoInputIDs[i] );
 		m_videoMan.drawInputBorder( m_videoInputIDs[i], 1, 0.6f, 0.6f, 0.6f  );
 	}

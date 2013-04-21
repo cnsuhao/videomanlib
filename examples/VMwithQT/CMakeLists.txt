@@ -11,12 +11,13 @@ ENDIF( QT_FOUND )
 INCLUDE_DIRECTORIES( ${QT_INCLUDES} ${OPENGL_INCLUDE_DIR})
 
 SET( MOC_FILES
- GLWindow.h )
+ GLWindow.h
+cameraSelector.h )
 
 QT4_WRAP_CPP(MOC_SOURCE_FILES ${MOC_FILES}  )
 SOURCE_GROUP( "Generated Files" FILES ${MOC_SOURCE_FILES} )
 
-ADD_EXECUTABLE( exampleVMwithQT VMwithQT.cpp GLWindow.cpp GLWindow.h ${MOC_SOURCE_FILES} )
-TARGET_LINK_LIBRARIES( exampleVMwithQT VideoMan ${QT_LIBRARIES} ${OPENGL_LIBRARIES} )
-set_target_properties( exampleVMwithQT PROPERTIES FOLDER "examples")
-add_dependencies( exampleVMwithQT VideoMan )
+ADD_EXECUTABLE( exQT VMwithQT.cpp GLWindow.cpp GLWindow.h cameraSelector.cpp cameraSelector.h ${MOC_SOURCE_FILES} )
+TARGET_LINK_LIBRARIES( exQT VideoMan ${QT_LIBRARIES} ${OPENGL_LIBRARIES} )
+set_target_properties( exQT PROPERTIES FOLDER "examples")
+add_dependencies( exQT VideoMan )
