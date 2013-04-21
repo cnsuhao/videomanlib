@@ -19,6 +19,8 @@ CaptureDeviceDShow::CaptureDeviceDShow(void)
 	cameraControl = NULL;
 	captureDlgs = NULL;
 	crossbar = NULL;
+	ghSemaphore = CreateSemaphore( NULL, 0, 1, NULL);
+	ghMutex = CreateMutex( NULL, FALSE, NULL);
 }
 
 CaptureDeviceDShow::~CaptureDeviceDShow(void)
@@ -43,6 +45,10 @@ CaptureDeviceDShow::~CaptureDeviceDShow(void)
 		crossbar = NULL;
 	}
 	SAFE_RELEASE( mediaSample );
+
+	ReleaseSemaphore( ghSemaphore, 1, NULL );
+	CloseHandle( ghSemaphore );
+	CloseHandle( ghMutex );
 } 
 
 bool CaptureDeviceDShow::initCamera( const char *friendlyName, const char *devicePath, VMInputFormat *aFormat )
@@ -167,19 +173,18 @@ HRESULT CaptureDeviceDShow::prepareMedia( std::string &friendlyName, std::string
 		format = *aFormat;
 
 	//Find capture device and add video input source filter
-	hr = findCaptureDevice( &videoSource, friendlyName, devicePath );
-	if ( SUCCEEDED( hr ) )
+	if ( SUCCEEDED( hr = findCaptureDevice( &videoSource, friendlyName, devicePath ) ) )	
 	{
-		if ( FAILED(hr = pGB->AddFilter(videoSource, _bstr_t(friendlyName.c_str()) )))//L"Video Source")))
+		if ( FAILED( hr = pGB->AddFilter(videoSource, _bstr_t(friendlyName.c_str()) )))//L"Video Source")))
 			return hr;
 	}
 	else
-		return E_FAIL;
+		return hr;
 
 	//Get capture dialog interface
 	hr = pCGB->FindInterface(&PIN_CATEGORY_CAPTURE,
 						  &MEDIATYPE_Video, videoSource,
-						  IID_IAMVfwCaptureDialogs, (void **)&captureDlgs);
+						  IID_IAMVfwCaptureDialogs, (void **)&captureDlgs );
 
 	//Create the crossbar if necessary
 	if ( !CreateCrossbar() )
@@ -195,21 +200,61 @@ HRESULT CaptureDeviceDShow::prepareMedia( std::string &friendlyName, std::string
 
 	//Get source stream config interface
 	IAMStreamConfig *pStreamConfig = NULL;
-	hr = pCGB->FindInterface(&PIN_CATEGORY_CAPTURE,NULL,videoSource,IID_IAMStreamConfig,(void**)&pStreamConfig);
-	if (FAILED(hr))		
+	if ( FAILED( hr = pCGB->FindInterface(&PIN_CATEGORY_CAPTURE,NULL,videoSource,IID_IAMStreamConfig,(void**)&pStreamConfig) ) )	
 		return hr;
 
+	//Get possible formats
+	/*int iCount = 0, iSize = 0;
+	hr = pStreamConfig->GetNumberOfCapabilities(&iCount, &iSize);
+	if (iSize == sizeof(VIDEO_STREAM_CONFIG_CAPS))
+	{
+		for (int iFormat = 0; iFormat < iCount; iFormat++)
+		{
+			VIDEO_STREAM_CONFIG_CAPS scc;
+			AM_MEDIA_TYPE *pmtConfig;
+			hr = pStreamConfig->GetStreamCaps(iFormat, &pmtConfig, (BYTE*)&scc);
+			if (SUCCEEDED(hr))
+			{
+				if ( pmtConfig->majortype == MEDIATYPE_Video &&
+					 pmtConfig->formattype == FORMAT_VideoInfo &&
+					(pmtConfig->cbFormat >= sizeof (VIDEOINFOHEADER)) &&
+					(pmtConfig->pbFormat != NULL) )
+				{
+					VIDEOINFOHEADER *pVih = (VIDEOINFOHEADER*)pmtConfig->pbFormat;
+					VMPixelFormat vmformat = translateMEDIASUBTYPE( pmtConfig->subtype );			
+					LONG lWidth = pVih->bmiHeader.biWidth;
+					LONG lHeight = pVih->bmiHeader.biHeight;
+				}
+				deleteMediaType(pmtConfig);
+			}
+		}
+	}*/
+
 	//Get IAMVideoProcAmp interface
-	if ( videoSource )
-		videoSource->QueryInterface( IID_IAMVideoProcAmp,  (void **)&videoProperties );	
+	hr = videoSource->QueryInterface( IID_IAMVideoProcAmp,  (void **)&videoProperties );	
 
 	//Get IAMVideoControl interface
-	if ( videoSource )
-		hr = videoSource->QueryInterface( IID_IAMVideoControl,  (void **)&videoControl );		
+	hr = videoSource->QueryInterface( IID_IAMVideoControl,  (void **)&videoControl );		
 	
 	//Get IAMCameraControl interface
-	if ( videoSource )
-		videoSource->QueryInterface( IID_IAMCameraControl,  (void **)&cameraControl );	
+	hr = videoSource->QueryInterface( IID_IAMCameraControl,  (void **)&cameraControl );	
+
+	//Test source filter connecting to the grabber
+	//Create sample grabber filter
+	if ( FAILED( hr = CoCreateInstance(CLSID_SampleGrabber, NULL, CLSCTX_INPROC_SERVER,
+		IID_IBaseFilter, (void**)&pSG) ) )
+		return hr;
+	//Add sampple grabber filter
+	if ( FAILED( hr = pGB->AddFilter(pSG, L"Sample Grabber") ) )
+		return hr;	
+	if ( FAILED( hr = autoConnectFilters(videoSource,1,pSG,1,pGB) )	 )
+		return hr;
+	//Disconnect in order to set input format
+	if ( FAILED( hr = outPinVideoSource->Disconnect() )	 )
+		return hr;
+	if ( FAILED( hr = pGB->RemoveFilter( pSG ) )	 )
+		return hr;	
+	SAFE_RELEASE( pSG );
 
 	//Setup input format
 	AM_MEDIA_TYPE inputMediaType;
@@ -279,14 +324,14 @@ HRESULT CaptureDeviceDShow::prepareMedia( std::string &friendlyName, std::string
 		return hr;
 	if ( FAILED ( hr = pGB->AddFilter(pVideoRenderer, L"NULL Video Renderer") ) )
 		return hr;
-	
+
 	//Create sample grabber filter
 	if ( FAILED( hr = CoCreateInstance(CLSID_SampleGrabber, NULL, CLSCTX_INPROC_SERVER,
 		IID_IBaseFilter, (void**)&pSG) ) )
 		return hr;	
 	if ( FAILED( hr = pSG->QueryInterface(IID_ISampleGrabber,(void**)&sampleGrabber)) )
 		return(hr);
-	
+
 	//Set sampleGrabber ouput format
 	AM_MEDIA_TYPE outputMediaType;
 	ZeroMemory(&outputMediaType,sizeof(AM_MEDIA_TYPE));
@@ -295,7 +340,7 @@ HRESULT CaptureDeviceDShow::prepareMedia( std::string &friendlyName, std::string
 	if ( aFormat != NULL )//&& aFormat->getPixelFormatOut() != UNKNOWN )	
 		outputMediaType.subtype = translatePIXEL_FORMAT( aFormat->getPixelFormatOut() );
 	else
-		outputMediaType.subtype = translatePIXEL_FORMAT( RGB24 );
+		outputMediaType.subtype = translatePIXEL_FORMAT( VM_RGB24 );
 	if ( FAILED( hr = sampleGrabber->SetMediaType(&outputMediaType) ) )
 		return hr;
 
@@ -328,7 +373,13 @@ HRESULT CaptureDeviceDShow::prepareMedia( std::string &friendlyName, std::string
 	format.width  = pvi->bmiHeader.biWidth;
 	format.height = pvi->bmiHeader.biHeight;
 	format.fps = referenceTime2fps( pvi->AvgTimePerFrame );
- 	format.setPixelFormat( UNKNOWN, translateMEDIASUBTYPE( outputMediaType.subtype ) );
+ 	format.setPixelFormat( VM_UNKNOWN, translateMEDIASUBTYPE( outputMediaType.subtype ) );
+	if ( format.getPixelFormatOut() == VM_UNKNOWN )
+	{
+		//The output format of the source filter is not supported
+		//Force a known format
+
+	}
 	freeMediaType(outputMediaType);	
 
 	hr = EnableMemoryBuffer();
@@ -340,54 +391,27 @@ HRESULT CaptureDeviceDShow::prepareMedia( std::string &friendlyName, std::string
 
 char *CaptureDeviceDShow::getFrame( bool wait)
 {
-/*	m_CSec.Lock();
-	if ( mb.size() > 0 )
-	{
-		mb.front().blocked = true;
-		m_CSec.Unlock();
-		mb.front().media_sample->GetPointer((BYTE**)&pixelBuffer);
-		frameCaptured = true;
-		return pixelBuffer;
-	}
-	m_CSec.Unlock();
-	return NULL;*/
-	/*if ( mediaSample != NULL )
-	{
-		mediaSample->GetPointer((BYTE**)&pixelBuffer);
-		frameCaptured = true;		
-		return pixelBuffer;
-	}	
-	return NULL;*/
-	return pixelBuffer;
+    if ( WaitForSingleObject( ghSemaphore, 100 ) == WAIT_OBJECT_0 )
+		return pixelBuffer;	
+	else
+		return NULL;
 }
 
 
 void CaptureDeviceDShow::releaseFrame()
 {
-	/*if (frameCaptured)
+	DWORD dwWaitResult = WaitForSingleObject( ghMutex, INFINITE );
+	if ( dwWaitResult == WAIT_OBJECT_0 )
 	{
-		pixelBuffer = NULL;
-		mb.front().media_sample->Release();
-		mb.front().blocked = false;
-		mb.pop_front();
-		frameCaptured = false;
-	}*/
-	//using SampleCB
-	if ( mediaSample != NULL )
-	{
-		pixelBuffer = NULL;		
-		mediaSample->Release();
-		mediaSample = NULL;
-		frameCaptured = false;
+		if ( mediaSample != NULL )
+		{
+			pixelBuffer = NULL;		
+			mediaSample->Release();
+			frameCaptured = false;		
+			mediaSample = NULL;
+		}
+	ReleaseMutex( ghMutex );
 	}
-	//using BufferCB
-	/*if ( pixelBuffer != NULL )
-	{
-		frameCaptured = false;
-		pixelBuffer = NULL;
-		if ( !dropFrames )
-			pMC->Run();
-	}*/
 }
 
 
@@ -727,59 +751,24 @@ void CaptureDeviceDShow::setFrameCallback( getFrameCallback theCallback, void *d
 
 HRESULT WINAPI CaptureDeviceDShow::SampleCB( double SampleTime, IMediaSample *pSample )
 {
-	/*while( be.media_sample != NULL )
+	DWORD dwWaitResult = WaitForSingleObject( ghMutex, INFINITE );
+	if ( dwWaitResult == WAIT_OBJECT_0 )
 	{
-	}
-		
-	pSample->AddRef();
-	be.media_sample = pSample;		
-	LONGLONG time, endT;
-	pSample->GetMediaTime( &time, &endT );
-	std::cout << "nuevo sample " << static_cast<double>( time  ) << std::endl;
-	return(S_OK);
-*/
-	if ( mediaSample == NULL )
-	{
-		pSample->AddRef();
-		mediaSample = pSample;
-
-		mediaSample->GetPointer((BYTE**)&pixelBuffer);
-		frameCaptured = true;
-		if ( callback )
-			(*callback)( pixelBuffer, inputID, SampleTime, frameCallbackData );
-
-		//LONGLONG time, endT;
-		//pSample->GetMediaTime( &time, &endT );
-		return(S_OK);
-	}	
-	/*if ( dropFrames )
-	{
-		if ( mb.size() < 2 )
-		{
-		//	m_CSec.Unlock();
-			MemoryBufferEntry mb_entry;	
-			mb_entry.media_sample = pSample;
-			mb_entry.blocked = false;
-			pSample->AddRef();
-			mb.push_back( mb_entry );
-		}
-		else	
+		if ( mediaSample == NULL )
 		{
 			pSample->AddRef();
-			pSample->Release();
+			mediaSample = pSample;
+			mediaSample->GetPointer((BYTE**)&pixelBuffer);
+			frameCaptured = true;
+			if ( callback )
+				(*callback)( pixelBuffer, inputID, SampleTime, frameCallbackData );
+			else
+  				ReleaseSemaphore( ghSemaphore, 1, NULL );
+			ReleaseMutex(ghMutex);
+			return(S_OK);
 		}
+		ReleaseMutex(ghMutex);
 	}
-	else
-	{
-		//m_CSec.Unlock();
-		MemoryBufferEntry mb_entry;	
-		mb_entry.media_sample = pSample;
-		mb_entry.blocked = false;
-		pSample->AddRef();
-
-		mb.push_back( mb_entry );
-	}*/
-	
 	return(S_FALSE);
 }
 

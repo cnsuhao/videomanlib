@@ -154,7 +154,6 @@ HRESULT VideoInputDShow::findMediaType(IPin *pin, VMInputFormat *requestedFormat
 		if ( requestedFormat->fps > 0 )
 			pvi->AvgTimePerFrame = fps2referenceTime( requestedFormat->fps );
 		copyMediaType( requestedMT, mediaType );
-		
 		if( ((mediaType->subtype == requestedSubtype) || (requestedSubtype == GUID_NULL)) &&
 			(pvi->bmiHeader.biHeight == requestedFormat->height) &&
 			(pvi->bmiHeader.biWidth  == requestedFormat->width) )			

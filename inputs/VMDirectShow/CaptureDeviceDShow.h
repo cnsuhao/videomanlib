@@ -76,6 +76,8 @@ private:
 	IAMVfwCaptureDialogs *captureDlgs;
 	CCrossbar *crossbar;
 	IPin *outPinVideoSource;
+	HANDLE ghSemaphore;
+	HANDLE ghMutex;
 
 	VideoManPrivate::VideoManInputController *controller;
 };
