@@ -49,9 +49,8 @@ bool GLWindow::openVideoFile()
 	VMInputFormat format;
 	VMInputIdentification device;
 	//Initialize one input from a video file
-	string fileNameSt = fileName.toStdString();
-	device.fileName = new char[fileNameSt.length() + 1];
-	strcpy( device.fileName, fileNameSt.c_str() );
+	device.fileName = new char[fileName.length() + 1];
+	strcpy( device.fileName, fileName.toAscii().data() );
 	if ( m_videoMan->supportedIdentifier( "DSHOW_VIDEO_FILE" ) )
 		device.identifier = "DSHOW_VIDEO_FILE"; //using directshow	
 	else if ( m_videoMan->supportedIdentifier( "HIGHGUI_VIDEO_FILE" ) )
@@ -74,7 +73,7 @@ bool GLWindow::openVideoFile()
 			connect( &m_timer, SIGNAL(timeout()), this, SLOT(timeOutSlot()) );
 			m_timer.start( 30 );
 		}
-		setWindowTitle( QString( device.identifier ) + QString( " - " ) + QString( device.fileName ) );
+		setWindowTitle( QString( device.identifier ) + QString( " - " ) + fileName );
 		delete device.fileName;
 		return true;
 	}
