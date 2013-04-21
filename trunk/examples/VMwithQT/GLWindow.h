@@ -33,7 +33,5 @@ private:
 	QTimer *m_timer;
 	VideoMan::VideoManControl m_videoMan;
 	std::vector< int > m_videoInputIDs; //List of indexes of the initialized inputs
-
-
- 
+	QString m_dirPath; 
 };

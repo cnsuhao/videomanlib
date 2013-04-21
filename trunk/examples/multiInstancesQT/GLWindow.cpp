@@ -4,6 +4,8 @@
 #include <qtimer.h>
 #include <string>
 #include <iostream>
+#include "cameraSelector.h"
+
 
 using namespace std;
 using namespace VideoMan;
@@ -41,13 +43,13 @@ void GLWindow::frameCallbackSlot( const char *pixelBuffer, int input )
 
 bool GLWindow::openVideoFile()
 {	
-	QString fileName = QFileDialog::getOpenFileName();
+	QString fileName = QFileDialog::getOpenFileName( this, tr("Open Video File") );
 	if ( fileName.isEmpty() )
 		return false;
 	VMInputFormat format;
 	VMInputIdentification device;
 	//Initialize one input from a video file
-	string fileNameSt = QString(fileName.toAscii()).toStdString();
+	string fileNameSt = fileName.toStdString();
 	device.fileName = new char[fileNameSt.length() + 1];
 	strcpy( device.fileName, fileNameSt.c_str() );
 	if ( m_videoMan->supportedIdentifier( "DSHOW_VIDEO_FILE" ) )
@@ -58,7 +60,6 @@ bool GLWindow::openVideoFile()
 		QMessageBox::critical( this, tr("Video files not supported"), tr("You have to build VMDirectShow or VMHighgui" ) );
 	//play in real-time
 	format.clock = true;
-	format.dropFrames = true;
 	//Render the audio stream
 	format.renderAudio = true;
 	//Initialize the video file is the path 
@@ -73,6 +74,7 @@ bool GLWindow::openVideoFile()
 			connect( &m_timer, SIGNAL(timeout()), this, SLOT(timeOutSlot()) );
 			m_timer.start( 30 );
 		}
+		setWindowTitle( QString( device.identifier ) + QString( " - " ) + QString( device.fileName ) );
 		delete device.fileName;
 		return true;
 	}
@@ -87,32 +89,65 @@ bool GLWindow::openCamera()
 	VMInputIdentification *deviceList;
 	int numDevices;
 	m_videoMan->getAvailableDevices( &deviceList, numDevices ); //list all the available devices	
-	int d = 0;	
-	while ( d < numDevices && m_inputID == -1 )
+
+	//Show camera selector dialog
+	CameraSelector *cameraSelector = new CameraSelector( this, false, true );	
+	//fill the devices list
+	for ( int i = 0; i < numDevices; i++ )
 	{
-		VMInputFormat format;
-		VMInputIdentification device = deviceList[d];
-		format.showDlg = true;
-		format.clock = true;
-		format.dropFrames = true;
-		makeCurrent();
-		if ( ( m_inputID = m_videoMan->addVideoInput( device, &format ) ) != -1 )
+		QListWidgetItem *lst =new QListWidgetItem( QString( deviceList[i].identifier ) + QString( " - " ) + QString( deviceList[i].friendlyName ), cameraSelector->listWidget );
+		cameraSelector->listWidget->insertItem(i,lst);
+	}		
+	cameraSelector->listWidget->show();
+	bool error = false;
+	vector<VMInputIdentification> selected;	
+	if ( cameraSelector->listWidget->count() != 0 )
+	{
+		cameraSelector->exec();
+		if ( cameraSelector->isAccepted() )
 		{
-			m_videoMan->showPropertyPage( m_inputID );
-			if ( m_videoMan->supportFrameCallback( m_inputID ) )
-				m_videoMan->setFrameCallback( m_inputID, frameCallback, this );
-			else
-			{			
-				connect( &m_timer, SIGNAL(timeout()), this, SLOT(timeOutSlot()) );
-				m_timer.start( 30 );
-			}
+			vector<int> selectedIndexes;
+			cameraSelector->getSelectedIndexes( selectedIndexes );
+			for ( int s = 0; s < (int)selectedIndexes.size(); ++s )
+				selected.push_back( deviceList[selectedIndexes[s]] );
 		}
-		++d;
-	}	
+		else
+			error = true;		
+	}
+	else
+	{
+		QMessageBox::warning( this, tr("Open Camera"), tr("No device available"), QMessageBox::Ok );
+		error = true;
+	}
+	delete cameraSelector;	
+	if ( error || selected.empty() )
+	{
+		m_videoMan->freeAvailableDevicesList( &deviceList, numDevices );
+		return false;
+	}
+
+	//Initialize selected device
+	VMInputFormat format;
+	VMInputIdentification device = selected[0];
+	format.showDlg = true;
+	format.clock = true;
+	makeCurrent();
+	if ( ( m_inputID = m_videoMan->addVideoInput( device, &format ) ) != -1 )
+	{
+		m_videoMan->showPropertyPage( m_inputID );
+		if ( m_videoMan->supportFrameCallback( m_inputID ) )
+			m_videoMan->setFrameCallback( m_inputID, frameCallback, this );
+		else
+		{			
+			connect( &m_timer, SIGNAL(timeout()), this, SLOT(timeOutSlot()) );
+			m_timer.start( 30 );
+		}
+		setWindowTitle( QString( device.identifier ) + QString( " - " ) + QString( device.friendlyName ) );
+	}
 	m_videoMan->freeAvailableDevicesList( &deviceList, numDevices );
 	if ( m_inputID == -1 )
 	{
-		QMessageBox::critical( this, tr("Error"), tr("Camera not found" ) );
+		QMessageBox::critical( this, tr("Error"), tr("Camera not initialized" ) );
 		return false;
 	}
 	return true;

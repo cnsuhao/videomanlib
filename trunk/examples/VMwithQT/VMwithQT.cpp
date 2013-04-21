@@ -34,6 +34,8 @@ class QPopupMenu;
 
 	//window.showFullScreen();
 	window.show();
+
+	QMessageBox::about( NULL, "VideoMan Qt example", "This example shows the integration of VideoMan with Qt. The central widget of the MainWindow is a QGLwidget with an instance of VideoMan" );
 	
 	return app.exec();
  }

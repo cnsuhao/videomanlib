@@ -11,12 +11,13 @@ INCLUDE_DIRECTORIES( ${QT_INCLUDES} ${OPENGL_INCLUDE_DIR})
 
 SET( MOC_FILES
  GLWindow.h
- mainWindow.h  )
+ mainWindow.h
+ cameraSelector.h )
 
 QT4_WRAP_CPP(MOC_SOURCE_FILES ${MOC_FILES}  )
 SOURCE_GROUP( "Generated Files" FILES ${MOC_SOURCE_FILES} )
 
-ADD_EXECUTABLE( exampleMultiInstancesQT main.cpp GLWindow.cpp GLWindow.h mainWindow.cpp mainWindow.h ${MOC_SOURCE_FILES} )
-TARGET_LINK_LIBRARIES( exampleMultiInstancesQT VideoMan ${QT_LIBRARIES} ${OPENGL_LIBRARIES} )
-set_target_properties( exampleMultiInstancesQT PROPERTIES FOLDER "examples")
-add_dependencies( exampleMultiInstancesQT VideoMan )
+ADD_EXECUTABLE( exQtMultiInstances main.cpp GLWindow.cpp GLWindow.h mainWindow.cpp mainWindow.h ${MOC_SOURCE_FILES} cameraSelector.cpp cameraSelector.h )
+TARGET_LINK_LIBRARIES( exQtMultiInstances VideoMan ${QT_LIBRARIES} ${OPENGL_LIBRARIES} )
+set_target_properties( exQtMultiInstances PROPERTIES FOLDER "examples")
+add_dependencies( exQtMultiInstances VideoMan )
