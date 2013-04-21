@@ -20,6 +20,13 @@ namespace VideoManPrivate
 	class VideoManInputController;
 };
 
+/*! \mainpage Wellcome to VideoMan
+ * 
+ * http://videomanlib.sourceforge.net/
+ */
+
+/** \brief Library's namespace 
+*/
 namespace VideoMan
 {
 
@@ -27,9 +34,22 @@ namespace VideoMan
 */
 enum VMTextureFiltering{ VM_NEAREST = 0, VM_LINEAR = 1};
 
-/** \brief VideoMan Control class
-\par Demo Code:
+/** \brief Control class
 
+With this class you can create and control the video inputs and also control the renderer:
+
+- You can initialize a video input from a video file:
+\code
+	device.identifier = "DSHOW_VIDEO_FILE";
+	device.fileName = "C:/videos/video.avi";
+	videoInputID = videoMan.addVideoInput( device, NULL );	
+	...
+	char * image = videoMan.getFrame( videoInputID );	
+	...
+	videoMan.releaseFrame( videoInputID );
+\endcode
+
+- Initialize a video input from a capture device:
 \code
 	videoMan.getAvailableDevices( list, numDevices );
 	if ( numDevices > 0 )
@@ -39,14 +59,23 @@ enum VMTextureFiltering{ VM_NEAREST = 0, VM_LINEAR = 1};
 		videoInputID = videoMan.addVideoInput( device, &format );
 	}
 	videoMan.freeAvailableDevicesList( list, numDevices );
-	...
-	videoMan.getFrame( videoInputID );
-	videoMan.updateTexture( videoInputID );
-	videoMan.renderFrame( videoInputID );
-	videoMan.releaseFrame( videoInputID );
 \endcode
 
-\author Javier Barandiaran Martirena (2006) http://sites.google.com/site/jbarandiaran/
+- Display the image in an OpenGL window. The OpenGL context should be created before you create the inputs:
+\code
+	videoMan.getFrame( videoInputID );
+	videoMan.updateTexture( videoInputID );
+	videoMan.releaseFrame( videoInputID );
+	videoMan.renderFrame( videoInputID );	
+\endcode
+
+- If you don't need to display the images or you prefer to use other system to display the image, you can create VideoMan without renderer:
+\code
+	videoMan = new VideoManControl( NO_RENDERER );
+\endcode
+
+This class contains the methods that are common to all the input modules. If you want to use functions of a specific input module, for example
+to configure the trigger of an industrial camera, you can use the controllers, see VideoManControl::createController
 */
 class VIDEOMAN_API VideoManControl
 {
@@ -57,18 +86,29 @@ private:
 
 public:
 	
-	enum VMRendererType{ NO_RENDERER, OPENGL_RENDERER };
+	/** \brief Render type otions
+	*/
+	enum VMRendererType{ NO_RENDERER /** Don't create renderer */, OPENGL_RENDERER /** Create OpenGL Renderer */  };
 	
-	/** \brief Constructor
-		\param useRenderer [in] If VideoMan will use renderer to display the images or not
+	/** \param rendererType [in] If VideoMan will use renderer to display the images or not
 	*/
 	VideoManControl( VMRendererType rendererType = OPENGL_RENDERER );
 
-	/** \brief Destructor
+	/**
 	*/
 	~VideoManControl(void);
 
-	/** \brief Check if the given identifier is supported by any of the loaded input modules
+	/** \brief Template for the frame callback
+		\param pixelBuffer [in] the image data
+		\param input [in] the input identifier that generates the callback
+		\param timestamp [in] Timestamp of the frame
+		\param data [in] User data from VideoManControl::setFrameCallback
+	*/
+	typedef void (*frameCallback)( char *pixelBuffer, size_t input, double timestamp, void *data );
+
+//! \name Input Modules info
+//@{
+	/** \brief Get the list of identifiers supported by the input modules
 			The user should must call to freeSupportedIdentifiersList
 		\param identifiers [out] list of identifiers
 		\param numIdentifiers [out] Number of supported identifers
@@ -82,22 +122,20 @@ public:
 	void freeSupportedIdentifiersList( char **&identifiers, int &numIdentifiers );
 
 	/** \brief Check if the given identifier is supported by any of the loaded input modules
+		\param identifier [in] identifier
 		\return true if the identifier is supported
 	*/
 	bool supportedIdentifier( const char *identifier );
+//@}
 
-//! \name General Input Control
+//! \name Video inputs control
 //@{
-	/** \brief  Add a video input
+	/** \brief Add a new video input
 		\param identifier [in] The input Identification (see VMInputIdentification)		
-		\param format [in/out] The preferred format of the video input, the resolution and fps will be taken from the video file
-		\return false if something fails
+		\param format [in/out] The preferred format of the video input, the resolution and fps will be taken from the video file (see VMInputFormat)
+		\return the input index assigned to the video input, -1 if something went wrong
 	*/
 	int addVideoInput( const VMInputIdentification &identifier, VMInputFormat *format );
-
-	//int addVideoInput( const char *identification, const char *inputModuleIdentifier );
-
-	//int addVideoInput( const char *identification, INPUT_TYPE type );
 
 	/** \brief  Delete the rqeuested video input
 		\param input [in] the video input index
@@ -108,9 +146,9 @@ public:
 	*/
 	void deleteInputs();
 
-	/** \brief  Get a new frame of this video input
+	/** \brief  Get a new frame of a video input
 		\param input [in] the video input index 
-		\param wait [in] if it must wait for next sample or not
+		\param wait [in] if it must wait for next frame or not
 		\return the frame of the video
 	*/
 	char *getFrame( size_t input, bool wait=false );
@@ -137,15 +175,14 @@ public:
 	*/
 	int getNumberOfInputs();
 
-	typedef void (*frameCallback)( char *pixelBuffer, size_t input, double timestamp, void *data );
-
 	/** \brief Set the callback that will be called when a new frame is available
 		\param input [in] the video input index 
 		\param callback [in] a callback of the type frameCallback
+		\param data [in] User data that will be passed to frameCallback
 	*/
 	void setFrameCallback( const size_t &input, frameCallback callback, void *data );
 
-	/** \brief Ask if the input support new frame callback
+	/** \brief Check if the input support new frame callback
 		\param input [in] the video input index 
 	*/
 	bool supportFrameCallback( const size_t &input );
@@ -202,7 +239,7 @@ public:
 
 	/** \brief  Turn the vertical flip (only affects to the renderer not to the image) on or off
 		\param input [in] the video input index
-		\param value [in] true turn on\false turn off
+		\param value [in] true turn on, false turn off
 	*/
 	void setVerticalFlip( const size_t &input, bool value );
 	
@@ -214,7 +251,7 @@ public:
 	
 	/** \brief  Turn the horizontal flip (only affects to the renderer not to the image) on or off
 		\param input [in] the video input index
-		\param value [in] true turn on\false turn off
+		\param value [in] true turn on, false turn off
 	*/
 	void setHorizontalFlip( const size_t &input, bool value );
 	
@@ -244,11 +281,13 @@ public:
 	void resetRendererZoom( const size_t &input );
 
 	/** \brief Set the rotation angle(only affects to the renderer not to the image)
+		\param input [in] the video input index	
 		\param angle [in] the angle in degrees
 	*/
 	void setRendererRotation( const size_t &input, float angle );
 
 	/** \brief Get the rotation angle
+		\param input [in] the video input index	
 		\return the angle in degrees
 	*/
 	float getRendererRotation( const size_t &input );
@@ -274,15 +313,15 @@ public:
 	void updateTexture( size_t input );
 
 	/** \brief Transform screen coordinates to image coordinates
-		\param x [in\out] the x or horizontal coordinate
-		\param y [in\out] the y or vertical coordinate
+		\param x [in-out] the x or horizontal coordinate
+		\param y [in-out] the y or vertical coordinate
 		\return if the coordinates are inside the image of any of the inputs, the index of that input is returned, -1 otherwise		
 	*/
 	int screenToImageCoords( float &x, float &y );
 
 	/** \brief Transform image (corresponding to a specific input) coordinates to screen coordinates
 		\param input [in] the video input index
-		\param x,y [in\out] the x,y (horizontal,vertical) coordinates	
+		\param x,y [in-out] the x,y (horizontal,vertical) coordinates	
 	*/
 	void imageToScreenCoords( const size_t &input, float &x, float &y );
 
@@ -369,10 +408,15 @@ public:
 //@{
 	/** \brief  Associate an image with an input, when the texture of the input will be updated, that image will be used
 		\param input [in] the video input index
+		\param image [in] the image data
 	*/
 	void setUserInputImage( const size_t &input, char* image );
 
-	char *getUserInputImage(  const size_t &input );
+	/** \brief Get the image associated with a user input
+		\param input [in] the video input index
+		\return the image data
+	*/
+	char *getUserInputImage( const size_t &input );
 //@}
 
 //! \name Camera Control

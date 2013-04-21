@@ -2,15 +2,20 @@
 
 #include "VideoManInputController.h"
 
-/** \brief If you have a PointGrey camera you can access more features with this interface through PointGrey's SDK
+/** \brief Advanced controller for PointGrey cameras running with VMPointGrey2
 \par Demo Code:
 \code
-	IPointGreyController *controller = (IPointGreyController*)videoMan.createController( "POINTGREY_CONTROLLER2" );
+	videoMan.getAvailableDevices( "PGR_CAMERA2", list, numDevices );
+	inputID = videoMan.addVideoInput( list[0], &format );
+	...
+	IPointGreyController *controller = (IPointGreyController.h*)videoMan.createController( inputID, "POINTGREY_CONTROLLER2" );
 	if ( controller )			
-	{		
-		...
-		videoMan.deleteController( &controller ); //not required
+	{
+		controller->setGainControl( true );				
+		controller->setShutterTime( 4 );
 	}
+	...
+	videoMan.deleteController( &controller );	 
 \endcode
 */
 class IPointGreyController : public VideoManPrivate::VideoManInputController
