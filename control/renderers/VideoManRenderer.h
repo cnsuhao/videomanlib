@@ -2,6 +2,7 @@
 #define VIDEOMANINRENDERER_H
 
 #include "VideoInput.h"
+#include "VideoManControl.h"
 #include <list>
 
 namespace VideoManPrivate
@@ -218,11 +219,9 @@ public:
 	*/
 	virtual void drawInputBorder( const size_t &input, const float &thickness, const float &r, const float &g, const float &b ) = 0;
 
-	typedef enum{ NEAREST = 0, LINEAR = 1} TEXTURE_FILTERING;
-
-	virtual void setTextureFiltering( TEXTURE_FILTERING textureFiltering ) = 0;
+	virtual void setTextureFiltering( VideoMan::VMTextureFiltering textureFiltering ) = 0;
 	
-	virtual TEXTURE_FILTERING getTextureFiltering() = 0;
+	virtual VideoMan::VMTextureFiltering getTextureFiltering() = 0;
 
 	virtual void setKeepAspectRatio( const size_t &input, bool Keep ) = 0;	
 	

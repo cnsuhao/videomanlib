@@ -1,7 +1,7 @@
 #ifdef WIN32
 	#include <windows.h>
 #endif
-#include <GL/glut.h>
+#include <GL/freeglut.h>
 #include <iostream>
 
 #include "VideoManControl.h"
@@ -33,7 +33,8 @@ void glutKeyboard(unsigned char key, int x, int y)
 	{
 		case 27:
 		{
-			exit(0);
+			glutLeaveMainLoop();
+			break;			
 		}
 		case 'n':
 		case 'N':
@@ -62,26 +63,6 @@ void glutSpecialKeyboard(int value, int x, int y)
 			fullScreened = !fullScreened;
 			break;
 		}
-		case GLUT_KEY_LEFT:
-		{
-			videoMan.goToMilisecond( videoInputID, videoMan.getPositionSeconds( videoInputID ) * 1000.0 - 1000.0 );
-			break;
-		}
-		case GLUT_KEY_RIGHT:
-		{
-			videoMan.goToMilisecond( videoInputID, videoMan.getPositionSeconds( videoInputID ) * 1000.0 + 1000.0 );
-			break;
-		}
-		case GLUT_KEY_UP:
-		{			
-			videoMan.goToFrame( videoInputID, videoMan.getPositionFrames( videoInputID ) + 1 );
-			break;
-		}
-		case GLUT_KEY_DOWN:
-		{			
-			videoMan.goToFrame( videoInputID, videoMan.getPositionFrames( videoInputID ) - 1 );			
-			break;
-		}
     }
 }
 
@@ -107,19 +88,16 @@ bool InitializeVideoMan()
 	return ( videoInputID != -1 );
 }
 
-void glutIdle()
-{
-	char *image = videoMan.getFrame( videoInputID );
-	if ( image != NULL )
-		glutPostRedisplay();
-}
-
 void glutDisplay(void)
 {
 	//Clear the opengl window
-	glClear( GL_COLOR_BUFFER_BIT );		
-	//Update the texture of the renderer
-	videoMan.updateTexture( videoInputID );	
+	glClear( GL_COLOR_BUFFER_BIT );
+	char *image = videoMan.getFrame( videoInputID );
+	if ( image != NULL )
+	{
+		//Update the texture of the renderer
+		videoMan.updateTexture( videoInputID );
+	}
 	//render the image of input n in the screen
 	videoMan.renderFrame( videoInputID );
     glutSwapBuffers();
@@ -155,14 +133,18 @@ int main(int argc, char** argv)
     glutInitWindowSize( 640, 480 );
     glutInit( &argc, argv );
     glutCreateWindow("VideoMan and image sequences");
-    glutReshapeFunc(glutResize);
-    glutDisplayFunc(glutDisplay);
-    glutKeyboardFunc(glutKeyboard);
-	glutSpecialFunc(glutSpecialKeyboard);
-	glutIdleFunc(glutIdle);
+	glutHideWindow();
 
 	if ( !InitializeVideoMan() )
-		return -1;	
+		return -1;
+
+	glutShowWindow();
+	glutReshapeFunc(glutResize);
+    glutDisplayFunc(glutDisplay);
+	glutIdleFunc(glutDisplay);
+    glutKeyboardFunc(glutKeyboard);
+	glutSpecialFunc(glutSpecialKeyboard);
+	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
 
 	fullScreened = false;
 	showHelp();

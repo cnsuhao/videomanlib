@@ -14,6 +14,19 @@
 
 #include "VideoManInputFormat.h"
 
+namespace VideoManPrivate
+{
+	class VideoManControlPrivate;
+	class VideoManInputController;
+};
+
+namespace VideoMan
+{
+
+/** \brief Texture filtering options
+*/
+enum VMTextureFiltering{ VM_NEAREST = 0, VM_LINEAR = 1};
+
 /** \brief VideoMan Control class
 \par Demo Code:
 
@@ -35,14 +48,6 @@
 
 \author Javier Barandiaran Martirena (2006) http://sites.google.com/site/jbarandiaran/
 */
-namespace VideoManPrivate
-{
-	class VideoManControlPrivate;
-	class VideoManInputController;
-};
-
-namespace VideoMan
-{
 class VIDEOMAN_API VideoManControl
 {
 private:
@@ -51,8 +56,8 @@ private:
 	VideoManControl & operator=(const VideoManControl &);
 
 public:
-
-	typedef enum{ NO_RENDERER, OPENGL_RENDERER } VMRendererType;
+	
+	enum VMRendererType{ NO_RENDERER, OPENGL_RENDERER };
 	
 	/** \brief Constructor
 		\param useRenderer [in] If VideoMan will use renderer to display the images or not
@@ -319,14 +324,14 @@ public:
 	void drawInputBorder( const size_t &input, const float &thickness, const float &r, const float &g, const float &b );
 
 	/** \brief Set the filtering mode of the renderer textures
-		\param textureFiltering [in] Filtering mode ( NEAREST = 0, LINEAR = 1 )
+		\param textureFiltering [in] Filtering mode
 	*/
-	void setTextureFiltering( int textureFiltering );
+	void setTextureFiltering( VMTextureFiltering textureFiltering );
 
 	/** \brief Get the filtering mode of the renderer textures
-		\return the filtering mode ( NEAREST = 0, LINEAR = 1 )
+		\return the filtering mode
 	*/
-	int getTextureFiltering();
+	VMTextureFiltering getTextureFiltering();
 
 	/** \brief Set if the renderer must keep the aspect ratio of the input (only affects to the renderer not to the image)
 		\param input [in] the video input index
@@ -484,5 +489,6 @@ private:
 
 	VideoManPrivate::VideoManControlPrivate *videoManPrivate;	
 };
+
 };
 #endif

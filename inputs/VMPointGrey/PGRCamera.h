@@ -77,11 +77,11 @@ public:
 
 	void printInfo();
 
-	bool setImageROI( int x, int y, int width, int height, int videoMode );
+	bool setImageROI( int x, int y, int width, int height );
 
 	bool moveImageROI( int x, int y );
 
-	bool getROIUnits( int &Hmax, int &Vmax, int &Hunit, int &Vunit, int &HPosUnit, int &VPosUnit, int videoMode );
+	bool getROIUnits( int &Hmax, int &Vmax, int &Hunit, int &Vunit, int &HPosUnit, int &VPosUnit );
 
 	bool resetImageROI();
 

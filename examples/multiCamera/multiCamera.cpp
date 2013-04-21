@@ -1,7 +1,7 @@
 #ifdef WIN32
 	#include <windows.h>
 #endif
-#include <GL/glut.h>
+#include <GL/freeglut.h>
 #include <iostream>
 #include <sstream>
 #include <stdlib.h>
@@ -45,6 +45,7 @@ void glutKeyboard(unsigned char key, int x, int y)
 		case 27:
 		{
 			exit(0);
+			break;
 		}
 	}
 }
@@ -68,7 +69,7 @@ void glutSpecialKeyboard(int value, int x, int y)
 		}
 		case GLUT_KEY_F2:
 		{
-			visualMode = (visualMode + 1 ) %5;
+			visualMode = (visualMode + 1 ) %9;
 			videoMan.changeVisualizationMode( visualMode);
 			break;
 		}		
@@ -79,12 +80,6 @@ void glutSpecialKeyboard(int value, int x, int y)
 			break;
 		}
     }
-}
-
-
-void InitializeOpenGL()
-{
-
 }
 
 bool InitializeVideoMan()
@@ -100,20 +95,20 @@ bool InitializeVideoMan()
 		device = list[v];
 		format.showDlg = true;
 		int inputID;
+		cout << endl;
+		cout << "Initializing " << device.friendlyName << " from " << device.identifier << endl;
 		if ( ( inputID = videoMan.addVideoInput( device, &format ) ) != -1 )
 		{
-			cout << endl;
-			cout << "Initialized camera: " << endl;
 			if ( device.friendlyName )
 				cout << "-Friendly name: " << device.friendlyName << endl;
 			if ( device.uniqueName )
 				cout << "-uniqueName: " << device.uniqueName << endl;
 			cout << "-resolution: " << format.width <<" " << format.height << endl;
 			cout << "-FPS: " << format.fps << endl;
-			cout << "===========" << endl;
 			videoInputIDs.push_back( inputID );
 			videoMan.showPropertyPage( inputID );
 		}	
+		cout << "===========" << endl;
 	}
 	videoMan.freeAvailableDevicesList(  &list, numDevices );
 
@@ -180,25 +175,22 @@ int main(int argc, char** argv)
     glutInitWindowPosition( 0, 0 );
     glutInitWindowSize( 640, 480 );
     glutInit( &argc, argv );
-
     glutCreateWindow("VideoMan MultiCamera Example");
+	glutHideWindow();
 
+	if ( !InitializeVideoMan() )	
+		return -1;	
+	
+	glutShowWindow();
     glutReshapeFunc(glutResize);
     glutDisplayFunc(glutDisplay);
     glutIdleFunc(glutDisplay);
     glutKeyboardFunc(glutKeyboard);
 	glutSpecialFunc(glutSpecialKeyboard);
+	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
 
-    InitializeOpenGL();
-	
-	if ( !InitializeVideoMan() )	
-		return 0;	
-	
 	fullScreened = false;
-
 	showHelp();
-
     glutMainLoop();
-
 	return 0;
 }

@@ -76,11 +76,6 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 
 VideoInput *initVideoInput( const VMInputIdentification &device, VMInputFormat *format )
 {
-	
-
-	//VMInputFormat *f;
-
-
 	KinectCamera *camera;
 	camera = new KinectCamera( );
 	if ( !camera->initCamera(device.friendlyName))//, "C:\\SamplesConfig.xml") )

@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <GL/glut.h>
+#include <GL/freeglut.h>
 #include <iostream>
 #include <vector>
 
@@ -42,7 +42,8 @@ void glutKeyboard(unsigned char key, int x, int y)
 	{
 		case 27:
 		{
-			exit(0);
+			glutLeaveMainLoop();
+			break;
 		}		
 	}
 }
@@ -76,12 +77,6 @@ void glutSpecialKeyboard(int value, int x, int y)
     }
 }
 
-
-void InitializeOpenGL()
-{
-}
-
-
 bool InitializeVideoMan()
 {
 	VMInputFormat format;	
@@ -96,7 +91,6 @@ bool InitializeVideoMan()
 		device.identifier = "DSHOW_VIDEO_FILE"; //using directshow	
 		//play in real-time using the framrate of the video
 		format.clock = true;
-		format.dropFrames = true;
 		format.renderAudio = true;		
 		if ( ( inputID = videoMan.addVideoInput( device, &format ) ) != -1 )
 		{
@@ -122,7 +116,7 @@ bool InitializeVideoMan()
 	{
 		device = list[0]; //take the first
 		//Show dialog to select the format
-		format.showDlg = true;	
+		format.showDlg = true;		
 		if ( ( inputID = videoMan.addVideoInput( device, &format ) ) != -1 )
 		{
 			videoInputIDs.push_back( inputID );
@@ -159,10 +153,6 @@ void glutDisplay(void)
 			//Update the texture of the renderer
 			videoMan.updateTexture( videoInputIDs[n] ); 
             
-			/*
-				Process the image...
-			*/
-
 			//Release the frame
 			videoMan.releaseFrame( videoInputIDs[n] );
 		}
@@ -202,27 +192,22 @@ int main(int argc, char** argv)
     glutInitWindowPosition( 0, 0 );
     glutInitWindowSize( 640, 480 );
     glutInit( &argc, argv );
-
     glutCreateWindow("VideoMan with DirectShow");
+	glutHideWindow();
 
-    glutReshapeFunc(glutResize);
+	if ( !InitializeVideoMan() )
+		return -1;
+
+	glutShowWindow();
+	glutReshapeFunc(glutResize);
     glutDisplayFunc(glutDisplay);
     glutIdleFunc(glutDisplay);
     glutKeyboardFunc(glutKeyboard);
 	glutSpecialFunc(glutSpecialKeyboard);
-
-    InitializeOpenGL();
-	
-	if ( !InitializeVideoMan() )
-	{
-		return 0;
-	}
+	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
 	
 	fullScreened = false;
-
 	showHelp();
-
     glutMainLoop();
-
 	return 0;
 }

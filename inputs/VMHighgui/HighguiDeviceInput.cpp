@@ -46,16 +46,16 @@ bool HighguiDeviceInput::initInput( const VMInputIdentification &device, VMInput
 		{
 			string channelSeq = image->channelSeq;
 			if ( channelSeq == "BGR" )
-				format.setPixelFormat( BGR24, BGR24 );
+				format.setPixelFormat( VM_BGR24, VM_BGR24 );
 			else if ( channelSeq == "RGB " )
-				format.setPixelFormat( RGB24, RGB24 );
+				format.setPixelFormat( VM_RGB24, VM_RGB24 );
 		}
 		else if ( image->nChannels == 1 )
 		{
 			if ( image->depth == 8 )
-				format.setPixelFormat( GREY8, GREY8 );
+				format.setPixelFormat( VM_GREY8, VM_GREY8 );
 			else if ( image->depth == 16 )
-				format.setPixelFormat( GREY16, GREY16 );
+				format.setPixelFormat( VM_GREY16, VM_GREY16 );
 		}
 		if ( aformat ) 
 			*aformat= format;

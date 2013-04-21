@@ -1,6 +1,6 @@
 FIND_PACKAGE( FlyCapture2 REQUIRED )
 IF (NOT FlyCapture2_FOUND)
-	MESSAGE(FATAL_ERROR "Pointgrey Flycapture2 SDK required, please specify it's location with Flycapture2 variables or disable BUILD_INPUT_VMPointGrey2")	
+	MESSAGE(FATAL_ERROR "Pointgrey Flycapture2 SDK required, please specify it's location with Flycapture2 variables or disable VIDEOMAN_BUILD_INPUT_VMPointGrey2")	
 ENDIF (NOT FlyCapture2_FOUND)
 SET( VMPointGrey_SRCS
 	VMPointGrey.cpp	

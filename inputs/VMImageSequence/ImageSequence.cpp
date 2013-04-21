@@ -58,13 +58,13 @@ bool ImgSeq::initSequence( const char *adirPath, VMInputFormat *aFormat )
 				format.height = img->height;
 				string channelSeq = img->channelSeq;
 				if ( img->nChannels == 3 && img->depth == 8 && channelSeq == "BGR" )
-					format.setPixelFormat( BGR24, BGR24 );
+					format.setPixelFormat( VM_BGR24, VM_BGR24 );
 				else if ( img->nChannels == 3 && img->depth == 8  )
-					format.setPixelFormat( RGB24, RGB24 );
+					format.setPixelFormat( VM_RGB24, VM_RGB24 );
 				else if ( img->nChannels == 1 && img->depth == 8)
-					format.setPixelFormat( GREY8, GREY8 );
+					format.setPixelFormat( VM_GREY8, VM_GREY8 );
 				else if ( img->nChannels == 1 && img->depth == 16)
-					format.setPixelFormat( GREY16, GREY16 );
+					format.setPixelFormat( VM_GREY16, VM_GREY16 );
 				else
 					return false;
 				if ( img->origin == 0 )
@@ -106,7 +106,7 @@ void ImgSeq::readNextImage()
 		{
 			//if ( fd.dwFileAttributes & dwAttr )
 			{
-				string fileName = fd.cFileName;			 
+				string fileName = fd.cFileName;				
 				IplImage *img2;
 				if ( img2 = cvLoadImage( (dirPath + "/" + fileName).c_str() ) )
 				{

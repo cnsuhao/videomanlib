@@ -492,13 +492,13 @@ void VideoManControl::getTextureCoords( const size_t &input, float &left, float 
 	videoManPrivate->renderer->getTextureCoords( input, left, bottom, right, up );
 }
 
-void VideoManControl::setTextureFiltering( int textureFiltering )
+void VideoManControl::setTextureFiltering( VMTextureFiltering textureFiltering )
 {
 	assert( videoManPrivate->renderer !=NULL && "setTextureFiltering(): Renderer not created");
-	videoManPrivate->renderer->setTextureFiltering( VideoManRenderer::TEXTURE_FILTERING(textureFiltering) );
+	videoManPrivate->renderer->setTextureFiltering( textureFiltering );
 }
 
-int VideoManControl::getTextureFiltering()
+VMTextureFiltering VideoManControl::getTextureFiltering()
 {
 	assert( videoManPrivate->renderer !=NULL && "getTextureFiltering(): Renderer not created");
 	return videoManPrivate->renderer->getTextureFiltering();

@@ -14,6 +14,9 @@
 
 namespace VideoMan
 {
+
+/** \brief Identification of a video input
+*/
 struct VMInputIdentification
 {
 	char* fileName;
@@ -30,8 +33,12 @@ struct VMInputIdentification
 	}
 };
 
-enum VMPixelFormat { RGB24, RGB32, BGR24, BGR32, YUV422, YUV411, IYUV, GREY8, GREY16, RAW8, RAW16, UNKNOWN};
+/** \brief Pixel Formats
+*/
+enum VMPixelFormat { VM_RGB24, VM_RGB32, VM_BGR24, VM_BGR32, VM_YUV422, VM_YUV411, VM_IYUV, VM_GREY8, VM_GREY16, VM_RAW8, VM_RAW16, VM_UNKNOWN};
 
+/** \brief Format of a video input
+*/
 class VIDEOMAN_API VMInputFormat
 {
 public:
@@ -42,8 +49,8 @@ public:
 
 	bool SetFormat( int awidth, int aheight, double afps, VMPixelFormat apixelFormatIn, VMPixelFormat apixelFormatOut );
 	bool setPixelFormat( VMPixelFormat apixelFormatIn, VMPixelFormat apixelFormatOut );
-	VMPixelFormat getPixelFormatIn();
-	VMPixelFormat getPixelFormatOut();
+	VMPixelFormat getPixelFormatIn() const;
+	VMPixelFormat getPixelFormatOut() const;
 	bool validFormat();	
 
 	int nChannels;  //Number of channels
@@ -54,8 +61,7 @@ public:
 	double fps;		//frames per second
 
 	bool showDlg;	//(capture device) Show init dialog to select format
-	
-	bool dropFrames; //drop frames while playing or not	
+
 	bool clock; //(video file) Use clock to reproduce the video with its corresponding framerate or not
 	bool renderAudio; //(video file) Render the audio channel	
 

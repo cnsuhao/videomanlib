@@ -198,8 +198,3 @@ if (NOT SFML_FOUND)
         message("${FIND_SFML_ERROR}")
     endif()
 endif()
-
-# handle success
-#if(SFML_FOUND)
-    #message("Found SFML: ${SFML_INCLUDE_DIR}")
-#endif()
