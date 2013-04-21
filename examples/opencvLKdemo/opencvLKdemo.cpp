@@ -104,11 +104,10 @@ bool InitializeVideoMan()
 	{
 		//Initialize one input from a video file
 		device.fileName = fileName; //file name
-		#ifdef WIN32
+		if ( videoMan.supportedIdentifier( "DSHOW_VIDEO_FILE" ) )
 			device.identifier = "DSHOW_VIDEO_FILE"; //using directshow	
-		#elif linux
+		else if ( videoMan.supportedIdentifier( "HIGHGUI_VIDEO_FILE" ) )
 			device.identifier = "HIGHGUI_VIDEO_FILE"; //using highugui	
-		#endif
 		if ( ( videoInput = videoMan.addVideoInput( device, &format ) ) != -1 )
 		{
 			if ( device.fileName )

@@ -194,11 +194,10 @@ bool InitializeVideoMan()
 		//Initialize one input from a video file
 		//device.fileName = dirPath.c_str();
 		device.fileName = dirPath;
-		#ifdef WIN32
+		if ( videoMan.supportedIdentifier( "DSHOW_VIDEO_FILE" ) )
 			device.identifier = "DSHOW_VIDEO_FILE"; //using directshow	
-		#elif linux
+		else if ( videoMan.supportedIdentifier( "HIGHGUI_VIDEO_FILE" ) )
 			device.identifier = "HIGHGUI_VIDEO_FILE"; //using highugui	
-		#endif
 		//play in real-time
 		format.clock = true;
 		format.renderAudio = true;
