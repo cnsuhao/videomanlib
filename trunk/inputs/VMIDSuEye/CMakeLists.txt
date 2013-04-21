@@ -1,6 +1,6 @@
 FIND_PACKAGE( UEYE REQUIRED )
 IF (NOT UEYE_FOUND)
-	MESSAGE(FATAL_ERROR "IDS UEye SDK required, please specify it's location with IDS_UEYE_SDK or disable BUILD_INPUT_VMIDSuEye")	
+	MESSAGE(FATAL_ERROR "IDS UEye SDK required, please specify it's location with IDS_UEYE_SDK or disable VIDEOMAN_BUILD_INPUT_VMIDSuEye")	
 ENDIF (NOT UEYE_FOUND)
 SET( VMIDSuEye_SRCS
 	VMIDSuEye.cpp	
