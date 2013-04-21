@@ -446,7 +446,7 @@ HRESULT CCrossbar::GetInputType (
 
 	CRouting *pCurrent = m_RoutingList.front();
 
-    if (Index >= m_RoutingList.size()) {
+    if (Index >= (int)m_RoutingList.size()) {
         return E_FAIL;
     }
     
@@ -524,7 +524,7 @@ HRESULT CCrossbar::GetInputName (
 {
     CRouting *pCurrent = m_RoutingList.front();
 
-    if ((Index >= m_RoutingList.size()) || (pName == NULL)) {
+    if ((Index >= (int)m_RoutingList.size()) || (pName == NULL)) {
         return E_FAIL;
     }
 
@@ -548,7 +548,7 @@ HRESULT CCrossbar::SetInputIndex (
     CRouting *pCurrent = m_RoutingList.front();
     int j;
 
-    if (Index >= m_RoutingList.size())
+    if (Index >= (int)m_RoutingList.size())
         return hr;	    
 	pCurrent = m_RoutingList[Index];
     assert (pCurrent != NULL);

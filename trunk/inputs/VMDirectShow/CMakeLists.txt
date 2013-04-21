@@ -27,11 +27,11 @@ SET( VMDirectShow_SRCS
 )
 
 #IDS uEye Camera Controller
-OPTION( BUILD_INPUT_DS_uEye_CONTROLLER "Build controller for IDS uEye cameras using DirectShow" OFF )
-IF( BUILD_INPUT_DS_uEye_CONTROLLER )
+OPTION( VIDEOMAN_BUILD_INPUT_DS_uEye_CONTROLLER "Build controller for IDS uEye cameras using DirectShow" OFF )
+IF( VIDEOMAN_BUILD_INPUT_DS_uEye_CONTROLLER )
 	FIND_PACKAGE( UEYEDS REQUIRED )
 	IF (NOT UEYEDS_FOUND)
-		MESSAGE(FATAL_ERROR "UEye DirectShow Interface (uEyeCaptureInterface.h) required, please specify it's location with IDS_UEYEDS_INTERFACE or disable BUILD_INPUT_DS_uEye_CONTROLLER")	
+		MESSAGE(FATAL_ERROR "UEye DirectShow Interface (uEyeCaptureInterface.h) required, please specify it's location with IDS_UEYEDS_INTERFACE or disable VIDEOMAN_BUILD_INPUT_DS_uEye_CONTROLLER")	
 	ENDIF (NOT UEYEDS_FOUND)
 	IF (UEYEDS_FOUND)
 		SET( VMDirectShow_SRCS
@@ -42,15 +42,15 @@ IF( BUILD_INPUT_DS_uEye_CONTROLLER )
 		ADD_DEFINITIONS( -DIDS_UEYE )
 		INCLUDE_DIRECTORIES(${UEYEDS_INCLUDE_DIR})
 	ENDIF (UEYEDS_FOUND)
-ENDIF( BUILD_INPUT_DS_uEye_CONTROLLER )
+ENDIF( VIDEOMAN_BUILD_INPUT_DS_uEye_CONTROLLER )
 
 #PointGrey Camera Controller
-OPTION( BUILD_INPUT_DS_PointGrey_CONTROLLER "Build controller for PointGrey cameras using DirectShow" OFF )
-IF( BUILD_INPUT_DS_PointGrey_CONTROLLER )
+OPTION( VIDEOMAN_BUILD_INPUT_DS_PointGrey_CONTROLLER "Build controller for PointGrey cameras using DirectShow" OFF )
+IF( VIDEOMAN_BUILD_INPUT_DS_PointGrey_CONTROLLER )
 	FIND_PACKAGE( PGRDirectShow REQUIRED )
 	
 	IF (NOT PGRDirectShow_FOUND)
-		MESSAGE(FATAL_ERROR "PointGrey DirectShow Interface required (PGRDirectShow.h), please specify it's location with _INTERFACE or disable BUILD_INPUT_DS_PointGrey_CONTROLLER")	
+		MESSAGE(FATAL_ERROR "PointGrey DirectShow Interface required (PGRDirectShow.h), please specify it's location with _INTERFACE or disable VIDEOMAN_BUILD_INPUT_DS_PointGrey_CONTROLLER")	
 	ENDIF (NOT PGRDirectShow_FOUND)
 	IF (PGRDirectShow_FOUND)
 		SET( VMDirectShow_SRCS
@@ -61,7 +61,7 @@ IF( BUILD_INPUT_DS_PointGrey_CONTROLLER )
 		ADD_DEFINITIONS( -DDS_POINTGREY )
 		INCLUDE_DIRECTORIES(${PGRDirectShow_INCLUDE_DIR})
 	ENDIF (PGRDirectShow_FOUND)
-ENDIF( BUILD_INPUT_DS_PointGrey_CONTROLLER )
+ENDIF( VIDEOMAN_BUILD_INPUT_DS_PointGrey_CONTROLLER )
 
 
 

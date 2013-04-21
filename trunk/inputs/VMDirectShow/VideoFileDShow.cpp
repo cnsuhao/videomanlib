@@ -177,7 +177,7 @@ HRESULT VideoFileDShow::prepareMedia( const std::string &name, VMInputFormat *aF
 	if ( aFormat != NULL )	
 		mt.subtype = translatePIXEL_FORMAT( aFormat->getPixelFormatOut() );
 	else
-		mt.subtype = translatePIXEL_FORMAT( RGB24 );
+		mt.subtype = translatePIXEL_FORMAT( VM_RGB24 );
 	if ( FAILED( hr = sampleGrabber->SetMediaType(&mt) ) )
 		return hr;
 	if ( FAILED( hr = pGB->AddFilter(pSG, L"Sample Grabber") ) )
@@ -313,10 +313,10 @@ HRESULT VideoFileDShow::prepareMedia( const std::string &name, VMInputFormat *aF
 	format.width  = pvi->bmiHeader.biWidth;
 	format.height = pvi->bmiHeader.biHeight;
 	format.fps = referenceTime2fps( pvi->AvgTimePerFrame );
- 	format.setPixelFormat( UNKNOWN, translateMEDIASUBTYPE( mediaType.subtype ) );
+ 	format.setPixelFormat( VM_UNKNOWN, translateMEDIASUBTYPE( mediaType.subtype ) );
 	avgTimePerFrame = static_cast<double>( pvi->AvgTimePerFrame );
 	if ( avgTimePerFrame <= 0 )
-		avgTimePerFrame = seconds2referenceTime( 0.03 ); //30fps
+		avgTimePerFrame = (double)seconds2referenceTime( 0.03 ); //30fps
 	freeMediaType(mediaType);
 
 	if ( aFormat != NULL  && !aFormat->clock )

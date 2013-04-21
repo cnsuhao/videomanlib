@@ -196,29 +196,29 @@ HRESULT autoConnectFilters(IBaseFilter *filter_out, int out_pin_nr, IBaseFilter 
 
 VMPixelFormat translateMEDIASUBTYPE( GUID format )
 {	
-	if(format == MEDIASUBTYPE_UYVY)   return(YUV411);
-	else if(format == MEDIASUBTYPE_YUY2)   return(YUV422);
+	if(format == MEDIASUBTYPE_UYVY)   return(VM_YUV411);
+	else if(format == MEDIASUBTYPE_YUY2)   return(VM_YUV422);
 	//if(format == MEDIASUBTYPE_RGB565) return(PIXELFORMAT_RGB565);
 	//if(format == MEDIASUBTYPE_RGB555) return(PIXELFORMAT_RGB555);
-	else if(format == MEDIASUBTYPE_RGB8) return(GREY8);	
-	else if(format == MEDIASUBTYPE_RGB24)  return(BGR24);
-	else if(format == MEDIASUBTYPE_RGB32)  return(BGR32);
-	return UNKNOWN;
+	else if(format == MEDIASUBTYPE_RGB8) return(VM_GREY8);	
+	else if(format == MEDIASUBTYPE_RGB24)  return(VM_BGR24);
+	else if(format == MEDIASUBTYPE_RGB32)  return(VM_BGR32);
+	return VM_UNKNOWN;
 }
 
 GUID translatePIXEL_FORMAT( VMPixelFormat format )
 {
 	switch ( format )
 	{
-		case YUV411:	return(MEDIASUBTYPE_Y411);	
-		case  YUV422:	return(MEDIASUBTYPE_UYVY);
-		case  IYUV:		return(MEDIASUBTYPE_IYUV);
-		case GREY8:		return(MEDIASUBTYPE_RGB8);	
-		case GREY16:	return(MEDIASUBTYPE_RGB8);	
-		case BGR24:		return(MEDIASUBTYPE_RGB24);
-		case RGB24:		return(MEDIASUBTYPE_RGB24);
-		case BGR32:		return(MEDIASUBTYPE_RGB32);
-		case RGB32:		return(MEDIASUBTYPE_RGB32);
+		case VM_YUV411:	return(MEDIASUBTYPE_Y411);	
+		case VM_YUV422:	return(MEDIASUBTYPE_UYVY);
+		case VM_IYUV:		return(MEDIASUBTYPE_IYUV);
+		case VM_GREY8:		return(MEDIASUBTYPE_RGB8);	
+		case VM_GREY16:	return(MEDIASUBTYPE_RGB8);	
+		case VM_BGR24:		return(MEDIASUBTYPE_RGB24);
+		case VM_RGB24:		return(MEDIASUBTYPE_RGB24);
+		case VM_BGR32:		return(MEDIASUBTYPE_RGB32);
+		case VM_RGB32:		return(MEDIASUBTYPE_RGB32);
 		default:		return GUID_NULL;
 	}
 }
