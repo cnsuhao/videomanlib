@@ -42,7 +42,7 @@ bool ImageFile::initInput( const char *imagePath, VMInputFormat *aFormat )
 			format.setPixelFormat( GREY16, GREY16 );
 		else
 			return false;*/
-		format.setPixelFormat( RGB24, RGB24 );
+		format.setPixelFormat( VM_RGB24, VM_RGB24 );
 		/*if ( channels == 1 && depth == IPL_DEPTH_8U && depth == IPL_DEPTH_8S )
 			format.setPixelFormat( GREY8, GREY8 );
 		if ( channels == 1 && depth == IPL_DEPTH_16U && depth == IPL_DEPTH_16S )

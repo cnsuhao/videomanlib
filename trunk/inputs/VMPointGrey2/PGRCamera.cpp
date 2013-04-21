@@ -154,13 +154,13 @@ FlyCapture2::VideoMode PGRCamera::buildVideoMode( VMInputFormat format )
 	{
 		switch ( format.getPixelFormatIn() )
 		{
-			case RGB24:			
+			case VM_RGB24:			
 				return VIDEOMODE_1600x1200RGB;								
-			case GREY16:			
+			case VM_GREY16:			
 				return VIDEOMODE_1600x1200Y16;				
-			case GREY8:
+			case VM_GREY8:
 				return VIDEOMODE_1600x1200Y8;				
-			case YUV422:
+			case VM_YUV422:
 				return VIDEOMODE_1600x1200YUV422;				
 		}
 	}	
@@ -168,13 +168,13 @@ FlyCapture2::VideoMode PGRCamera::buildVideoMode( VMInputFormat format )
 	{
 		switch ( format.getPixelFormatIn() )
 		{
-			case RGB24:
+			case VM_RGB24:
 				return VIDEOMODE_1280x960RGB;								
-			case GREY16:			
+			case VM_GREY16:			
 				return VIDEOMODE_1280x960Y16;				
-			case GREY8:
+			case VM_GREY8:
 				return VIDEOMODE_1280x960Y8;				
-			case YUV422:
+			case VM_YUV422:
 				return VIDEOMODE_1280x960YUV422;							
 				
 		}
@@ -183,13 +183,13 @@ FlyCapture2::VideoMode PGRCamera::buildVideoMode( VMInputFormat format )
 	{
 		switch ( format.getPixelFormatIn() )
 		{
-			case RGB24:
+			case VM_RGB24:
 				return VIDEOMODE_1024x768RGB;								
-			case GREY16:			
+			case VM_GREY16:			
 				return VIDEOMODE_1024x768Y16;				
-			case GREY8:
+			case VM_GREY8:
 				return VIDEOMODE_1024x768Y8;				
-			case YUV422:
+			case VM_YUV422:
 				return VIDEOMODE_1024x768YUV422;											
 		}
 	}
@@ -197,13 +197,13 @@ FlyCapture2::VideoMode PGRCamera::buildVideoMode( VMInputFormat format )
 	{
 		switch ( format.getPixelFormatIn() )
 		{
-			case RGB24:
+			case VM_RGB24:
 				return VIDEOMODE_800x600RGB;								
-			case GREY16:			
+			case VM_GREY16:			
 				return VIDEOMODE_800x600Y16;				
-			case GREY8:
+			case VM_GREY8:
 				return VIDEOMODE_800x600Y8;				
-			case YUV422:
+			case VM_YUV422:
 				return VIDEOMODE_800x600YUV422;				
 		}
 	}	
@@ -211,15 +211,15 @@ FlyCapture2::VideoMode PGRCamera::buildVideoMode( VMInputFormat format )
 	{
 		switch ( format.getPixelFormatIn() )
 		{
-			case RGB24:
+			case VM_RGB24:
 				return VIDEOMODE_640x480RGB;				
-			case GREY16:
+			case VM_GREY16:
 				return VIDEOMODE_640x480Y16;				
-			case GREY8:
+			case VM_GREY8:
 				return VIDEOMODE_640x480Y8;				
-			case YUV422:
+			case VM_YUV422:
 				return VIDEOMODE_640x480YUV422;				
-			case YUV411:
+			case VM_YUV411:
 				return VIDEOMODE_640x480YUV411;			
 		}
 	}
@@ -252,25 +252,25 @@ FlyCapture2::PixelFormat PGRCamera::buildPixelFormat( VMPixelFormat pixelFormat 
 {
 	switch( pixelFormat )
 	{
-		case RGB24:
+		case VM_RGB24:
 			return PIXEL_FORMAT_RGB;
-		case RGB32:
+		case VM_RGB32:
 			return PIXEL_FORMAT_RGBU;
-		case BGR24:
+		case VM_BGR24:
 			return PIXEL_FORMAT_BGR;
-		case BGR32:
+		case VM_BGR32:
 			return PIXEL_FORMAT_BGRU;
-		case YUV422:
+		case VM_YUV422:
 			return PIXEL_FORMAT_422YUV8;
-		case YUV411:
+		case VM_YUV411:
 			return PIXEL_FORMAT_411YUV8;
-		case GREY8:
+		case VM_GREY8:
 			return PIXEL_FORMAT_MONO8;
-		case GREY16:
+		case VM_GREY16:
 			return PIXEL_FORMAT_MONO16;
-		case RAW8:
+		case VM_RAW8:
 			return PIXEL_FORMAT_RAW8;
-		case RAW16:
+		case VM_RAW16:
 			return PIXEL_FORMAT_RAW16;
 	}
 	return PIXEL_FORMAT_RGB;		
@@ -315,7 +315,7 @@ void frameCallback( Image* pImage, const void* pCallbackData )
 		pgrCamerap->lastImage = pImage;
 		
 		if( pgrCamerap->callback )
-			(*pgrCamerap->callback)( pgrCamerap->pixelBuffer, pgrCamerap->inputID, pImage->GetTimeStamp().seconds, pgrCamerap->frameCallbackData );			
+			(*pgrCamerap->callback)( pgrCamerap->pixelBuffer, pgrCamerap->inputID, (double)pImage->GetTimeStamp().seconds, pgrCamerap->frameCallbackData );			
 	}
 }
 
@@ -440,16 +440,15 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 					return false;
 				}
 				if ( supported && m_fmt7Info.maxWidth == aFormat->width && m_fmt7Info.maxHeight == aFormat->height &&
-					( aFormat->getPixelFormatOut() == UNKNOWN || m_fmt7Info.pixelFormatBitField & fmt7PixFmt == fmt7PixFmt ) )
+					( aFormat->getPixelFormatOut() == VM_UNKNOWN || ( ( m_fmt7Info.pixelFormatBitField & fmt7PixFmt ) == fmt7PixFmt ) ) )
 				{
-					
 					//same resolution and pixelFormat
 					found = true;
 				}
 			}
 			if ( found )
 			{
-				if (aFormat->getPixelFormatOut() == UNKNOWN ) 
+				if (aFormat->getPixelFormatOut() == VM_UNKNOWN ) 
 					getFirstPixelFormatSupported(m_fmt7Info,fmt7PixFmt);
 
 				format.SetFormat( m_fmt7Info.maxWidth, m_fmt7Info.maxHeight, aFormat->fps, resolvePixelFormat( fmt7PixFmt ), resolvePixelFormat( fmt7PixFmt ) );
@@ -629,30 +628,30 @@ VMPixelFormat PGRCamera::resolvePixelFormat( FlyCapture2::PixelFormat pFormat )
 	switch( pFormat )
 	{
 		case PIXEL_FORMAT_MONO8:
-			return GREY8;
+			return VM_GREY8;
 		case PIXEL_FORMAT_RAW8:
-			return RAW8;
+			return VM_RAW8;
 		case PIXEL_FORMAT_411YUV8:
-			return YUV411;
+			return VM_YUV411;
 		case PIXEL_FORMAT_422YUV8:
-			return YUV422;
+			return VM_YUV422;
 		//case PIXEL_FORMAT_444YUV8:
-			//return YUV444;
+			//return VM_YUV444;
 		case PIXEL_FORMAT_MONO16:
 		case PIXEL_FORMAT_S_MONO16:
-			return GREY16;
+			return VM_GREY16;
 		case PIXEL_FORMAT_RAW16:
-			return RAW16;
+			return VM_RAW16;
 		case PIXEL_FORMAT_RGB8:		
-			return RGB24;
+			return VM_RGB24;
 		case PIXEL_FORMAT_BGR:
-			return BGR24;
+			return VM_BGR24;
 		case PIXEL_FORMAT_RGBU:		
-			return RGB32;
+			return VM_RGB32;
 		case PIXEL_FORMAT_BGRU:
-			return BGR32;
+			return VM_BGR32;
 	}
-	return UNKNOWN;
+	return VM_UNKNOWN;
 }
 
 
@@ -662,112 +661,112 @@ bool PGRCamera::resolveFormat( VideoMode videoMode, FrameRate frameRate, VMInput
 	{
 		case VIDEOMODE_1600x1200YUV422:
 		{
-			rFormat.SetFormat( 1600, 1200, 30, YUV422, YUV422 );
+			rFormat.SetFormat( 1600, 1200, 30, VM_YUV422, VM_YUV422 );
 			break;
 		}
 		case VIDEOMODE_1600x1200RGB:
 		{
-			rFormat.SetFormat( 1600, 1200, 30, RGB24, RGB24 );
+			rFormat.SetFormat( 1600, 1200, 30, VM_RGB24, VM_RGB24 );
 			break;
 		}
 		case VIDEOMODE_1600x1200Y8:
 		{
-			rFormat.SetFormat( 1600, 1200, 30, GREY8, GREY8 );
+			rFormat.SetFormat( 1600, 1200, 30, VM_GREY8, VM_GREY8 );
 			break;
 		}
 		case VIDEOMODE_1600x1200Y16:
 		{
-			rFormat.SetFormat( 1600, 1200, 30, GREY16, GREY16 );
+			rFormat.SetFormat( 1600, 1200, 30, VM_GREY16, VM_GREY16 );
 			break;
 		}
 		case VIDEOMODE_1280x960YUV422:
 		{
-			rFormat.SetFormat( 1280, 960, 30, YUV422, YUV422 );
+			rFormat.SetFormat( 1280, 960, 30, VM_YUV422, VM_YUV422 );
 			break;
 		}
 		case VIDEOMODE_1280x960RGB:
 		{
-			rFormat.SetFormat( 1280, 960, 30, RGB24, RGB24 );
+			rFormat.SetFormat( 1280, 960, 30, VM_RGB24, VM_RGB24 );
 			break;
 		}
 		case VIDEOMODE_1280x960Y8:
 		{
-			rFormat.SetFormat( 1280, 960, 30, GREY8, GREY8 );
+			rFormat.SetFormat( 1280, 960, 30, VM_GREY8, VM_GREY8 );
 			break;
 		}
 		case VIDEOMODE_1280x960Y16:
 		{
-			rFormat.SetFormat( 1280, 960, 30, GREY16, GREY16 );
+			rFormat.SetFormat( 1280, 960, 30, VM_GREY16, VM_GREY16 );
 			break;
 		}			
 		case VIDEOMODE_1024x768Y8:
 		{
-			rFormat.SetFormat( 1024, 768, 30, GREY8, GREY8 );
+			rFormat.SetFormat( 1024, 768, 30, VM_GREY8, VM_GREY8 );
 			break;
 		}
 		case VIDEOMODE_1024x768Y16:
 		{
-			rFormat.SetFormat( 1024, 768, 30, GREY16, GREY16 );
+			rFormat.SetFormat( 1024, 768, 30, VM_GREY16, VM_GREY16 );
 			break;
 		}
 		case VIDEOMODE_1024x768YUV422:
 		{
-			rFormat.SetFormat( 1024, 768, 30, YUV422, YUV422 );
+			rFormat.SetFormat( 1024, 768, 30, VM_YUV422, VM_YUV422 );
 			break;
 		}
 		case VIDEOMODE_1024x768RGB:
 		{
-			rFormat.SetFormat( 1024, 768, 30, RGB24, RGB24 );
+			rFormat.SetFormat( 1024, 768, 30, VM_RGB24, VM_RGB24 );
 			break;
 		}
 		case VIDEOMODE_800x600Y8:
 		{
-			rFormat.SetFormat( 800, 600, 30, GREY8, GREY8 );
+			rFormat.SetFormat( 800, 600, 30, VM_GREY8, VM_GREY8 );
 			break;
 		}
 		case VIDEOMODE_800x600Y16:
 		{
-			rFormat.SetFormat( 800, 600, 30, GREY16, GREY16 );
+			rFormat.SetFormat( 800, 600, 30, VM_GREY16, VM_GREY16 );
 			break;
 		}
 		case VIDEOMODE_800x600YUV422:
 		{
-			rFormat.SetFormat( 800, 600, 30, YUV422, YUV422 );
+			rFormat.SetFormat( 800, 600, 30, VM_YUV422, VM_YUV422 );
 			break;
 		}
 		case VIDEOMODE_800x600RGB:
 		{
-			rFormat.SetFormat( 800, 600, 30, RGB24, RGB24 );
+			rFormat.SetFormat( 800, 600, 30, VM_RGB24, VM_RGB24 );
 			break;
 		}
 		case VIDEOMODE_640x480RGB:
 		{
-			rFormat.SetFormat( 640, 480, 30, RGB24, RGB24 );			
+			rFormat.SetFormat( 640, 480, 30, VM_RGB24, VM_RGB24 );			
 			break;
 		}
 		case VIDEOMODE_640x480YUV422:
 		{
-			rFormat.SetFormat( 640, 480, 30, YUV422, YUV422 );
+			rFormat.SetFormat( 640, 480, 30, VM_YUV422, VM_YUV422 );
 			break;
 		}
 		case VIDEOMODE_640x480YUV411:
 		{
-			rFormat.SetFormat( 640, 480, 30, YUV411, YUV411 );
+			rFormat.SetFormat( 640, 480, 30, VM_YUV411, VM_YUV411 );
 			break;
 		}
 		case VIDEOMODE_640x480Y16:
 		{
-			rFormat.SetFormat( 640, 480, 30, GREY16, GREY16 );
+			rFormat.SetFormat( 640, 480, 30, VM_GREY16, VM_GREY16 );
 			break;
 		}
 		case VIDEOMODE_640x480Y8:
 		{
-			rFormat.SetFormat( 640, 480, 30, GREY8, GREY8 );
+			rFormat.SetFormat( 640, 480, 30, VM_GREY8, VM_GREY8 );
 			break;
 		}
 		case VIDEOMODE_320x240YUV422:
 		{
-			rFormat.SetFormat( 320, 240, 30, YUV422, YUV422 );
+			rFormat.SetFormat( 320, 240, 30, VM_YUV422, VM_YUV422 );
 			break;
 		}		
 		case VIDEOMODE_FORMAT7:
@@ -889,7 +888,7 @@ void PGRCamera::getAvailableDevices(  VMInputIdentification **deviceList, int &n
     {
 		VMInputIdentification device;
 
-        PGRGuid guid;	
+        PGRGuid guid;
         error = busMgr.GetCameraFromIndex(i, &guid);
         if (error != PGRERROR_OK)
         {
@@ -905,7 +904,7 @@ void PGRCamera::getAvailableDevices(  VMInputIdentification **deviceList, int &n
 			return;
 		}*/
 
-		Camera cam;	
+		Camera cam;
 		error = cam.Connect(&guid);
 		if (error != PGRERROR_OK)
 		{
@@ -1093,19 +1092,19 @@ int PGRCamera::buildColorCoding( VMPixelFormat pixelFormat )
 {
 	switch( pixelFormat )
 	{
-	case GREY8:
+	case VM_GREY8:
 		return 0;
-	case YUV411:
+	case VM_YUV411:
 		return 1;
-	case YUV422:
+	case VM_YUV422:
 		return 2;
 	//case 3:
-	//	return YUV444;
-	case RGB24:
+	//	return VM_YUV444;
+	case VM_RGB24:
 		return 4;
-	case GREY16:
+	case VM_GREY16:
 		return 5;
-	case RAW8:
+	case VM_RAW8:
 		return 9;
 	default:
 		return -1;

@@ -42,7 +42,6 @@ bool InitializeVideoMan()
 		#endif
 		//play in real-time
 		format.clock = true;
-		format.dropFrames = true;
 		format.renderAudio = true;
 		//Initialize the video file is the path 
 		if ( ( videoInputID = videoMan->addVideoInput( device, &format ) ) != -1 )
@@ -77,7 +76,6 @@ bool InitializeVideoMan()
 			device = list[d];		
 			//Show dialog to select the format
 			format.showDlg = true;
-			format.dropFrames = true;
 			if ( ( videoInputID = videoMan->addVideoInput( device, &format ) ) != -1 )
 			{
 				//videoMan->showPropertyPage( videoInputID );

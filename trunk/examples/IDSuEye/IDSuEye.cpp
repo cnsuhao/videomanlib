@@ -1,9 +1,10 @@
 #ifdef WIN32
 	#include <windows.h>
 #endif
-#include <GL/glut.h>
+#include <GL/freeglut.h>
 #include <iostream>
 #include "VideoManControl.h"
+#include "controllers/IuEyeCameraController.h"
 
 using namespace std;
 using namespace VideoMan;
@@ -15,7 +16,7 @@ You also need to build the VMIDSuEye input
 */
 
 VideoManControl videoMan;
-
+IuEyeCameraController *controller;
 int inputID; //Index of the video input
 
 void glutResize(int width, int height)
@@ -43,9 +44,14 @@ bool InitializeVideoMan()
 		{
 			cout << " Initialized camera ID " << deviceList[d].uniqueName << endl;
 			videoMan.setVerticalFlip( inputID, true );
+			controller =  ((IuEyeCameraController*)videoMan.createController( 0, "uEye_CAMERA_CONTROLLER" ));
+			double frameRate;
+			controller->getFrameRate( frameRate );
+			float exposure;
+			controller->getShutterTime( exposure );
+			//controller->setFrameRate( 8 );			
 			break;
 		}
-		++d;
 	}
 	videoMan.freeAvailableDevicesList( &deviceList, numDevices );	
 
@@ -76,13 +82,17 @@ int main(int argc, char** argv)
 	glutInitWindowPosition( 0, 0 );
 	glutInitWindowSize( 640, 480 );
     glutInit( &argc, argv );
-    glutCreateWindow("VideoMan with PointGrey");
+    glutCreateWindow("VideoMan with IDS uEye cameras");
+	glutHideWindow();
+
+	if ( !InitializeVideoMan() )
+		return -1;
+
+	glutShowWindow();
 	glutReshapeFunc(glutResize );  
     glutDisplayFunc(glutDisplay);
-	glutIdleFunc(glutDisplay);
- 
-	if ( !InitializeVideoMan() )
-		return -1; 
+	glutIdleFunc(glutDisplay);		
+	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
     
 	glutMainLoop();
 	return 0;

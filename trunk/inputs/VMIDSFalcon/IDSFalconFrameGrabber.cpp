@@ -87,7 +87,7 @@ int IDSFalconFrameGrabber::colorModeFromPixelFormat( VMPixelFormat pixelFormat )
 {
 	switch (pixelFormat)
 	{
-	case GREY8:
+	case VM_GREY8:
 		return IS_SET_CM_Y8;
 		break;
 	/*case RGB15:
@@ -96,12 +96,12 @@ int IDSFalconFrameGrabber::colorModeFromPixelFormat( VMPixelFormat pixelFormat )
 /*	case RGB16:
 		return IS_SET_CM_RGB16;
 		break;*/
-	case RGB24:
-	case BGR24:
+	case VM_RGB24:
+	case VM_BGR24:
 		return IS_SET_CM_RGB24;
 		break;
-	case RGB32:
-	case BGR32:
+	case VM_RGB32:
+	case VM_BGR32:
 		return IS_SET_CM_RGB32;
 		break;
 	default:
@@ -115,20 +115,20 @@ VMPixelFormat IDSFalconFrameGrabber::pixelFormatFromColorMode( int colorMode )
 	switch (colorMode)
 	{
 	case IS_SET_CM_Y8:
-		return GREY8;
+		return VM_GREY8;
 	//case IS_SET_CM_RGB16:
-	//	return GREY16;
+	//	return VM_GREY16;
 	//	break;
 	case IS_SET_CM_RGB24:
-		return BGR24;
+		return VM_BGR24;
 	case IS_SET_CM_RGB16:
-		return YUV422;
+		return VM_YUV422;
 	//case IS_SET_CM_RGB15:
-	//	return RGB15;
+	//	return VM_RGB15;
 	case IS_SET_CM_RGB32:
-		return BGR32;
+		return VM_BGR32;
 	default:
-		return UNKNOWN;
+		return VM_UNKNOWN;
 	}
 }
 
@@ -192,7 +192,7 @@ bool IDSFalconFrameGrabber::initBoard( const unsigned long &hids, VMInputFormat 
 	{
 		colorMode = is_SetColorMode( m_hBoard, IS_GET_COLOR_MODE );
 		VMPixelFormat pixelFormat = pixelFormatFromColorMode( colorMode );
-		if ( pixelFormat == UNKNOWN )
+		if ( pixelFormat == VM_UNKNOWN )
 		{
 			is_ExitBoard (m_hBoard);
 			return false;

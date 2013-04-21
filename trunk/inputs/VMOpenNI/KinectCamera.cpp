@@ -59,25 +59,25 @@ bool KinectCamera::initCamera( std::string source, std::string xmlFile )
 	if (source.compare("KINECT_RGB_Camera")==0)
 	{
 		__source = RGB_CAMERA;
-		format.SetFormat(640,480,30,RGB24,RGB24);
+		format.SetFormat(640,480,30,VM_RGB24,VM_RGB24);
 		__data = new char[640*480*3];
 	}
 	else if (source.compare("KINECT_Depth_Camera_Color")==0)
 	{
 		__source = DEPTH_CAMERA_COLOR;
-		format.SetFormat(640,480,30,RGB24,RGB24);
+		format.SetFormat(640,480,30,VM_RGB24,VM_RGB24);
 		__data = new char[640*480*3];
 	}
 	else if (source.compare("KINECT_IR_Camera")==0)
 	{
 		__source = IR_CAMERA;
-		format.SetFormat(1024,768,30,GREY16,GREY16);
+		format.SetFormat(1024,768,30,VM_GREY16,VM_GREY16);
 		__data = new char[1024*768*2];
 
 	}
 	else{
 		__source = DEPTH_CAMERA;
-		format.SetFormat(640,480,30,GREY16,GREY16);
+		format.SetFormat(640,480,30,VM_GREY16,VM_GREY16);
 		__data = new char[640*480*2];
 	}
 
@@ -97,7 +97,7 @@ bool KinectCamera::initCamera( std::string source, std::string xmlFile )
 	
 	if (nRetVal != XN_STATUS_OK) return false;
 
-	format.SetFormat(640,480,30,RGB24,RGB24);
+	format.SetFormat(640,480,30,VM_RGB24,VM_RGB24);
 	
 		return true;
 }
@@ -110,26 +110,26 @@ bool KinectCamera::initCamera( std::string source )
 	if (source.compare("KINECT_RGB_Camera")==0)
 	{
 		__source = RGB_CAMERA;
-		format.SetFormat(640,480,30,RGB24,RGB24);
+		format.SetFormat(640,480,30,VM_RGB24,VM_RGB24);
 		__data = new char[640*480*3];
 	}
 	else if (source.compare("KINECT_Depth_Camera_Color")==0)
 	{
 		__source = DEPTH_CAMERA_COLOR;
-		format.SetFormat(640,480,30,RGB24,RGB24);
+		format.SetFormat(640,480,30,VM_RGB24,VM_RGB24);
 		__data = new char[640*480*3];
 	}
 	else if (source.compare("KINECT_IR_Camera")==0)
 	{
 		__source = IR_CAMERA;
-		format.SetFormat(resX,resY,30,GREY8,GREY8);
+		format.SetFormat(resX,resY,30,VM_GREY8,VM_GREY8);
 		__data = new char[resX*resY];
 
 	}
 	else
 	{
 		__source = DEPTH_CAMERA;
-		format.SetFormat(640,480,30,GREY16,GREY16);
+		format.SetFormat(640,480,30,VM_GREY16,VM_GREY16);
 		__data = new char[640*480*2];
 	}
 
@@ -164,7 +164,7 @@ bool KinectCamera::initCamera( std::string source )
 		nRetVal = __image.SetMapOutputMode(__mapMode);
 
 		/* Establecemos el formato interno */
-		format.SetFormat(640,480,30,RGB24,RGB24);
+		format.SetFormat(640,480,30,VM_RGB24,VM_RGB24);
 	}
 	
 	if (nRetVal != XN_STATUS_OK) return false;

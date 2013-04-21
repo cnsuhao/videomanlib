@@ -164,14 +164,14 @@ bool PointGreyController::moveImageROI( int x, int y )
 	return cameraList[0]->moveImageROI( x, y );
 }
 
-bool PointGreyController::setImageROI( int x, int y, int width, int height, int videoMode  )
+bool PointGreyController::setImageROI( int x, int y, int width, int height  )
 {
-	return cameraList[0]->setImageROI( x, y, width, height, videoMode );
+	return cameraList[0]->setImageROI( x, y, width, height );
 }
 
-bool PointGreyController::getROIUnits( int &Hmax, int &Vmax, int &Hunit, int &Vunit, int &HPosUnit, int &VPosUnit, int videoMode )
+bool PointGreyController::getROIUnits( int &Hmax, int &Vmax, int &Hunit, int &Vunit, int &HPosUnit, int &VPosUnit )
 {
-	return cameraList[0]->getROIUnits( Hmax, Vmax, Hunit, Vunit, HPosUnit, VPosUnit, videoMode );
+	return cameraList[0]->getROIUnits( Hmax, Vmax, Hunit, Vunit, HPosUnit, VPosUnit );
 }
 
 bool PointGreyController::resetImageROI()
@@ -200,5 +200,16 @@ bool PointGreyController::getBayerFormat(size_t &btf)
 bool PointGreyController::setFrameRate( float frameRate )
 {
 	cout << "PointGreyController::setFrameRate not implemented" << endl;
+	return false;
+}
+
+void PointGreyController::convertRawToColor( const unsigned char* imgSrc, unsigned char *imgDst, int width, int height )
+{
+	cout << "PointGreyController::convertRawToColor not implemented" << endl;
+}
+
+bool PointGreyController::setStrobeOutput( bool onOff, float delay, float duration,	unsigned int polarity, unsigned int source )
+{
+	cout << "PointGreyController::setStrobeOutput not implemented" << endl;
 	return false;
 }

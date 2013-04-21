@@ -1,7 +1,7 @@
 #ifdef WIN32
 	#include <windows.h>
 #endif
-#include <GL/glut.h>
+#include <GL/freeglut.h>
 #include <iostream>
 
 #include "VideoManControl.h"
@@ -25,7 +25,6 @@ int videoLengthFrames;
 int videoInputID; //Index of the video input
 char *videoFile = 0;
 bool paused = false;
-bool useCallback = false;
 
 void glutResize(int width, int height)
 {
@@ -47,8 +46,8 @@ void glutKeyboard(unsigned char key, int x, int y)
 	{
 		case 27:
 		{
-			clear();
-			exit(0);
+			glutLeaveMainLoop();
+			break;
 		}
 		case 'p':
 		case 'P':
@@ -109,16 +108,6 @@ void glutSpecialKeyboard(int value, int x, int y)
     }
 }
 
-
-void InitializeOpenGL()
-{
-}
-
-void callback( char *pixel, size_t input, double timeStamp, void *data )
-{
-	glutPostRedisplay();
-}
-
 bool InitializeVideoMan()
 {
 	videoInputID = -1;
@@ -135,7 +124,6 @@ bool InitializeVideoMan()
 		#endif
 		//play in real-time
 		format.clock = true;
-		format.dropFrames = true;
 		//Render the audio stream
 		format.renderAudio = true;
 		//Initialize the video file is the path
@@ -149,10 +137,7 @@ bool InitializeVideoMan()
 			if ( device.fileName )
 				cout << "Loaded video file: " << device.fileName << endl;
 			cout << "resolution: " << format.width << "X" << format.height << endl;
-			cout << "Video Length: " << videoLengthSeconds << " seconds and " << videoLengthFrames << " frames" << endl;			
-			useCallback = videoMan.supportFrameCallback( videoInputID );					
-			if ( useCallback )
-				videoMan.setFrameCallback( videoInputID, callback, NULL );
+			cout << "Video Length: " << videoLengthSeconds << " seconds and " << videoLengthFrames << " frames" << endl;						
 			videoMan.playVideo( videoInputID );
 		}
 	}	
@@ -160,21 +145,17 @@ bool InitializeVideoMan()
 	return ( videoInputID != -1 );
 }
 
-void glutIdle()
-{
-	//Get a new frame
-	if ( videoMan.getFrame( videoInputID ) != NULL )
-		glutPostRedisplay();
-}
-
 void glutDisplay(void)
 {
 	//Clear the opengl window
 	glClear( GL_COLOR_BUFFER_BIT );		
-	//Update the texture of the renderer
-	videoMan.updateTexture( videoInputID );
-	//Release the frame
-	videoMan.releaseFrame( videoInputID );
+	if ( videoMan.getFrame( videoInputID ) != NULL )
+	{
+		//Update the texture of the renderer
+		videoMan.updateTexture( videoInputID );
+		//Release the frame
+		videoMan.releaseFrame( videoInputID );
+	}
 	//render the image of input n in the screen
 	videoMan.renderFrame( videoInputID );
     glutSwapBuffers();
@@ -212,20 +193,22 @@ int main(int argc, char** argv)
     glutInitWindowSize( 640, 480 );
     glutInit( &argc, argv );
     glutCreateWindow("VideoMan video file playback control");
-    glutReshapeFunc(glutResize);
-    glutDisplayFunc(glutDisplay);
-    glutKeyboardFunc(glutKeyboard);
-	glutSpecialFunc(glutSpecialKeyboard);
+	glutHideWindow();
 
-    InitializeOpenGL();	
 	if ( !InitializeVideoMan() )
 		return -1; 	
-	
-	if ( !useCallback ) 
-		glutIdleFunc(glutIdle);
+
+	glutShowWindow();
+	glutReshapeFunc(glutResize);
+    glutDisplayFunc(glutDisplay);
+    glutIdleFunc(glutDisplay);
+    glutKeyboardFunc(glutKeyboard);
+	glutSpecialFunc(glutSpecialKeyboard);
+	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
 
 	fullScreened = false;
 	showHelp();
     glutMainLoop();
+	clear();
 	return 0;
 }

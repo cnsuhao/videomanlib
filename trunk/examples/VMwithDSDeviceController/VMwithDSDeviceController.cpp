@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <GL/glut.h>
+#include <GL/freeglut.h>
 #include <iostream>
 #include <vector>
 
@@ -46,8 +46,8 @@ void glutKeyboard(unsigned char key, int x, int y)
 	{
 		case 27:
 		{
-			clear();
-			exit(0);
+			glutLeaveMainLoop();
+			break;
 		}		
 		case 'c':
 		case 'C':
@@ -96,11 +96,6 @@ void glutSpecialKeyboard(int value, int x, int y)
 			break;
 		}
     }
-}
-
-
-void InitializeOpenGL()
-{
 }
 
 void printCameraControl( ICaptureDeviceDSController::CameraControl identifier, std::string name )
@@ -253,26 +248,22 @@ int main(int argc, char** argv)
     glutInitWindowPosition( 0, 0 );
     glutInitWindowSize( 640, 480 );
     glutInit( &argc, argv );
-
     glutCreateWindow("VideoMan with DirectShow");
-
-    glutReshapeFunc(glutResize);
+	glutHideWindow();
+	
+	if ( !InitializeVideoMan() )	
+		return -1;
+	
+	glutShowWindow();
+	glutReshapeFunc(glutResize);
     glutDisplayFunc(glutDisplay);
     glutIdleFunc(glutDisplay);
     glutKeyboardFunc(glutKeyboard);
 	glutSpecialFunc(glutSpecialKeyboard);
+	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
 
-    InitializeOpenGL();
-	
-	if ( !InitializeVideoMan() )
-	{
-		return 0;
-	}
-	
 	fullScreened = false;
-
 	showHelp();
-
     glutMainLoop();
 	clear();
 	return 0;

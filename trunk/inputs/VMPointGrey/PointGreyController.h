@@ -40,17 +40,21 @@ public:
 
 	bool setShutterTime( float shutterTime );
 
-	bool setImageROI( int x, int y, int width, int height, int videoMode );
+	bool setImageROI( int x, int y, int width, int height );
 
 	bool moveImageROI( int x, int y );
 
-	bool getROIUnits( int &Hmax, int &Vmax, int &Hunit, int &Vunit, int &HPosUnit, int &VPosUnit, int videoMode );
+	bool getROIUnits( int &Hmax, int &Vmax, int &Hunit, int &Vunit, int &HPosUnit, int &VPosUnit );
 
 	bool resetImageROI();
 
 	bool setTrigger( bool triggerOn, int source, int mode );
+
+	bool setStrobeOutput( bool onOff, float delay, float duration,	unsigned int polarity, unsigned int source );
 	
 	bool fireSoftwareTrigger( bool broadcast );
+
+	void convertRawToColor( const unsigned char* imgSrc, unsigned char *imgDst, int width, int height );
 
 	bool getBayerFormat(size_t &btf);
 

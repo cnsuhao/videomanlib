@@ -67,7 +67,7 @@ void glutMouseFunc( int button, int mouseState, int x, int y )
 			//Draw the circle in the image			
 			int xi = (int)xf;
 			int yi = (int)yf;
-			cvCircle( img, cvPoint( xi, yi ), 6, CV_RGB( 0, 255, 0 ), 2 );
+			cvCircle( img, cvPoint( (int)xi, (int)yi ), 6, CV_RGB( 0, 255, 0 ), 2 );
 			cout << "Screen coords: " << x << " " << y << endl;
 			cout << "Image coords: " << xf << " " << yf << endl;
 			
@@ -197,10 +197,10 @@ bool InitializeVideoMan()
 	inputID = -1;
 	VMInputFormat format;
 	VMInputIdentification device;
-	videoMan.setTextureFiltering( 0 );
+	videoMan.setTextureFiltering( VM_LINEAR );
 	//Initialize one user input	
 	device.identifier = "USER_INPUT"; //using directshow			
-	format.SetFormat( img->width, img->height, 0, BGR24, BGR24 );
+	format.SetFormat( img->width, img->height, 0, VM_BGR24, VM_BGR24 );
 	if ( img->widthStep % 4 != 0 )
 	{
 		if ( img->widthStep % 8 == 0 )
@@ -332,27 +332,20 @@ int main(int argc, char** argv)
 		cout << "You must specify a path to an image file" << endl;
 		return -1;
 	}
-	
 	if ( !img )
 	{
 		string file = argv[1];
 		cout << "Error loading image " << file << endl;
 		return -1;
 	}
+
 	glutInitDisplayMode( GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA | GLUT_MULTISAMPLE );
 	glutInitWindowPosition( 0, 0 );
 	glutInitWindowSize( 640, 480 );
     glutInit( &argc, argv );
     glutCreateWindow("2D Drawing demo");
-	glutReshapeFunc(glutResize );  
-    glutDisplayFunc(glutDisplay);
-	//glutIdleFunc(glutDisplay);
-    glutKeyboardFunc(glutKeyboard);
-	glutSpecialFunc(glutSpecialKeyboard);
-	glutMouseFunc( glutMouseFunc );
-	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
-	videoMan.setTextureFiltering( 0 );
-
+	glutHideWindow();
+	
 	if ( !InitializeVideoMan() )
 		return -1;
 
@@ -365,9 +358,18 @@ int main(int argc, char** argv)
 	catch(runtime_error e)
 	{
 		cerr << e.what() << endl;
-		cerr << "Font file font.ttf not found. Copy that file to the working directory of the example" << e.what() << endl;
-		freetypeFontFound = false;		
+		cerr << "Font file font.ttf not found. Copy that file to the working directory /build_path/../examples/drawing2D" << endl;
+		freetypeFontFound = false;
 	}
+
+	glutShowWindow();
+	glutReshapeFunc(glutResize );  
+    glutDisplayFunc(glutDisplay);
+	//glutIdleFunc(glutDisplay);
+    glutKeyboardFunc(glutKeyboard);
+	glutSpecialFunc(glutSpecialKeyboard);
+	glutMouseFunc( glutMouseFunc );
+	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 	
 
 	fullScreened = false;	
 	showHelp();    

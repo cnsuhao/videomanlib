@@ -5,9 +5,8 @@ using namespace VideoMan;
 VMInputFormat::VMInputFormat(void)
 {
 	align = 4;
-	SetFormat( 320, 240, 60, UNKNOWN, RGB24 );	
+	SetFormat( 320, 240, 60, VM_UNKNOWN, VM_RGB24 );	
 	showDlg = false;
-	dropFrames = true;
 	clock = true;
 	renderAudio = true;	
 }
@@ -30,7 +29,6 @@ VMInputFormat &VMInputFormat::operator=( VMInputFormat const &format )
 	this->height = format.height;
 	this->fps = format.fps;
 	this->showDlg = format.showDlg;
-	this->dropFrames = format.dropFrames;
 	this->clock = format.clock;
 	this->renderAudio = format.renderAudio;
 	this->formatIn = format.formatIn;
@@ -58,39 +56,39 @@ bool VMInputFormat::setPixelFormat( VMPixelFormat apixelFormatIn, VMPixelFormat 
 	formatOut = apixelFormatOut;
 	switch ( apixelFormatOut )
 	{
-		case RGB24:
-		case BGR24:
+		case VM_RGB24:
+		case VM_BGR24:
 		{
 			depth = 8;
 			nChannels = 3;
 			break;
 		}
-		case RGB32:
-		case BGR32:
+		case VM_RGB32:
+		case VM_BGR32:
 		{
 			depth = 8;
 			nChannels = 4;		
 			break;
 		}
-		case GREY16:
+		case VM_GREY16:
 		{
 			depth = 16;
 			nChannels = 1;
 			break;
 		}
-		case GREY8:
+		case VM_GREY8:
 		{
 			depth = 8;
 			nChannels = 1;
 			break;
 		}
-		case RAW8:
+		case VM_RAW8:
 		{
 			depth = 8;
 			nChannels = 1;
 			break;
 		}
-		case YUV422:
+		case VM_YUV422:
 		{
 			depth = 16;
 			nChannels = 3;
@@ -167,12 +165,12 @@ bool VMInputFormat::validFormat()
 	return BppOut;
 }*/
 
-VMPixelFormat VMInputFormat::getPixelFormatIn()
+VMPixelFormat VMInputFormat::getPixelFormatIn() const
 {
 	return formatIn;
 }
 
-VMPixelFormat VMInputFormat::getPixelFormatOut()
+VMPixelFormat VMInputFormat::getPixelFormatOut() const
 {
 	return formatOut;
 }

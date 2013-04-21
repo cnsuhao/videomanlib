@@ -1,7 +1,7 @@
 #ifdef WIN32
 	#include <windows.h>
 #endif
-#include <GL/glut.h>
+#include <GL/freeglut.h>
 #include <iostream>
 #include "VideoManControl.h"
 
@@ -77,12 +77,16 @@ int main(int argc, char** argv)
 	glutInitWindowSize( 640, 480 );
     glutInit( &argc, argv );
     glutCreateWindow("VideoMan with PointGrey");
-	glutReshapeFunc(glutResize );  
-    glutDisplayFunc(glutDisplay);
-	glutIdleFunc(glutDisplay);
+	glutHideWindow();
  
 	if ( !InitializeVideoMan() )
 		return -1; 
+
+	glutShowWindow();
+	glutReshapeFunc(glutResize );  
+    glutDisplayFunc(glutDisplay);
+	glutIdleFunc(glutDisplay);
+	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
     
 	glutMainLoop();
 	return 0;

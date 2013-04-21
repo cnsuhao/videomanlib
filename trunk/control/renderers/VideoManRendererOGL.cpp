@@ -1,6 +1,7 @@
 #ifdef WIN32
 	#include "windows.h"
 #endif
+
 #include <math.h>
 #include <iostream>
 #include "VideoManRendererOGL.h"
@@ -62,14 +63,14 @@ void printGLerror( std::string message, GLenum glErr )
 
 VideoManRendererOGL::VideoManRendererOGL(void)
 {
-	//supportedFormats.push_back(RGB15);
-	supportedFormats.push_back(RGB24);
-	supportedFormats.push_back(BGR24);
-	supportedFormats.push_back(RGB32);
-	supportedFormats.push_back(BGR32);
-	supportedFormats.push_back(GREY16);
-	supportedFormats.push_back(GREY8);
-	supportedFormats.push_back(RAW8);
+	//supportedFormats.push_back(VM_RGB15);
+	supportedFormats.push_back(VM_RGB24);
+	supportedFormats.push_back(VM_BGR24);
+	supportedFormats.push_back(VM_RGB32);
+	supportedFormats.push_back(VM_BGR32);
+	supportedFormats.push_back(VM_GREY16);
+	supportedFormats.push_back(VM_GREY8);
+	supportedFormats.push_back(VM_RAW8);
 	textureFiltering = GL_LINEAR;
 }
 
@@ -210,51 +211,51 @@ bool VideoManRendererOGL::generateTexture( RendererOGLInput &inputOGL )
 	inputOGL.dataType = GL_UNSIGNED_BYTE;
 	switch ( inputOGL.pixelFormat )
 	{
-		case GREY16:
-		case RAW16:
+		case VM_GREY16:
+		case VM_RAW16:
 		{
 			inputOGL.oglTextureFormat = GL_LUMINANCE;
 			inputOGL.internalFormat = GL_LUMINANCE16;
 			inputOGL.dataType = GL_UNSIGNED_SHORT;			
 			break;
 		}
-		case GREY8:
-		case RAW8:
+		case VM_RAW8:
+		case VM_GREY8:	
 		{
 			inputOGL.oglTextureFormat = GL_LUMINANCE;
 			inputOGL.internalFormat = 1;
 			inputOGL.dataType = GL_UNSIGNED_BYTE;
 			break;
 		}
-		case BGR24:
+		case VM_BGR24:
 		{			
 			inputOGL.oglTextureFormat = GL_BGR;
 			inputOGL.internalFormat = 3;
 			inputOGL.dataType = GL_UNSIGNED_BYTE;
 			break;
 		}
-		case RGB24:
+		case VM_RGB24:
 		{
 			inputOGL.oglTextureFormat = GL_RGB;
 			inputOGL.internalFormat = 3;
 			inputOGL.dataType = GL_UNSIGNED_BYTE;
 			break;
 		}
-		/*case RGB15:
+		/*case VM_RGB15:
 		{
 			inputOGL.oglTextureFormat = GL_RGB;
 			inputOGL.internalFormat = GL_RGB5;
 			inputOGL.dataType = GL_UNSIGNED_BYTE;
 			break;
 		}*/
-		case BGR32:
+		case VM_BGR32:
 		{
 			inputOGL.oglTextureFormat = GL_BGRA;
 			inputOGL.internalFormat = 3;
 			inputOGL.dataType = GL_UNSIGNED_BYTE;
 			break;
 		}
-		case RGB32:
+		case VM_RGB32:
 		{
 			inputOGL.oglTextureFormat = GL_RGBA;
 			inputOGL.internalFormat = 3;
@@ -926,29 +927,29 @@ void VideoManRendererOGL::drawInputBorder( const size_t &input, const float &thi
 	glPopAttrib();
 }
 
-void VideoManRendererOGL::setTextureFiltering( TEXTURE_FILTERING _textureFiltering )
+void VideoManRendererOGL::setTextureFiltering( VMTextureFiltering _textureFiltering )
 {
 	switch ( _textureFiltering )
 	{
-	case NEAREST:
+	case VM_NEAREST:
 		textureFiltering = GL_NEAREST;
 		break;
-	case LINEAR:
+	case VM_LINEAR:
 		textureFiltering = GL_LINEAR;
 		break;
 	}
 }
 
-VideoManRenderer::TEXTURE_FILTERING VideoManRendererOGL::getTextureFiltering()
+VMTextureFiltering VideoManRendererOGL::getTextureFiltering()
 {
 	switch ( textureFiltering )
 	{
 	case GL_NEAREST:
-		return NEAREST;		
+		return VM_NEAREST;		
 	case GL_LINEAR:
-		return LINEAR;		
+		return VM_LINEAR;		
 	}
-	return LINEAR;
+	return VM_LINEAR;
 }
 
 

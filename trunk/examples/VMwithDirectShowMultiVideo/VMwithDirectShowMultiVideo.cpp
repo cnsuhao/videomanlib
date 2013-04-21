@@ -1,6 +1,6 @@
 #define _CRT_SECURE_NO_DEPRECATE //warning C4996: 'strcpy' was declared deprecated
 #include <windows.h>
-#include <GL/glut.h>
+#include <GL/freeglut.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -47,7 +47,8 @@ void glutKeyboard(unsigned char key, int x, int y)
 	{
 		case 27:
 		{
-			exit(0);
+			glutLeaveMainLoop();
+			break;
 		}
 	}
 }
@@ -82,12 +83,6 @@ void glutSpecialKeyboard(int value, int x, int y)
 			break;
 		}
     }
-}
-
-
-void InitializeOpenGL()
-{
-
 }
 
 void loadFiles( string dirPath, vector< string > &files )
@@ -130,7 +125,6 @@ bool InitializeVideoMan()
 		device.identifier = "DSHOW_VIDEO_FILE"; //using directshow	
 		//play in real-time
 		format.clock = true;
-		format.dropFrames = true;
 		format.renderAudio = renderAudio;
 		int inputID;
 		if ( ( inputID = videoMan.addVideoInput( device, &format ) ) != -1 )
@@ -215,27 +209,24 @@ int main(int argc, char** argv)
     glutInitWindowPosition( 0, 0 );
     glutInitWindowSize( 640, 480 );
     glutInit( &argc, argv );
-
     glutCreateWindow("VideoMan with DirectShow");
-
-    glutReshapeFunc(glutResize);
-    glutDisplayFunc(glutDisplay);
-    glutIdleFunc(glutDisplay);
-    glutKeyboardFunc(glutKeyboard);
-	glutSpecialFunc(glutSpecialKeyboard);
-
-    InitializeOpenGL();
+	glutHideWindow();
 	
 	if ( !InitializeVideoMan() )
 	{
 		return 0;
 	}
+
+	glutShowWindow();
+	glutReshapeFunc(glutResize);
+    glutDisplayFunc(glutDisplay);
+    glutIdleFunc(glutDisplay);
+    glutKeyboardFunc(glutKeyboard);
+	glutSpecialFunc(glutSpecialKeyboard);
+	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
 	
 	fullScreened = false;
-
 	showHelp();
-
     glutMainLoop();
-
 	return 0;
 }

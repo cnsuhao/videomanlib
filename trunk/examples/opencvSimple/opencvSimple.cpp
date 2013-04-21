@@ -2,7 +2,7 @@
 	#include <windows.h>
 #endif
 #include <vector>
-#include <GL/glut.h>
+#include <GL/freeglut.h>
 #include <iostream>
 #include "cv.h"
 #include "cxcore.h"
@@ -32,8 +32,6 @@ IplImage *gray;
 
 char *dirPath = 0;
 
-bool useCallback = false;
-
 void glutResize(int width, int height)
 {
 	screenLeft = 0;
@@ -60,8 +58,8 @@ void glutKeyboard(unsigned char key, int x, int y)
 	{
 		case 27:
 		{
-			clear();
-			exit(0);
+			glutLeaveMainLoop();
+			break;
 		}
 	}
 }
@@ -110,7 +108,7 @@ void glutSpecialKeyboard(int value, int x, int y)
 		case GLUT_KEY_F5:
 		{			
 			static int mode = 0;
-			mode = (mode + 1 ) %5;
+			mode = (mode + 1 ) %9;
 			videoMan.changeVisualizationMode( mode );
 
 			break;
@@ -125,71 +123,54 @@ void glutSpecialKeyboard(int value, int x, int y)
     }
 }
 
-void InitializeOpenGL()
-{
-}
-
-void callback( char *pixel, size_t input, double timeStamp, void *data )
-{
-	memcpy( inputCopy->imageData, (const char *)pixel, inputCopy->imageSize );	
-	glutPostRedisplay();
-}
-
-void glutIdle()
-{
-	if ( !useCallback )
-	{
-		char *image = videoMan.getFrame( videoInputID );
-		if ( image != NULL )
-		{
-			memcpy( inputCopy->imageData, (const char *)image, inputCopy->imageSize );			
-			glutPostRedisplay();
-		}
-	}
-}
-
 void glutDisplay(void)
 {
 	//Clear the opengl window
 	glClear( GL_COLOR_BUFFER_BIT );
 	
-	//Update the texture of the renderer
-	videoMan.updateTexture( videoInputID, inputCopy->imageData ); 
-       
-	//cvSetImageData( inputHeader, image, inputHeader->widthStep );
-	// Process the images...
+	char *image = videoMan.getFrame( videoInputID );
+	if ( image != NULL )
+	{
+		memcpy( inputCopy->imageData, (const char *)image, inputCopy->imageSize );	
 	
-	//Convert to grayscale
-	if ( inputCopy->nChannels != 1 )
-		cvCvtColor( inputCopy, gray, CV_RGB2GRAY );
-	else
-		cvCopy( inputCopy, gray );
-	
-	//process 0
-	if ( videoMan.isActivated( userInputIDs[0] ) )
-	{
-		cvNot( inputCopy, processedImages[0] );
-		videoMan.updateTexture( userInputIDs[0] );
-	}
+		//Update the texture of the renderer
+		videoMan.updateTexture( videoInputID, inputCopy->imageData ); 
+	       
+		//cvSetImageData( inputHeader, image, inputHeader->widthStep );
+		// Process the images...
+		
+		//Convert to grayscale
+		if ( inputCopy->nChannels != 1 )
+			cvCvtColor( inputCopy, gray, CV_RGB2GRAY );
+		else
+			cvCopy( inputCopy, gray );
+		
+		//process 0
+		if ( videoMan.isActivated( userInputIDs[0] ) )
+		{
+			cvNot( inputCopy, processedImages[0] );
+			videoMan.updateTexture( userInputIDs[0] );
+		}
 
-	//process 1 
-	if ( videoMan.isActivated( userInputIDs[1] ) && inputCopy->depth == 8 )
-	{
-		cvSmooth( inputCopy, processedImages[1], CV_BLUR, 7, 7 );
-		videoMan.updateTexture( userInputIDs[1] );				
-	}
+		//process 1 
+		if ( videoMan.isActivated( userInputIDs[1] ) && inputCopy->depth == 8 )
+		{
+			cvSmooth( inputCopy, processedImages[1], CV_BLUR, 7, 7 );
+			videoMan.updateTexture( userInputIDs[1] );				
+		}
 
-	//process 2
-	if ( videoMan.isActivated( userInputIDs[2]) && inputCopy->depth == 8 )
-	{
-		cvZero( processedImages[2] );
-		cvCanny( gray, edges, 50, 60 );		
-		cvCopy( inputCopy, processedImages[2],edges );		
-		videoMan.updateTexture( userInputIDs[2] );	
-	}
+		//process 2
+		if ( videoMan.isActivated( userInputIDs[2]) && inputCopy->depth == 8 )
+		{
+			cvZero( processedImages[2] );
+			cvCanny( gray, edges, 50, 60 );		
+			cvCopy( inputCopy, processedImages[2],edges );		
+			videoMan.updateTexture( userInputIDs[2] );	
+		}
 
-	//Release the frame
-	videoMan.releaseFrame( videoInputID );
+		//Release the frame
+		videoMan.releaseFrame( videoInputID );
+	}
 
 	//render the image of input n in the screen
 	videoMan.renderFrame( videoInputID ); 	
@@ -220,7 +201,6 @@ bool InitializeVideoMan()
 		#endif
 		//play in real-time
 		format.clock = true;
-		format.dropFrames = true;
 		format.renderAudio = true;
 		//Initialize the video file is the path 
 		if ( ( videoInputID = videoMan.addVideoInput( device, &format ) ) != -1 )
@@ -258,8 +238,7 @@ bool InitializeVideoMan()
 			device = list[d];
 			//Show dialog to select the format
 			format.showDlg = true;
-			format.SetFormat( 640, 480, 30, RGB24, RGB24 );
-			format.dropFrames = true;
+			format.SetFormat( 640, 480, 30, VM_RGB24, VM_RGB24 );
 			if ( ( videoInputID = videoMan.addVideoInput( device, &format ) ) != -1 )
 			{
 				videoMan.showPropertyPage( videoInputID );
@@ -275,10 +254,7 @@ bool InitializeVideoMan()
 	}
 
 	if ( videoInputID != -1 )
-	{
-		useCallback = videoMan.supportFrameCallback( videoInputID );
-		if ( useCallback )
-			videoMan.setFrameCallback( videoInputID, callback, NULL );
+	{		
 		inputCopy = cvCreateImage( cvSize( format.width, format.height), format.depth, format.nChannels );
 
 		//Initialize the user inputs for showing the processed images
@@ -327,29 +303,23 @@ int main(int argc, char** argv)
     glutInitWindowPosition( 0, 0 );
     glutInitWindowSize( 640, 480 );
     glutInit( &argc, argv );
-
     glutCreateWindow("VideoMan-OpenCV Simple");
-
-    glutReshapeFunc(glutResize);
-    glutDisplayFunc(glutDisplay);
-    glutKeyboardFunc(glutKeyboard);
-	glutSpecialFunc(glutSpecialKeyboard);
-
-    InitializeOpenGL();
+	glutHideWindow();   
 	
 	if ( !InitializeVideoMan() )
 		return 0;
 
-	if ( !useCallback ) 
-		glutIdleFunc(glutIdle);
+	glutShowWindow();
+	glutReshapeFunc(glutResize);
+    glutDisplayFunc(glutDisplay);
+	glutIdleFunc(glutDisplay);
+    glutKeyboardFunc(glutKeyboard);
+	glutSpecialFunc(glutSpecialKeyboard);
+	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
 
 	fullScreened = false;
-
 	showHelp();
-
     glutMainLoop();
-
 	clear();
-
 	return 0;
 }

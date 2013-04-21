@@ -10,10 +10,6 @@
 //#pragma comment(lib,"opengl32.lib")
 //#pragma comment(lib,"glu32.lib")
 
-
-//#include <gl\glu.h>
-//#include <gl\glut.h>
-
 /** 
 	SUPPORTED FORMATS:
 	-RGB24, BGR24
@@ -138,9 +134,9 @@ public:
 
 	void drawInputBorder( const size_t &input, const float &thickness, const float &r, const float &g, const float &b );
 
-	void setTextureFiltering( TEXTURE_FILTERING textureFiltering );
+	void setTextureFiltering( VideoMan::VMTextureFiltering textureFiltering );
 
-	VideoManRenderer::TEXTURE_FILTERING getTextureFiltering();
+	VideoMan::VMTextureFiltering getTextureFiltering();
 	
 	void setKeepAspectRatio( const size_t &input, bool keep );
 

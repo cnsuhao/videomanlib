@@ -1,7 +1,7 @@
 #ifdef WIN32
 	#include <windows.h>
 #endif
-#include <GL/glut.h>
+#include <GL/freeglut.h>
 #include "cv.h"
 #include <iostream>
 #include <string>
@@ -59,7 +59,8 @@ void glutKeyboard(unsigned char key, int x, int y)
 	{
 		case 27:
 		{
-			exit(0);
+			glutLeaveMainLoop();
+			break;
 		}
 		case 'r':
             need_to_init = 1;
@@ -95,13 +96,6 @@ void glutSpecialKeyboard(int value, int x, int y)
     }
 }
 
-
-void InitializeOpenGL()
-{
-
-}
-
-
 bool InitializeVideoMan()
 {
 	VMInputIdentification device;
@@ -110,7 +104,11 @@ bool InitializeVideoMan()
 	{
 		//Initialize one input from a video file
 		device.fileName = fileName; //file name
-		device.identifier = "DSHOW_VIDEO_FILE"; //using directshow	
+		#ifdef WIN32
+			device.identifier = "DSHOW_VIDEO_FILE"; //using directshow	
+		#elif linux
+			device.identifier = "HIGHGUI_VIDEO_FILE"; //using highugui	
+		#endif
 		if ( ( videoInput = videoMan.addVideoInput( device, &format ) ) != -1 )
 		{
 			if ( device.fileName )
@@ -316,17 +314,8 @@ int main(int argc, char** argv)
     glutInitWindowPosition( 0, 0 );
     glutInitWindowSize( 640, 480 );
     glutInit( &argc, argv );
-
     glutCreateWindow("VideoMan-OpenCV LKdemo");
-
-    glutReshapeFunc(glutResize);
-    glutDisplayFunc(glutDisplay);
-    glutIdleFunc(glutDisplay);
-    glutKeyboardFunc(glutKeyboard);
-	glutSpecialFunc(glutSpecialKeyboard);
-	glutMouseFunc(glutMouseFunc);
-
-    InitializeOpenGL();
+	glutHideWindow();
 	
 	if ( !InitializeVideoMan() )
 	{
@@ -346,14 +335,19 @@ int main(int argc, char** argv)
     points[1] = (CvPoint2D32f*)cvAlloc(MAX_COUNT*sizeof(points[0][0]));
     status = (char*)cvAlloc(MAX_COUNT);
     flags = 0;
+
+	glutShowWindow();
+	glutReshapeFunc(glutResize);
+    glutDisplayFunc(glutDisplay);
+    glutIdleFunc(glutDisplay);
+    glutKeyboardFunc(glutKeyboard);
+	glutSpecialFunc(glutSpecialKeyboard);
+	glutMouseFunc(glutMouseFunc);
+	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
 	
 	fullScreened = false;
-
 	showHelp();
-
     glutMainLoop();
-
 	clear();
-
     return 0;
 }
