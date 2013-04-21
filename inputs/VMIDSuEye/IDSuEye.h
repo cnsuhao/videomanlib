@@ -24,6 +24,14 @@ public:
 
 	bool linkController( VideoManPrivate::VideoManInputController *acontroller );
 
+	void getExposure( float &shutterTime );
+	
+	bool setExposure( float shutterTime );
+
+	void getFrameRate( double &frameRate );
+
+	bool setFrameRate( double frameRate );
+
 private:
 
 	int colorModeFromPixelFormat( VideoMan::VMPixelFormat pixelFormat );

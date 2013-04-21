@@ -21,5 +21,12 @@ public:
 	virtual bool setImageROI( int x, int y, int width, int height ) = 0;
 
 	virtual bool setImageROIpos( int x, int y ) = 0;
+	
+	virtual void getShutterTime( float &shutterTime ) = 0;
 
+	virtual bool setShutterTime( float shutterTime ) = 0;
+
+	virtual void getFrameRate( double &frameRate ) = 0;
+
+	virtual bool setFrameRate( double frameRate ) = 0;
 };

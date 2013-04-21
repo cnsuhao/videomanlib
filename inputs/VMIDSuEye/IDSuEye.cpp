@@ -56,21 +56,21 @@ int IDSuEye::colorModeFromPixelFormat( VMPixelFormat pixelFormat )
 {
 	switch (pixelFormat)
 	{
-	case GREY8:
+	case VM_GREY8:
 		return IS_CM_MONO8;
-	case GREY16:
+	case VM_GREY16:
 		return IS_CM_MONO16;
-	case RAW8:
+	case VM_RAW8:
 		return IS_CM_SENSOR_RAW8;
-	case RGB24:	
+	case VM_RGB24:	
 		return IS_CM_RGB8_PACKED;
-	case BGR24:
+	case VM_BGR24:
 		return IS_CM_BGR8_PACKED;
-	case RGB32:	
+	case VM_RGB32:	
 		return IS_CM_RGBA8_PACKED;
-	case BGR32:
+	case VM_BGR32:
 		return IS_CM_BGRA8_PACKED;
-	case YUV422:
+	case VM_YUV422:
 		return IS_CM_UYVY_PACKED;
 	default:
 		return IS_CM_RGB8_PACKED;
@@ -82,23 +82,23 @@ VMPixelFormat IDSuEye::pixelFormatFromColorMode( int colorMode )
 	switch (colorMode)
 	{
 	case IS_CM_MONO8:
-		return GREY8;
+		return VM_GREY8;
 	case IS_CM_MONO16:
-		return GREY16;
+		return VM_GREY16;
 	case IS_CM_SENSOR_RAW8:
-		return RAW8;
+		return VM_RAW8;
 	case IS_CM_RGB8_PACKED:
-		return RGB24;
+		return VM_RGB24;
 	case IS_CM_BGR8_PACKED:
-		return BGR24;
+		return VM_BGR24;
 	case IS_CM_RGBA8_PACKED:
-		return RGB32;
+		return VM_RGB32;
 	case IS_CM_BGRA8_PACKED:
-		return BGR32;
+		return VM_BGR32;
 	case IS_CM_UYVY_PACKED:
-		return YUV422;	
+		return VM_YUV422;	
 	default:
-		return UNKNOWN;
+		return VM_UNKNOWN;
 	}
 }
 
@@ -140,7 +140,7 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 
 	// Set display mode to DIB
     nRet = is_SetDisplayMode(m_hCam, IS_SET_DM_DIB);		
-	if ( !aformat || aformat->getPixelFormatIn() == UNKNOWN )
+	if ( !aformat || aformat->getPixelFormatIn() == VM_UNKNOWN )
 	{	
 		//Get Image size
 		IS_RECT rectAOI; 
@@ -162,13 +162,13 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 		{
 			m_nColorMode = IS_CM_RGB8_PACKED;
 			m_nBitsPerPixel = 24;
-			format.SetFormat( m_nSizeX, m_nSizeY, 30.0, RGB24, RGB24 );
+			format.SetFormat( m_nSizeX, m_nSizeY, 30.0, VM_RGB24, VM_RGB24 );
 		}
 		else
 		{
 			m_nColorMode = IS_CM_MONO8;
 			m_nBitsPerPixel = 8;
-			format.SetFormat( m_nSizeX, m_nSizeY, 30.0, GREY8, GREY8 );
+			format.SetFormat( m_nSizeX, m_nSizeY, 30.0, VM_GREY8, VM_GREY8 );
 		}
 	}
 	else
@@ -196,7 +196,7 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 
 		//Check if an image size matches the format
 		bool encontrado = false;
-		for ( int f = 0; !encontrado && f < pformatList->nNumListElements; ++f )
+		for ( int f = 0; !encontrado && f < (int)pformatList->nNumListElements; ++f )
 		{
 			if ( pformatList->FormatInfo[f].nWidth == aformat->width && pformatList->FormatInfo[f].nHeight == aformat->height )
 			{
@@ -406,7 +406,7 @@ bool IDSuEye::setImageROI( int x, int y, int width, int height )
 	{
 		cerr << "Invalid AOI" << endl;
 		return false;
-	}
+	}	
 	if (is_AllocImageMem(m_hCam, width, height, m_nBitsPerPixel, &m_pcImageMemory, &m_lMemoryId ) != IS_SUCCESS)
 	{
 		cerr << "Memory allocation failed!" << endl;
@@ -415,6 +415,9 @@ bool IDSuEye::setImageROI( int x, int y, int width, int height )
 	is_SetImageMem( m_hCam, m_pcImageMemory, m_lMemoryId );
 	//is_AddToSequence( m_hCam, m_pcImageMemory[i], m_lMemoryId[i] );	
 
+	CloseHandle(m_hEvent);
+	m_hEvent = CreateEvent(NULL, TRUE, FALSE, "");
+	is_InitEvent( m_hCam, m_hEvent, IS_SET_EVENT_FRAME);
 	if ( is_CaptureVideo( m_hCam, IS_WAIT ) != IS_SUCCESS )
 		return false;
 	return true;
@@ -422,15 +425,14 @@ bool IDSuEye::setImageROI( int x, int y, int width, int height )
 
 bool IDSuEye::setImageROIpos( int x, int y )
 {
-	/*if ( is_SetImagePos( m_hCam, x, y ) != IS_SUCCESS )
-	{
-		cerr << "Invalid image ROI position" << x << " " << y << endl;
-		return false;
-	}*/
 	IS_RECT rectAOI; 
+	//is_AOI( m_hCam, IS_AOI_IMAGE_GET_AOI, (void*)&rectAOI, sizeof(rectAOI));
 	rectAOI.s32X     = x;
-	rectAOI.s32Y     = y;		 	
-	if ( is_AOI( m_hCam, IS_AOI_IMAGE_SET_POS, (void*)&rectAOI, sizeof(rectAOI)) != IS_SUCCESS )
+	rectAOI.s32Y     = y;
+	IS_POINT_2D position;
+	position.s32X = x;
+	position.s32Y = y;
+	if ( is_AOI( m_hCam, IS_AOI_IMAGE_SET_POS_FAST, (void*)&position, sizeof(position)) != IS_SUCCESS )
 	{
 		cerr << "Invalid AOI position" << endl;
 		return false;
@@ -446,4 +448,26 @@ bool IDSuEye::linkController( VideoManInputController *acontroller )
 		return true;
 	}
 	return false;
+}
+
+void IDSuEye::getExposure( float &shutterTime )
+{
+	is_Exposure( m_hCam, IS_EXPOSURE_CMD_GET_EXPOSURE, &shutterTime, sizeof(shutterTime)  );	
+}
+
+bool IDSuEye::setExposure( float shutterTime )
+{
+	int nRet = is_Exposure( m_hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, &shutterTime, sizeof(shutterTime)  );
+	return ( nRet == IS_SUCCESS );	
+}
+
+void IDSuEye::getFrameRate( double &frameRate )
+{
+	is_GetFramesPerSecond( m_hCam, &frameRate );
+}
+
+bool IDSuEye::setFrameRate( double frameRate )
+{
+	int nRet = is_SetFrameRate( m_hCam, frameRate, &frameRate );
+	return ( nRet == IS_SUCCESS );
 }

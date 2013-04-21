@@ -16,6 +16,14 @@ public:
 	bool setImageROI( int x, int y, int width, int height );
 
 	bool setImageROIpos( int x, int y );
+
+	void getShutterTime( float &shutterTime );
+
+	bool setShutterTime( float shutterTime );	
+
+	void getFrameRate( double &frameRate );
+
+	bool setFrameRate( double frameRate );
 			
 protected:		
 	IDSuEye *uEyeCamera;
