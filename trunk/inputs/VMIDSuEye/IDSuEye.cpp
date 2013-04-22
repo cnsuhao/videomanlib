@@ -322,6 +322,7 @@ char *IDSuEye::getFrame( bool wait)
 		CloseHandle(m_hEvent);
 		m_hEvent = CreateEvent(NULL, TRUE, FALSE, "");
 		is_InitEvent( m_hCam, m_hEvent, IS_SET_EVENT_FRAME);	
+		pixelBuffer = m_pcImageMemory;
 		return m_pcImageMemory;
 	}
 	return NULL;
