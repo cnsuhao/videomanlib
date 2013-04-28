@@ -4,19 +4,20 @@
 #include <vector>
 #include <GL/freeglut.h>
 #include <iostream>
-#include "cv.h"
-#include "cxcore.h"
+#include "opencv2/core/core.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
 
 #include "VideoManControl.h"
 
 using namespace std;
+using namespace cv;
 using namespace VideoMan;
 
 /*
 This is a simple example using OpenCV. One video input is initialized and it is processed using openCV
-To use this example, VideoMan must be built with the directive VM_OGLRenderer, 
+To use this example, VideoMan must be built with the directive VM_OGLRenderer,
 also you need to build the input VMDirectShow
-*/ 
+*/
 
 VideoManControl videoMan;
 int screenLeft, screenUp, screenWidth, screenHeight;
@@ -25,10 +26,10 @@ double videoLength;
 int videoInputID; //Index of the video input
 std::vector< int > userInputIDs; //Indexes of the userinputs for showing the processed images
 
-IplImage *inputCopy;	//Copy of the input image
-IplImage *processedImages[3]; //The processed images
-IplImage *edges;
-IplImage *gray;
+cv::Mat inputCopy;                //Copy of the input image
+cv::Mat processedImages[3];        //The processed images
+cv::Mat gray;
+cv::Mat edges;
 
 char *dirPath = 0;
 
@@ -45,11 +46,9 @@ void glutResize(int width, int height)
 void clear()
 {
 	videoMan.deleteInputs();
-	for ( int i = 0; i< 3; ++i )
-		cvReleaseImage( &processedImages[i] );
-	cvReleaseImage( &inputCopy );
-	cvReleaseImage( &edges );
-	cvReleaseImage( &gray );	
+	inputCopy.release();
+    for ( int i = 0; i< 3; ++i )
+        processedImages[i].release();   	
 }
 
 void glutKeyboard(unsigned char key, int x, int y)
@@ -131,40 +130,40 @@ void glutDisplay(void)
 	char *image = videoMan.getFrame( videoInputID );
 	if ( image != NULL )
 	{
-		memcpy( inputCopy->imageData, (const char *)image, inputCopy->imageSize );	
+		memcpy( inputCopy.data, (const char *)image, inputCopy.size().area()*inputCopy.channels() );	
 	
 		//Update the texture of the renderer
-		videoMan.updateTexture( videoInputID, inputCopy->imageData ); 
+		videoMan.updateTexture( videoInputID, (const char*)inputCopy.data ); 
 	       
 		//cvSetImageData( inputHeader, image, inputHeader->widthStep );
 		// Process the images...
 		
 		//Convert to grayscale
-		if ( inputCopy->nChannels != 1 )
-			cvCvtColor( inputCopy, gray, CV_RGB2GRAY );
-		else
-			cvCopy( inputCopy, gray );
+		if ( inputCopy.channels() != 1 )
+			cv::cvtColor( inputCopy, gray, CV_RGB2GRAY);       
+    	else
+			inputCopy.copyTo(gray);
 		
 		//process 0
 		if ( videoMan.isActivated( userInputIDs[0] ) )
 		{
-			cvNot( inputCopy, processedImages[0] );
+			cv::bitwise_not( inputCopy, processedImages[0] );
 			videoMan.updateTexture( userInputIDs[0] );
 		}
 
-		//process 1 
-		if ( videoMan.isActivated( userInputIDs[1] ) && inputCopy->depth == 8 )
+		//process 1
+		if ( videoMan.isActivated( userInputIDs[1] ) )
 		{
-			cvSmooth( inputCopy, processedImages[1], CV_BLUR, 7, 7 );
-			videoMan.updateTexture( userInputIDs[1] );				
+			cv::blur( inputCopy, processedImages[1], cv::Size(7,7));
+			videoMan.updateTexture( userInputIDs[1] );
 		}
 
 		//process 2
-		if ( videoMan.isActivated( userInputIDs[2]) && inputCopy->depth == 8 )
+		if ( videoMan.isActivated( userInputIDs[2]) )
 		{
-			cvZero( processedImages[2] );
-			cvCanny( gray, edges, 50, 60 );		
-			cvCopy( inputCopy, processedImages[2],edges );		
+			processedImages[2].setTo(0);
+        	cv::Canny( gray, edges, 50, 60 );
+        	inputCopy.copyTo( processedImages[2], edges );
 			videoMan.updateTexture( userInputIDs[2] );	
 		}
 
@@ -254,7 +253,10 @@ bool InitializeVideoMan()
 
 	if ( videoInputID != -1 )
 	{		
-		inputCopy = cvCreateImage( cvSize( format.width, format.height), format.depth, format.nChannels );
+		if(format.depth == 8 && format.nChannels == 3)
+			inputCopy = cv::Mat( cv::Size(format.width, format.height), CV_8UC3 );
+        else if(format.nChannels == 1)
+            inputCopy = cv::Mat( cv::Size(format.width, format.height), CV_8UC1 );
 
 		//Initialize the user inputs for showing the processed images
 		device.identifier = "USER_INPUT";
@@ -264,12 +266,15 @@ bool InitializeVideoMan()
 			if ( ( inputID = videoMan.addVideoInput( device, &format ) ) != -1 )
 			{
 				userInputIDs.push_back( inputID );
-				processedImages[i] = cvCreateImage( cvSize( format.width, format.height), format.depth, format.nChannels );
-				videoMan.setUserInputImage( inputID, processedImages[i]->imageData );
+				 if(format.depth == 8 && format.nChannels == 3)
+                    processedImages[i] = cv::Mat( cv::Size(format.width, format.height), CV_8UC3 );
+                else if(format.nChannels == 1)
+                    processedImages[i] = cv::Mat( cv::Size(format.width, format.height), CV_8UC1 );
+				videoMan.setUserInputImage( inputID, (char*)processedImages[i].data);
 			}
 		}
-		edges = cvCreateImage( cvSize( format.width, format.height), format.depth, 1 );
-		gray = cvCreateImage( cvSize( format.width, format.height), format.depth, 1 );
+		edges = cv::Mat( cv::Size( format.width, format.height), CV_8UC1 );
+        gray = cv::Mat( cv::Size( format.width, format.height), CV_8UC1 );
 	}
 	
 	//We want to display all the intialized video inputs
@@ -296,6 +301,7 @@ int main(int argc, char** argv)
 	cout << "Usage: opencvSimple.exe filePath(string)" << endl;
 	cout << "Example: opencvSimple.exe c:\\video.avi" << endl;
 	cout << "If you don't specify a filepath, a camera will be initialized" << endl;
+	cout << "=====================================================" << endl;
 	if ( argc > 1 )
 		dirPath = argv[1];
 	glutInitDisplayMode( GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA | GLUT_MULTISAMPLE );
@@ -306,8 +312,15 @@ int main(int argc, char** argv)
 	glutHideWindow();   
 	
 	if ( !InitializeVideoMan() )
-		return 0;
+	{
+		showHelp();
+		cout << "Error intializing VideoMan" << endl;
+		cout << "Pres Enter to exit" << endl;		 
+		getchar();
+		return -1;
+	}
 
+	showHelp();
 	glutShowWindow();
 	glutReshapeFunc(glutResize);
     glutDisplayFunc(glutDisplay);
@@ -317,7 +330,6 @@ int main(int argc, char** argv)
 	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
 
 	fullScreened = false;
-	showHelp();
     glutMainLoop();
 	clear();
 	return 0;
