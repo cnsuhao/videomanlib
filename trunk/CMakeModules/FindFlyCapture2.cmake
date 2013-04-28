@@ -42,7 +42,7 @@
     PATHS 
     "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Point Grey Research, Inc.\\PGRFlyCapture;InstallDir]/lib"
     "$ENV{ProgramFiles}/Point Grey Research/FlyCapture2/lib"
-    "$ENV{EXTRA}/include"
+    "$ENV{EXTRA}/lib"
     )
   #MESSAGE("DBG FlyCapture2_GUI_LIBRARY=${FlyCapture2_GUI_LIBRARY}")
 
