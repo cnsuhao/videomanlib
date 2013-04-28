@@ -9,10 +9,7 @@
 #include "cxcore.h"
 #include "highgui.h"
 
-
-
 #include "VideoManControl.h"
-
 
 using namespace std;
 using namespace VideoMan;
@@ -107,25 +104,29 @@ void showHelp()
 
 int main(int argc, char** argv)
 {
-	//The OpenGL renderer is not needed
-	videoMan = new VideoManControl( VideoManControl::NO_RENDERER );
-
 	cout << "This is a simple example using OpenCV Highgui for the window creation and image visualization" << endl;	
 	cout << "Usage: opencvHighgui.exe filePath(string)" << endl;
 	cout << "Example: opencvHighgui.exe c:\\video.avi" << endl;
 	cout << "If you don't specify a filepath, a camera will be initialized" << endl;
+	cout << "=====================================================" << endl;
+
+	//The OpenGL renderer is not needed
+	videoMan = new VideoManControl( VideoManControl::NO_RENDERER );
 	
 	if ( argc > 1 )
 		videoFile = argv[1];
 
 	if ( !InitializeVideoMan() )
 	{
-		delete videoMan;
-		return 0;
+		showHelp();
+		delete videoMan;		
+		cout << "Error intializing VideoMan" << endl;
+		cout << "Pres Enter to exit" << endl;		 
+		getchar();
+		return -1;		
 	}
 
 	showHelp();
-
 	cvNamedWindow( "VideoMan example with Highgui" );
 	char code = -1;
 	for(;;)

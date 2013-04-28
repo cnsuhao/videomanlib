@@ -10,7 +10,7 @@ using namespace std;
 using namespace VideoMan;
 
 /*
-This is an example that shows how to use IDS uEye cameras 
+This is an example that shows how to use cameras with DC1394
 To use this example, VideoMan must be built with the directive VM_OGLRenderer
 You also need to build the VMDC1394 input
 */

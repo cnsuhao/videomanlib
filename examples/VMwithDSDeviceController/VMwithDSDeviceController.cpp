@@ -75,6 +75,21 @@ void glutKeyboard(unsigned char key, int x, int y)
 			}
 			break;
 		}
+		case 'e':
+		case 'E':
+		{
+			long value;
+			bool flagAuto;
+			if ( controller && controller->getCameraControl( ICaptureDeviceDSController::Exposure, value, flagAuto ) )
+			{
+				//Gain is supported
+				if ( flagAuto )
+					controller->setCameraControl( ICaptureDeviceDSController::Exposure, value, false );//Turn Manual
+				else
+					controller->setCameraControl( ICaptureDeviceDSController::Exposure, value, true );//Turn Auto
+			}
+			break;
+		}
 	}
 }
 
@@ -241,9 +256,9 @@ void showHelp()
 
 int main(int argc, char** argv)
 {
-	cout << "This example initilizes one camera" << endl;
+	cout << "This example initilizes one camera with VMDirectShow" << endl;
 	cout << "=====================================================" << endl;
-	
+
 	glutInitDisplayMode( GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA | GLUT_MULTISAMPLE );
     glutInitWindowPosition( 0, 0 );
     glutInitWindowSize( 640, 480 );
@@ -251,9 +266,16 @@ int main(int argc, char** argv)
     glutCreateWindow("VideoMan with DirectShow");
 	glutHideWindow();
 	
-	if ( !InitializeVideoMan() )	
+	if ( !InitializeVideoMan() )
+	{
+		showHelp();
+		cout << "Error intializing VideoMan" << endl;
+		cout << "Pres Enter to exit" << endl;		 
+		getchar();
 		return -1;
+	}
 	
+	showHelp();	
 	glutShowWindow();
 	glutReshapeFunc(glutResize);
     glutDisplayFunc(glutDisplay);
@@ -263,7 +285,6 @@ int main(int argc, char** argv)
 	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
 
 	fullScreened = false;
-	showHelp();
     glutMainLoop();
 	clear();
 	return 0;

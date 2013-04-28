@@ -70,8 +70,9 @@ void glutDisplay(void)
 
 int main(int argc, char** argv)
 {
-	cout << endl << "=====================================================" << endl;	
-	cout << "This is an example that shows how to use PointGrey cameras " << endl;	
+	cout << "This is an example that shows how to use PointGrey cameras " << endl;
+	cout << "=====================================================" << endl;
+
 	glutInitDisplayMode( GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA | GLUT_MULTISAMPLE );
 	glutInitWindowPosition( 0, 0 );
 	glutInitWindowSize( 640, 480 );
@@ -80,7 +81,12 @@ int main(int argc, char** argv)
 	glutHideWindow();
  
 	if ( !InitializeVideoMan() )
-		return -1; 
+	{
+		cout << "Error intializing VideoMan" << endl;
+		cout << "Pres Enter to exit" << endl;		 
+		getchar();
+		return -1;
+	}
 
 	glutShowWindow();
 	glutReshapeFunc(glutResize );  

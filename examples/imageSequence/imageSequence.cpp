@@ -116,15 +116,18 @@ void showHelp()
 
 int main(int argc, char** argv)
 {
-	cout << endl;
 	cout << "This is an example using VMImageSequence input module for loading an image sequence" << endl;	
 	cout << "Usage: exampleImageSequence.exe imagesPath(string)" << endl;
-	cout << "Example: exampleImageSequence.exe c:\\mySequence" << endl;	
+	cout << "Example: exampleImageSequence.exe c:\\mySequence" << endl;
+	cout << "=====================================================" << endl;
 	if ( argc > 1 )
 		imagesPath = argv[1];
 	else
 	{
+		showHelp();
 		cout << "You must specify a path to a directory" << endl;
+		cout << "Pres Enter to exit" << endl;
+		getchar();
 		return -1;
 	}
 
@@ -136,8 +139,15 @@ int main(int argc, char** argv)
 	glutHideWindow();
 
 	if ( !InitializeVideoMan() )
+	{
+		showHelp();
+		cout << "Error intializing VideoMan" << endl;
+		cout << "Pres Enter to exit" << endl;
+		getchar();
 		return -1;
+	}
 
+	showHelp();
 	glutShowWindow();
 	glutReshapeFunc(glutResize);
     glutDisplayFunc(glutDisplay);
@@ -147,7 +157,6 @@ int main(int argc, char** argv)
 	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
 
 	fullScreened = false;
-	showHelp();
     glutMainLoop();
 	return 0;
 }

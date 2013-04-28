@@ -362,7 +362,13 @@ int main(int argc, char** argv)
 	glutHideWindow();
    
     if ( !InitializeVideoMan() )
+	{
+		showHelp();
+		cout << "Error intializing VideoMan" << endl;
+		cout << "Pres Enter to exit" << endl;		 
+		std::getchar();
 		return -1;
+	}
 
 	allocGPUMem( format.width, format.height, format.nChannels * format.depth / 8 );
 		
@@ -375,12 +381,16 @@ int main(int argc, char** argv)
 	}
 	catch(runtime_error e)
 	{
+		showHelp();
 		cerr << e.what() << endl;
-		cerr << "Font file font.ttf not found. Copy that file to the working directory /build_path/../examples/cuda" << endl;
+		cerr << "Font file font.ttf not found. Copy that file to the working directory /build_path/../examples/cuda" << endl;		
+		cout << "Pres Enter to exit" << endl;		 
+		std::getchar();
 		clear();
 		return -1;
 	}
 
+	showHelp();
 	glutShowWindow();
 	glutReshapeFunc(glutResize);
     glutDisplayFunc(glutDisplay);
@@ -391,7 +401,6 @@ int main(int argc, char** argv)
 	glutMotionFunc( glutMouseMotionFunc );
 	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
 
-	showHelp();
     glutMainLoop();
 	clear();
 	return 0;

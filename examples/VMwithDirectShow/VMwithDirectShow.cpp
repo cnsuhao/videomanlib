@@ -184,7 +184,7 @@ int main(int argc, char** argv)
 	cout << "This example initilizes two inputs: one video file and one camera" << endl;
 	cout << "Usage: VMwithDirectShow.exe filePath(string)" << endl;	
 	cout << "Example: VMwithDirectShow.exe c:\\video.avi" << endl;
-	cout << "The camera is automatically detected" << endl;		
+	cout << "The camera is automatically detected" << endl;
 	cout << "=====================================================" << endl;
 	if ( argc > 1 )
 		dirPath = argv[1];
@@ -196,8 +196,15 @@ int main(int argc, char** argv)
 	glutHideWindow();
 
 	if ( !InitializeVideoMan() )
+	{
+		showHelp();
+		cout << "Error intializing VideoMan" << endl;
+		cout << "Pres Enter to exit" << endl;
+		getchar();
 		return -1;
+	}
 
+	showHelp();
 	glutShowWindow();
 	glutReshapeFunc(glutResize);
     glutDisplayFunc(glutDisplay);
@@ -207,7 +214,6 @@ int main(int argc, char** argv)
 	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
 	
 	fullScreened = false;
-	showHelp();
     glutMainLoop();
 	return 0;
 }

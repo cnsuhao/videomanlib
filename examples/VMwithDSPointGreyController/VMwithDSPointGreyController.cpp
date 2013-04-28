@@ -146,7 +146,7 @@ int main(int argc, char** argv)
 {
 	cout << "This example initilizes one camera" << endl;
 	cout << "=====================================================" << endl;
-	
+
 	glutInitDisplayMode( GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA | GLUT_MULTISAMPLE );
     glutInitWindowPosition( 0, 0 );
     glutInitWindowSize( 640, 480 );
@@ -155,8 +155,15 @@ int main(int argc, char** argv)
 	glutHideWindow();
 
 	if ( !InitializeVideoMan() )	
+	{
+		showHelp();
+		cout << "Error intializing VideoMan" << endl;
+		cout << "Pres Enter to exit" << endl;		 
+		getchar();
 		return -1;
+	}
 
+	showHelp();
 	glutShowWindow();
     glutReshapeFunc(glutResize);
     glutDisplayFunc(glutDisplay);
@@ -166,7 +173,6 @@ int main(int argc, char** argv)
 	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
 	
 	fullScreened = false;
-	showHelp();
     glutMainLoop();
 	clear();
 	return 0;

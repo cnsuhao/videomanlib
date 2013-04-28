@@ -179,11 +179,16 @@ int main(int argc, char** argv)
 	cout << "This is a simple example showing the control of video file playback" << endl;	
 	cout << "Usage: videoFileControl.exe filePath(string)" << endl;
 	cout << "Example: videoFileControl.exe c:\\video.avi" << endl;	
+	cout << "=====================================================" << endl;
+
 	if ( argc > 1 )
 		videoFile = argv[1];
 	else
 	{
+		showHelp();
 		cout << "You must specify a path to a video file" << endl;
+		cout << "Pres Enter to exit" << endl;
+		getchar();
 		return -1;
 	}
 
@@ -195,8 +200,15 @@ int main(int argc, char** argv)
 	glutHideWindow();
 
 	if ( !InitializeVideoMan() )
-		return -1; 	
+	{
+		showHelp();
+		cout << "Error intializing VideoMan" << endl;
+		cout << "Pres Enter to exit" << endl;
+		getchar();
+		return -1;
+	}
 
+	showHelp();
 	glutShowWindow();
 	glutReshapeFunc(glutResize);
     glutDisplayFunc(glutDisplay);
@@ -206,7 +218,6 @@ int main(int argc, char** argv)
 	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
 
 	fullScreened = false;
-	showHelp();
     glutMainLoop();
 	clear();
 	return 0;
