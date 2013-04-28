@@ -49,7 +49,7 @@ SUBDIRS(
 )
 ENDIF(VIDEOMAN_BUILD_INPUT_VMImageFile)
 
-option(VIDEOMAN_BUILD_INPUT_VMHighgui "Build VMHighgui input module for input devices and video files using OpenCV-Highgui" OFF)
+option(VIDEOMAN_BUILD_INPUT_VMHighgui "Build VMHighgui input module for input devices and video files using OpenCV-Highgui" ON)
 IF(VIDEOMAN_BUILD_INPUT_VMHighgui)	
 SUBDIRS(
 VMHighgui

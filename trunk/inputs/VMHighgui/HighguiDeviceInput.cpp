@@ -13,7 +13,7 @@ HighguiDeviceInput::HighguiDeviceInput(void)
 
 HighguiDeviceInput::~HighguiDeviceInput(void)
 {
-	cvReleaseCapture( &capture );
+	capture.release();	
 }
 
 bool HighguiDeviceInput::initInput( const VMInputIdentification &device, VMInputFormat *aformat )
@@ -24,42 +24,42 @@ bool HighguiDeviceInput::initInput( const VMInputIdentification &device, VMInput
 		istringstream ss( device.uniqueName );
 		ss >> id;
 	}
-	capture = cvCreateCameraCapture( id );
-	if( capture )
+	capture.open( id );
+	if( capture.isOpened() )
 	{
 		if ( aformat )
 		{
-			cvSetCaptureProperty( capture, CV_CAP_PROP_FRAME_WIDTH, aformat->width );
-			cvSetCaptureProperty( capture, CV_CAP_PROP_FRAME_HEIGHT, aformat->height ); 
-			cvSetCaptureProperty( capture, CV_CAP_PROP_FPS, aformat->fps  );		
+			//set prefered format
+			capture.set( CV_CAP_PROP_FRAME_WIDTH, aformat->width );
+			capture.set( CV_CAP_PROP_FRAME_HEIGHT, aformat->height ); 
+			capture.set( CV_CAP_PROP_FPS, aformat->fps  );		
 		}
-		format.width = (int)cvGetCaptureProperty( capture, CV_CAP_PROP_FRAME_WIDTH );
-		format.height = (int)cvGetCaptureProperty( capture, CV_CAP_PROP_FRAME_HEIGHT );
-		format.fps = cvGetCaptureProperty( capture, CV_CAP_PROP_FPS );		
 
-		IplImage *image = cvQueryFrame( capture );
-		if ( !image ) 
-			return false;
-		format.nChannels = image->nChannels;
-		format.depth = image->depth;
-		if ( image->nChannels == 3 )
-		{
-			string channelSeq = image->channelSeq;
-			if ( channelSeq == "BGR" )
-				format.setPixelFormat( VM_BGR24, VM_BGR24 );
-			else if ( channelSeq == "RGB " )
-				format.setPixelFormat( VM_RGB24, VM_RGB24 );
+		format.width = (int)capture.get( CV_CAP_PROP_FRAME_WIDTH );
+		format.height = (int)capture.get( CV_CAP_PROP_FRAME_HEIGHT );
+		format.fps = capture.get( CV_CAP_PROP_FPS );		
+
+		cv::Mat image;
+		if ( !capture.grab() )
+			return false;		
+		if ( !capture.retrieve( image ) )
+			return false;		
+		format.nChannels = image.channels();
+		format.depth = image.depth();
+		if ( image.channels() == 3 )
+		{		
+			format.setPixelFormat( VM_BGR24, VM_BGR24 );		
 		}
-		else if ( image->nChannels == 1 )
+		else if ( image.channels() == 1 )
 		{
-			if ( image->depth == 8 )
+			if ( image.depth() == 8 )
 				format.setPixelFormat( VM_GREY8, VM_GREY8 );
-			else if ( image->depth == 16 )
+			else if ( image.depth() == 16 )
 				format.setPixelFormat( VM_GREY16, VM_GREY16 );
 		}
 		if ( aformat ) 
 			*aformat= format;
-		pixelBuffer = image->imageData;
+		pixelBuffer = (char*)image.data;
 		
 		const string identifier = "HIGHGUI_CAPTURE_DEVICE";
 		identification.identifier = new char[identifier.length() + 1];
@@ -70,15 +70,18 @@ bool HighguiDeviceInput::initInput( const VMInputIdentification &device, VMInput
 	return false;
 }
 
-void HighguiDeviceInput::releaseFrame( )
+void HighguiDeviceInput::releaseFrame( ) 
 {
-	cvGrabFrame( capture );
 	pixelBuffer = NULL;
 }
 
 char *HighguiDeviceInput::getFrame( bool wait)
 {
-	IplImage *image = cvRetrieveFrame( capture );//cvQueryFrame( capture );
-	pixelBuffer = image->imageData;
+	if ( capture.grab() )
+	{
+		cv::Mat image;
+		if ( capture.retrieve( image ) )
+			pixelBuffer = (char*)image.data;
+	}
 	return pixelBuffer;
 }
