@@ -12,7 +12,7 @@ using namespace VideoMan;
 /*
 This is an example that shows how to use IDS uEye cameras 
 To use this example, VideoMan must be built with the directive VM_OGLRenderer
-You also need to build the VMIDSuEye input
+You also need to build the VMDC1394 input
 */
 
 VideoManControl videoMan;
@@ -32,8 +32,8 @@ bool InitializeVideoMan()
 	VMInputIdentification *deviceList;
 	int numDevices;
 
-	videoMan.getAvailableDevices( "IDS_uEye_CAMERA", &deviceList, numDevices );
-	cout << "Found " << numDevices << " IDS uEye cameras:" << endl;
+	videoMan.getAvailableDevices( "DC1394_CAPTURE_DEVICE", &deviceList, numDevices );
+	cout << "Found " << numDevices << " cameras" << endl;
 	for ( int d = 0; d < numDevices; ++d )
 		cout << "-" << deviceList[d].friendlyName << " with ID " << deviceList[d].uniqueName << endl;
 	for ( int d = 0; d < numDevices; ++d )
@@ -44,12 +44,6 @@ bool InitializeVideoMan()
 		{
 			cout << " Initialized camera ID " << deviceList[d].uniqueName << endl;
 			videoMan.setVerticalFlip( inputID, true );
-			controller =  ((IuEyeCameraController*)videoMan.createController( 0, "uEye_CAMERA_CONTROLLER" ));
-			double frameRate;
-			controller->getFrameRate( frameRate );
-			float exposure;
-			controller->getShutterTime( exposure );
-			//controller->setFrameRate( 8 );			
 			break;
 		}
 	}
@@ -76,22 +70,17 @@ void glutDisplay(void)
 
 int main(int argc, char** argv)
 {
-	cout << "This is an example that shows how to use IDS uEye cameras with VMIDSuEye" << endl;	
-	cout << "=====================================================" << endl;
+	cout << endl << "=====================================================" << endl;	
+	cout << "This is an example that shows how to use cameras with DC1394 " << endl;	
 	glutInitDisplayMode( GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA | GLUT_MULTISAMPLE );
 	glutInitWindowPosition( 0, 0 );
 	glutInitWindowSize( 640, 480 );
     glutInit( &argc, argv );
-    glutCreateWindow("VideoMan with IDS uEye cameras");
+    glutCreateWindow("VideoMan with DC1394");
 	glutHideWindow();
 
 	if ( !InitializeVideoMan() )
-	{
-		cout << "Error intializing VideoMan" << endl;
-		cout << "Pres Enter to exit" << endl;		 
-		getchar();
 		return -1;
-	}
 
 	glutShowWindow();
 	glutReshapeFunc(glutResize );  
