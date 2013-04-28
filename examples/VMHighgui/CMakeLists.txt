@@ -1,0 +1,7 @@
+FIND_PACKAGE( Freeglut REQUIRED )
+FIND_PACKAGE( OpenGL REQUIRED )
+INCLUDE_DIRECTORIES( ${FREEGLUT_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR} )
+ADD_EXECUTABLE( exVMHighgui exVMHighgui.cpp )
+TARGET_LINK_LIBRARIES( exVMHighgui VideoMan ${FREEGLUT_LIBRARIES} ${OPENGL_LIBRARIES} )
+set_target_properties( exVMHighgui PROPERTIES FOLDER "examples")
+add_dependencies( exVMHighgui VideoMan )
