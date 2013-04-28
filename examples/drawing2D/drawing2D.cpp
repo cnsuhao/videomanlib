@@ -5,8 +5,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "cxcore.h"
-#include "highgui.h"
+
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/core/core.hpp"
 
 #include "VideoManControl.h"
 
@@ -28,9 +29,9 @@ int screenLeft, screenUp, screenWidth, screenHeight;
 bool fullScreened;
 
 int inputID; //Index of the video input
-IplImage *img; //Input image
+cv::Mat img; //Input image
 
-std::vector<CvPoint2D32f> pointsList; //List of created points
+std::vector<cv::Point2f> pointsList; //List of created points
 
 #include "FreeType.h"
 
@@ -47,12 +48,6 @@ void glutResize(int width, int height)
 	videoMan.changeScreenSize( screenLeft, screenUp, screenWidth, screenHeight );
 }
 
-void clear()
-{
-	cvReleaseImage( &img );
-}
-
-
 void glutMouseFunc( int button, int mouseState, int x, int y )
 {
 	//Draw a new point
@@ -64,14 +59,14 @@ void glutMouseFunc( int button, int mouseState, int x, int y )
 		//Check if the point is inside the input region
 		if ( videoMan.screenToImageCoords( xf, yf ) == inputID )
 		{
-			//Draw the circle in the image			
+			//Draw the circle in the image
 			int xi = (int)xf;
 			int yi = (int)yf;
-			cvCircle( img, cvPoint( (int)xi, (int)yi ), 6, CV_RGB( 0, 255, 0 ), 2 );
+			cv::circle( img, cv::Point( xi, yi ), 6, CV_RGB( 0, 255, 0 ), 2 );
 			cout << "Screen coords: " << x << " " << y << endl;
 			cout << "Image coords: " << xf << " " << yf << endl;
 			
-			pointsList.push_back( cvPoint2D32f( (int)xi+0.5, (int)yi+0.5 ) );
+			pointsList.push_back( cv::Point2f( xi + 0.5f, yi + 0.5f ) );
 		}
 		//We need to update the texture
 		videoMan.updateTexture( inputID  );
@@ -200,22 +195,22 @@ bool InitializeVideoMan()
 	videoMan.setTextureFiltering( VM_LINEAR );
 	//Initialize one user input	
 	device.identifier = "USER_INPUT"; //using directshow			
-	format.SetFormat( img->width, img->height, 0, VM_BGR24, VM_BGR24 );
-	if ( img->widthStep % 4 != 0 )
+	format.SetFormat( img.cols, img.rows, 0, VM_BGR24, VM_BGR24 );
+	if ( img.step % 4 != 0 )
 	{
-		if ( img->widthStep % 8 == 0 )
+		if ( img.step % 8 == 0 )
 			format.align = 8;
 		else
 			format.align = 1;
 	}
 	if ( ( inputID = videoMan.addVideoInput( device, &format ) ) != -1 )	
-		videoMan.setUserInputImage( inputID, img->imageData );
+		videoMan.setUserInputImage( inputID, (char*)img.data );
 	else
 		return false;
 	videoMan.setKeepAspectRatio( inputID, true );
 	videoMan.activateAllVideoInputs();
 	videoMan.updateTexture( inputID );
-	videoMan.setVerticalFlip( inputID, img->origin == 0 );
+	videoMan.setVerticalFlip( inputID, true );
 
 	return ( inputID != -1 );
 }
@@ -325,17 +320,27 @@ int main(int argc, char** argv)
 	cout << "-Blue X: Drew over the screen with OpenGL (screen coordinates)" << endl;	
 	cout << "Usage: drawing2D.exe imageFilePath(string)" << endl;
 	cout << "Example: drawing2D.exe c:\\image.jpg" << endl;	
+	cout << "=====================================================" << endl;
+	string file;
 	if ( argc > 1 )
-		img = cvLoadImage( argv[1], CV_LOAD_IMAGE_COLOR );		
-	else
 	{
+		file = argv[1];
+		img = cv::imread( argv[1], CV_LOAD_IMAGE_COLOR );		
+	}
+	else
+	{		
+		showHelp();
 		cout << "You must specify a path to an image file" << endl;
+		getchar();
+		cout << "Pres Enter to exit" << endl;		 
 		return -1;
 	}
-	if ( !img )
-	{
-		string file = argv[1];
+	if ( img.empty() )
+	{		
+		showHelp();
 		cout << "Error loading image " << file << endl;
+		cout << "Pres Enter to exit" << endl;		 
+		getchar();
 		return -1;
 	}
 
@@ -347,7 +352,13 @@ int main(int argc, char** argv)
 	glutHideWindow();
 	
 	if ( !InitializeVideoMan() )
+	{
+		showHelp();
+		cout << "Error intializing VideoMan" << endl;
+		cout << "Pres Enter to exit" << endl;		 
+		getchar();
 		return -1;
+	}
 
 	//Load the font	
 	try
@@ -362,6 +373,7 @@ int main(int argc, char** argv)
 		freetypeFontFound = false;
 	}
 
+	showHelp();    
 	glutShowWindow();
 	glutReshapeFunc(glutResize );  
     glutDisplayFunc(glutDisplay);
@@ -372,8 +384,6 @@ int main(int argc, char** argv)
 	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 	
 
 	fullScreened = false;	
-	showHelp();    
 	glutMainLoop();
-	clear();
 	return 0;
 }
