@@ -207,17 +207,8 @@ void mouseControl( VideoManControl &videoMan, sf::Clock &clock, const sf::Event 
 	}
 }
 
-int main(int argc, char** argv)
+void showHelp()
 {
-	sf::RenderWindow app(sf::VideoMode(800, 600, 24), "VideoMan with PointGrey");
-	
-	if ( !InitializeVideoMan() )
-		return EXIT_FAILURE; 
-	videoMan.changeScreenSize( 0, 0, app.getSize().x, app.getSize().y );
-
-	cout << endl << "=====================================================" << endl;	
-	cout << "This is an example that shows how to use PointGrey cameras and the advanced functionality" << endl;	
-	cout << "Works with VMPointGrey (using FlyCapture v1) and VMPointGrey2 (using FlyCapture v2)" << endl;	
 	cout << "========" << endl;
 	cout << "Controls:" << endl;
 	cout << "Esc->Exit" << endl;
@@ -229,6 +220,26 @@ int main(int argc, char** argv)
 	cout << "LEFT/RIGHT->Move the ROI left/right" << endl;		
 	cout << "R->Reset image ROI" << endl;	
 	cout << "========" << endl;
+}
+
+int main(int argc, char** argv)
+{
+	cout << "This is an example that shows how to use PointGrey cameras and the advanced functionality" << endl;	
+	cout << "Works with VMPointGrey (using FlyCapture v1) and VMPointGrey2 (using FlyCapture v2)" << endl;	
+	cout << "=====================================================" << endl;
+
+	sf::RenderWindow app(sf::VideoMode(800, 600, 24), "VideoMan with PointGrey");
+	
+	if ( !InitializeVideoMan() )
+	{
+		showHelp();
+		cout << "Error intializing VideoMan" << endl;
+		cout << "Pres Enter to exit" << endl;		 
+		getchar();
+		return -1;
+	}
+	showHelp();
+	videoMan.changeScreenSize( 0, 0, app.getSize().x, app.getSize().y );	
 
 	sf::Clock clock;
 	while ( app.isOpen() )

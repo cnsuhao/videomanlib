@@ -259,7 +259,6 @@ void glutDisplay(void)
     glutSwapBuffers();
 }
 
-
 void showHelp()
 {
 	printf("========\n");
@@ -304,10 +303,10 @@ int main(int argc, char** argv)
 	cout << "Usage: VMwithDirectShow.exe filePath(string)" << endl;
 	cout << "Example: VMwithDirectShow.exe c:\\video.avi" << endl;
 	cout << "If no argument is passed, a camera is initialized" << endl;	
+	cout << "=====================================================" << endl;
+
 	if ( argc > 1 ) 
-	{
 		fileName = argv[1];
-	}
 
 	glutInitDisplayMode( GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA | GLUT_MULTISAMPLE );
     glutInitWindowPosition( 0, 0 );
@@ -318,7 +317,10 @@ int main(int argc, char** argv)
 	
 	if ( !InitializeVideoMan() )
 	{
-		fprintf(stderr,"Could not initialize capturing...\n");
+		showHelp();
+		cout << "Error intializing VideoMan" << endl;
+		cout << "Pres Enter to exit" << endl;		 
+		getchar();
 		return -1;
 	}
 
@@ -335,6 +337,7 @@ int main(int argc, char** argv)
     status = (char*)cvAlloc(MAX_COUNT);
     flags = 0;
 
+	showHelp();
 	glutShowWindow();
 	glutReshapeFunc(glutResize);
     glutDisplayFunc(glutDisplay);
@@ -345,7 +348,6 @@ int main(int argc, char** argv)
 	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
 	
 	fullScreened = false;
-	showHelp();
     glutMainLoop();
 	clear();
     return 0;

@@ -193,12 +193,21 @@ void showHelp()
 
 int main(int argc, char** argv)
 {
-	cout << "Multiple video files are initilized using DirectShow" << endl;
+	cout << "Multiple video files are initilized using VMDirectShow" << endl;
 	cout << "Usage: VMwithDirectShowMultiVideo.exe directoryPath(string) playAudio(0/1)" << endl;
 	cout << "Example: VMwithDirectShowMultiVideo.exe c:\\MyVideos 0" << endl;
 	cout << "=====================================================" << endl;
+
 	if ( argc > 1 )
 		dirPath = argv[1];
+	else
+	{
+		showHelp();
+		cout << "Error: A path to a folder containing videos is needed" << endl;
+		cout << "Pres Enter to exit" << endl;
+		std::getchar();
+		return -1;
+	}
 	if ( argc > 2 )
 	{
 		string num = argv[2];
@@ -214,9 +223,14 @@ int main(int argc, char** argv)
 	
 	if ( !InitializeVideoMan() )
 	{
-		return 0;
+		showHelp();
+		cout << "Error intializing VideoMan" << endl;
+		cout << "Pres Enter to exit" << endl;		 
+		getchar();
+		return -1;
 	}
 
+	showHelp();
 	glutShowWindow();
 	glutReshapeFunc(glutResize);
     glutDisplayFunc(glutDisplay);
@@ -225,8 +239,7 @@ int main(int argc, char** argv)
 	glutSpecialFunc(glutSpecialKeyboard);
 	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION); 
 	
-	fullScreened = false;
-	showHelp();
+	fullScreened = false;	
     glutMainLoop();
 	return 0;
 }
