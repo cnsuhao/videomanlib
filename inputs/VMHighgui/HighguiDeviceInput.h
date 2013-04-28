@@ -2,8 +2,7 @@
 #include "VideoManInputFormat.h"
 #include "VideoInput.h"
 
-#include <highgui.h>
-
+#include "opencv2/highgui/highgui.hpp"
 
 class HighguiDeviceInput :
 	public VideoManPrivate::VideoInput
@@ -19,5 +18,5 @@ public:
 	void releaseFrame( );	
 
 private:	
-	CvCapture *capture;
+	cv::VideoCapture capture;
 };
