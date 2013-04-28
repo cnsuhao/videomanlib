@@ -163,7 +163,8 @@ bool ImgSeq::initSequence( const char *adirPath, VMInputFormat *aFormat )
 		{
 			format.width = img->width;
 			format.height = img->height;
-			if ( img->nChannels == 3 && img->depth == 8 && img->channelSeq == "BGR" )
+				string channelSeq = img->channelSeq;
+			if ( img->nChannels == 3 && img->depth == 8 && channelSeq == "BGR" )
 				format.setPixelFormat( VM_BGR24, VM_BGR24 );
 			else if ( img->nChannels == 3 && img->depth == 8 )
 				format.setPixelFormat( VM_RGB24, VM_RGB24 );
@@ -173,6 +174,9 @@ bool ImgSeq::initSequence( const char *adirPath, VMInputFormat *aFormat )
 				format.setPixelFormat( VM_GREY16, VM_GREY16 );
 			else
 				return false;			
+			if ( img->origin == 0 )
+				cvFlip( img, img, 0 );
+
 		}
 	}
 	if ( img ) 
@@ -207,6 +211,8 @@ void ImgSeq::readNextImage()
 			{
 				cvReleaseImage( &img );
 				img = img2;
+				if ( img->origin == 0 )
+					cvFlip( img, img, 0 );
 				pixelBuffer = img->imageData;
 				newImage = true;
 			}
