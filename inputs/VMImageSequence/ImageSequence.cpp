@@ -163,12 +163,14 @@ bool ImgSeq::initSequence( const char *adirPath, VMInputFormat *aFormat )
 		{
 			format.width = img->width;
 			format.height = img->height;
-			if ( img->nChannels == 3 && img->depth == 8 )
-				format.setPixelFormat( RGB24, RGB24 );
+			if ( img->nChannels == 3 && img->depth == 8 && img->channelSeq == "BGR" )
+				format.setPixelFormat( VM_BGR24, VM_BGR24 );
+			else if ( img->nChannels == 3 && img->depth == 8 )
+				format.setPixelFormat( VM_RGB24, VM_RGB24 );
 			else if ( img->nChannels == 1 && img->depth == 8)
-				format.setPixelFormat( GREY8, GREY8 );
+				format.setPixelFormat( VM_GREY8, VM_GREY8 );
 			else if ( img->nChannels == 1 && img->depth == 16)
-				format.setPixelFormat( GREY16, GREY16 );
+				format.setPixelFormat( VM_GREY16, VM_GREY16 );
 			else
 				return false;			
 		}
