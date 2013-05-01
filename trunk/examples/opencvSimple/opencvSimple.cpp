@@ -187,7 +187,7 @@ bool InitializeVideoMan()
 {
 	VMInputFormat format;	
 	VMInputIdentification device;
-
+	bool withHighgui = false;
 	if ( dirPath )
 	{
 		//Initialize one input from a video file
@@ -196,7 +196,10 @@ bool InitializeVideoMan()
 		if ( videoMan.supportedIdentifier( "DSHOW_VIDEO_FILE" ) )
 			device.identifier = "DSHOW_VIDEO_FILE"; //using directshow	
 		else if ( videoMan.supportedIdentifier( "HIGHGUI_VIDEO_FILE" ) )
+		{
 			device.identifier = "HIGHGUI_VIDEO_FILE"; //using highugui	
+			withHighgui = true;
+		}
 		//play in real-time
 		format.clock = true;
 		format.renderAudio = true;
@@ -210,7 +213,8 @@ bool InitializeVideoMan()
 			//get the length of the video
 			videoLength = videoMan.getLengthSeconds( videoInputID );
 			cout << "duration: " << videoLength << " seconds" << endl;
-			
+			if ( withHighgui )
+				videoMan.setVerticalFlip( videoInputID, true );
 			videoMan.playVideo( videoInputID );
 		}
 	}
@@ -271,6 +275,8 @@ bool InitializeVideoMan()
                 else if(format.nChannels == 1)
                     processedImages[i] = cv::Mat( cv::Size(format.width, format.height), CV_8UC1 );
 				videoMan.setUserInputImage( inputID, (char*)processedImages[i].data);
+				if ( withHighgui )
+					videoMan.setVerticalFlip( inputID, true );
 			}
 		}
 		edges = cv::Mat( cv::Size( format.width, format.height), CV_8UC1 );

@@ -104,10 +104,14 @@ bool InitializeVideoMan()
 	{
 		//Initialize one input from a video file
 		device.fileName = fileName; //file name
+		bool withHighgui = false;
 		if ( videoMan.supportedIdentifier( "DSHOW_VIDEO_FILE" ) )
 			device.identifier = "DSHOW_VIDEO_FILE"; //using directshow	
 		else if ( videoMan.supportedIdentifier( "HIGHGUI_VIDEO_FILE" ) )
+		{
 			device.identifier = "HIGHGUI_VIDEO_FILE"; //using highugui	
+			withHighgui = true;
+		}
 		if ( ( videoInput = videoMan.addVideoInput( device, &format ) ) != -1 )
 		{
 			if ( device.fileName )
@@ -117,6 +121,8 @@ bool InitializeVideoMan()
 			//get the length of the video
 			videoLength = videoMan.getLengthSeconds( videoInput );
 			videoMan.playVideo( videoInput );
+			if ( withHighgui )
+				videoMan.setVerticalFlip( videoInput, true );
 			printf("duration: %f seconds\n\n", videoLength );
 		}
 		else 
@@ -280,9 +286,9 @@ void clear()
     cvReleaseImage( &prev_grey );
     cvReleaseImage( &pyramid );
     cvReleaseImage( &prev_pyramid );
-	delete [] points[0];
-    delete [] points[1];
-    delete status;
+	cvFree( &points[0] );
+	cvFree( &points[1] );	
+	cvFree( &status );    
 }
 
 void glutMouseFunc( int button, int state, int x, int y )
