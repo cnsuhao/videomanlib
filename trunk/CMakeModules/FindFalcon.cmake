@@ -9,7 +9,7 @@
       "$ENV{ProgramFiles}/IDS/Falcon/Develop/"
 	  "$ENV{ProgramW6432}/IDS/Falcon/Develop/")
    ELSE(WIN32)
-    FIND_PATH(IDS_FALCON_SDK "include/Falcon.h" "/usr/")
+    FIND_PATH(IDS_FALCON_SDK "include/falcon.h" "/usr/")
    ENDIF(WIN32)
    
    IF(IDS_FALCON_SDK)

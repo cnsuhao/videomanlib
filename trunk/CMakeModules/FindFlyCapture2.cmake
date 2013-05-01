@@ -24,25 +24,28 @@
     "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Point Grey Research, Inc.\\PGRFlyCapture;InstallDir]/include"
     "$ENV{ProgramFiles}/Point Grey Research/FlyCapture2/include"
     "$ENV{EXTRA}/include"
+    /usr/include/flycapture/
     )
   #MESSAGE("DBG FlyCapture2_INCLUDE_DIR=${FlyCapture2_INCLUDE_DIR}")
 
   FIND_LIBRARY(FlyCapture2_LIBRARY
-    NAMES FlyCapture2
+    NAMES FlyCapture2 libflycapture.so
     PATHS 
     "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Point Grey Research, Inc.\\PGRFlyCapture;InstallDir]/lib"
     "$ENV{ProgramFiles}/Point Grey Research/FlyCapture2/lib"
     "$ENV{EXTRA}/lib"
+    /usr/lib
     )
   #MESSAGE("DBG FlyCapture2_LIBRARY=${FlyCapture2_LIBRARY}")
 
 
   FIND_LIBRARY(FlyCapture2_GUI_LIBRARY
-    NAMES FlyCapture2GUI
+    NAMES FlyCapture2GUI libflycapturegui.so
     PATHS 
     "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Point Grey Research, Inc.\\PGRFlyCapture;InstallDir]/lib"
     "$ENV{ProgramFiles}/Point Grey Research/FlyCapture2/lib"
     "$ENV{EXTRA}/lib"
+    /usr/lib
     )
   #MESSAGE("DBG FlyCapture2_GUI_LIBRARY=${FlyCapture2_GUI_LIBRARY}")
 
