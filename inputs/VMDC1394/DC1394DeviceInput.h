@@ -3,14 +3,13 @@
 
 #include <dc1394/dc1394.h>
 
-class DC1394DeviceInput :
-	public VideoInput
+class DC1394DeviceInput : public VideoManPrivate::VideoInput
 {
 public:
 	DC1394DeviceInput(dc1394_t *d);
 	virtual ~DC1394DeviceInput(void);
 
-	bool initInput( const inputIdentification &device, VideoManInputFormat *format );
+	bool initInput( const VideoMan::VMInputIdentification &device, VideoMan::VMInputFormat *format );
 
 	char *getFrame( bool wait = false);
 

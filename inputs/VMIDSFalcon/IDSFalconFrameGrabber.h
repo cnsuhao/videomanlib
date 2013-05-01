@@ -5,12 +5,12 @@
 #endif
 
 #include "VideoManInputFormat.h"
-#include "Falcon.h"
+#include "falcon.h"
 #include "VideoInput.h"
 
 #include <vector>
 
-void copyStringToChar( const std::string &src, char **dst );	
+void copyStringToChar( const std::string &src, char **dst );
 
 void freeChar( char **src );
 
@@ -27,19 +27,19 @@ public:
 	char *getFrame( bool wait = false);
 
 	inline void releaseFrame();
-	
+
 	void showPropertyPage();
 
 	void play();
-	
+
 	void pause();
-	
+
 	void stop();
 
 	static void getAvailableDevices( VideoMan::VMInputIdentification **_deviceList, int &numDevices  );
 
 	void setFrameCallback( VideoManPrivate::VideoInput::getFrameCallback theCallback, void *data );
-	
+
 	bool supportFrameCallback()
 	{
 		#ifdef WIN32
@@ -59,7 +59,7 @@ public:
 		#ifdef linux
 			pthread_cond_t hEvent;
 			pthread_t hThread;
-		#endif		
+		#endif
 
 		bool           bKill;
 		int            nXSize;
@@ -83,8 +83,8 @@ private:
 	std::vector<int> m_nSeqNumId;
 	int m_lastSeqIndex;
 	int colorMode;
-		
-	IDS_SWITCH_THREAD m_info;	
+
+	IDS_SWITCH_THREAD m_info;
 
 	int colorModeFromPixelFormat( VideoMan::VMPixelFormat depth );
 	VideoMan::VMPixelFormat pixelFormatFromColorMode( int colorMode );

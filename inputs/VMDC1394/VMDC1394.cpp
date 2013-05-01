@@ -1,9 +1,12 @@
 #include "VMmoduleBase.h"
 #include "DC1394DeviceInput.h"
+#include "VideoManInputFormat.h"
+#include "VideoInput.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sstream>
 
 // DEFINE THE IDENTIFIERS THE MODULE WLL SUPPORT
 const char *identifiers[1] = {"DC1394_CAPTURE_DEVICE"};
@@ -27,6 +30,21 @@ void __attribute__ ((constructor)) my_init(void);
 void __attribute__ ((destructor)) my_fini(void);
 
 static dc1394_t *d;
+
+using namespace VideoMan;
+using namespace VideoManPrivate;
+using namespace std;
+
+void copyStringToChar( const std::string &src, char **dst )
+{
+	if ( src.length() > 0 )
+	{
+		*dst = new char[src.length() + 1];
+		strcpy( *dst, src.c_str() );
+	}
+	else
+		*dst = NULL;
+}
 
 void my_init()
 {
@@ -53,7 +71,7 @@ void my_fini()
 }
 #endif
 
-VideoInput *initVideoInput( const inputIdentification &device, VideoManInputFormat *format )
+VideoInput *initVideoInput( const VMInputIdentification &device, VMInputFormat *format )
 {
 	if ( strcmp(device.identifier,"DC1394_CAPTURE_DEVICE")==0 )
 	{
@@ -65,7 +83,7 @@ VideoInput *initVideoInput( const inputIdentification &device, VideoManInputForm
 }
 
 
-void getAvailableDevices( inputIdentification **deviceList, int &numDevices )
+void getAvailableDevices( VMInputIdentification **deviceList, int &numDevices )
 {
 	dc1394camera_list_t *list;
 	dc1394error_t err;
@@ -73,7 +91,7 @@ void getAvailableDevices( inputIdentification **deviceList, int &numDevices )
 	err=dc1394_camera_enumerate (d, &list);
 	//DC1394_ERR_RTN(err,"Failed to enumerate cameras");
 
-    (*deviceList) = new inputIdentification[list->num];
+    (*deviceList) = new VMInputIdentification[list->num];
     numDevices = list->num;
 
 	static char identifier_int[] = "DC1394_CAPTURE_DEVICE";
@@ -82,13 +100,15 @@ void getAvailableDevices( inputIdentification **deviceList, int &numDevices )
 	for (i=0;i<list->num;++i)
 	{
 		(*deviceList)[i].identifier = identifier_int;
-		(*deviceList)[i].serialNumber= list->ids[i].guid;
+		ostringstream ss2;
+		ss2 << list->ids[i].guid;					
+		copyStringToChar( ss2.str(), &(*deviceList)[i].uniqueName );
 	}
 
 	dc1394_camera_free_list (list);
 }
 
-void freeAvailableDevices( inputIdentification **deviceList, int &numDevices )
+void freeAvailableDevices( VMInputIdentification **deviceList, int &numDevices )
 {
         delete(*deviceList);
 }
