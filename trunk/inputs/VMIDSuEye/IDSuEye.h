@@ -1,7 +1,7 @@
 #pragma once
 #include "VideoInput.h"
 #include "VideoManInputFormat.h"
-#include <include/uEye.h>
+#include <include/ueye.h>
 
 
 class IDSuEye :
@@ -12,12 +12,12 @@ public:
 	virtual ~IDSuEye(void);
 
 	bool initInput( const VideoMan::VMInputIdentification &device, VideoMan::VMInputFormat *format );
-		
+
 	char *getFrame( bool wait = false);
 
 	void releaseFrame( );
-	
-	static void getAvailableDevices( VideoMan::VMInputIdentification **deviceList, int &numDevices  );	
+
+	static void getAvailableDevices( VideoMan::VMInputIdentification **deviceList, int &numDevices  );
 
 	bool setImageROI( int x, int y, int width, int height );
 	bool setImageROIpos( int x, int y );
@@ -25,7 +25,7 @@ public:
 	bool linkController( VideoManPrivate::VideoManInputController *acontroller );
 
 	void getExposure( float &shutterTime );
-	
+
 	bool setExposure( float shutterTime );
 
 	void getFrameRate( double &frameRate );
@@ -45,7 +45,7 @@ private:
 	int m_lMemoryId;		// camera memory - buffer ID
 	char*	m_pcImageMemory;	// camera memory - pointer to buffer
 	SENSORINFO m_sInfo;			// sensor information struct
-	
+
 	INT		m_nColorMode;		// Y8/RGB16/RGB24/REG32
 	INT		m_nBitsPerPixel;	// number of bits needed store one pixel
 	INT		m_nSizeX;			// width of image

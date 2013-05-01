@@ -1,7 +1,7 @@
 #include "DC1394DeviceInput.h"
 #include <iostream>
-#include <string>
 #include <string.h>
+#include <sstream>
 
 #include <dc1394/dc1394.h>
 
@@ -32,6 +32,9 @@
     }                                                     \
   } while (0);
 
+using namespace VideoMan;
+using namespace VideoManPrivate;
+using namespace std;
 
 DC1394DeviceInput::DC1394DeviceInput(dc1394_t *d)
 {
@@ -52,20 +55,23 @@ void DC1394DeviceInput::cleanup_and_exit(dc1394camera_t *camera)
 	dc1394_camera_free(this->camera);
 }
 
-bool DC1394DeviceInput::initInput( const inputIdentification &device, VideoManInputFormat *aformat )
+bool DC1394DeviceInput::initInput( const VMInputIdentification &device, VMInputFormat *aformat )
 {
 	dc1394error_t err;
 
-	this->camera = dc1394_camera_new (this->d, device.serialNumber);
+	std::istringstream ss( device.uniqueName );
+	int id;
+	ss >> id;		 
+	this->camera = dc1394_camera_new (this->d, id );
 
 	if (!this->camera) {
-		dc1394_log_error("Failed to initialize camera with guid %llx", device.serialNumber);
+		dc1394_log_error("Failed to initialize camera with guid %llx", id);
 		return false;
 	}
 
 	std::cout<<"Using camera with GUID "<<camera->guid<<std::endl;
 
-	format.SetFormat( 640, 480, 100, RAW8, RAW8 );
+	format.SetFormat( 640, 480, 100, VM_RAW8, VM_RAW8 );
 	*aformat= format;
 
 

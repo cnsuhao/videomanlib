@@ -6,7 +6,6 @@
 #include "VMmoduleBase.h"
 #include <string>
 #include <vector>
-#include "VMmoduleBase.h"
 
 using namespace std;
 using namespace VideoMan;
