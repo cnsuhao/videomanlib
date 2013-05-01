@@ -4,7 +4,6 @@
 #include <GL/freeglut.h>
 #include <iostream>
 #include "VideoManControl.h"
-#include "controllers/IuEyeCameraController.h"
 
 using namespace std;
 using namespace VideoMan;
@@ -47,7 +46,7 @@ bool InitializeVideoMan()
 			break;
 		}
 	}
-	videoMan.freeAvailableDevicesList( &deviceList, numDevices );	
+	videoMan.freeAvailableDevicesList( &deviceList, numDevices );
 
 	return ( inputID != -1 );
 }
@@ -56,11 +55,11 @@ bool InitializeVideoMan()
 void glutDisplay(void)
 {
 	//Clear the opengl window
-	glClear( GL_COLOR_BUFFER_BIT );		
+	glClear( GL_COLOR_BUFFER_BIT );
 
 	if ( videoMan.getFrame( inputID ) )
 	{
-		videoMan.updateTexture( inputID );	
+		videoMan.updateTexture( inputID );
 		videoMan.releaseFrame( inputID );
 	}
 	videoMan.renderFrame( inputID );
@@ -70,8 +69,8 @@ void glutDisplay(void)
 
 int main(int argc, char** argv)
 {
-	cout << endl << "=====================================================" << endl;	
-	cout << "This is an example that shows how to use cameras with DC1394 " << endl;	
+	cout << endl << "=====================================================" << endl;
+	cout << "This is an example that shows how to use cameras with DC1394 " << endl;
 	glutInitDisplayMode( GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA | GLUT_MULTISAMPLE );
 	glutInitWindowPosition( 0, 0 );
 	glutInitWindowSize( 640, 480 );
@@ -83,11 +82,11 @@ int main(int argc, char** argv)
 		return -1;
 
 	glutShowWindow();
-	glutReshapeFunc(glutResize );  
+	glutReshapeFunc(glutResize );
     glutDisplayFunc(glutDisplay);
-	glutIdleFunc(glutDisplay);		
+	glutIdleFunc(glutDisplay);
 	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
-    
+
 	glutMainLoop();
 	return 0;
 }
