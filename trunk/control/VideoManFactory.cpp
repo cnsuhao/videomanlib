@@ -51,7 +51,7 @@ void cloneInputIdentification( const VMInputIdentification &src, VMInputIdentifi
 	cloneCharToChar( src.uniqueName, &dst.uniqueName );
 	cloneCharToChar( src.fileName, &dst.fileName );
 	cloneCharToChar( src.friendlyName, &dst.friendlyName );
-	cloneCharToChar( src.identifier, &dst.identifier );	
+	cloneCharToChar( src.identifier, &dst.identifier );
 }
 
 void cloneDeviceList( const VMInputIdentification *src, VMInputIdentification *&dst, const int numDevices )
@@ -71,7 +71,7 @@ VideoManFactory::VideoManFactory(void)
 }
 
 void VideoManFactory::deleteInput( VideoInput **input )
-{	
+{
 	const string identifier = (*input)->getIdentification().identifier;
 	if ( identifier == "USER_INPUT" )
 	{
@@ -84,7 +84,7 @@ void VideoManFactory::deleteInput( VideoInput **input )
 	if ( identifiersMap.find( identifier ) == identifiersMap.end() )
 		return;
 	std::string moduleName = identifiersMap[identifier];
-	#ifdef WIN32		
+	#ifdef WIN32
 		HINSTANCE hinstLib = getLoadedModuleHandle( moduleName );
 		if ( hinstLib != NULL )
 		{
@@ -94,7 +94,7 @@ void VideoManFactory::deleteInput( VideoInput **input )
 				deleteInput( input );
 		}
 	#endif
-	#ifdef linux		
+	#ifdef linux
 		void *handle = getLoadedModuleHandle( moduleName );
 		if ( handle )
 		{
@@ -214,7 +214,7 @@ void VideoManFactory::LoadModulesWindows( const std::string &path )
 				checkVersionImportFunction checkVersion = (checkVersionImportFunction)GetProcAddress(hinstLib, "checkVersion");
 				if ( checkVersion == NULL )
 					continue;
-				string version = checkVersion();				
+				string version = checkVersion();
 				#ifdef _DEBUG
 					if  ( version != "DEBUG" )
 					{
@@ -269,7 +269,7 @@ void VideoManFactory::LoadModulesWindows( const std::string &path )
 void VideoManFactory::LoadModulesLinux( const std::string &path )
 {
 #ifdef linux
-	//const std::string modulesPath = path + "\\vm*.so";
+	//const std::string modulesPath = path + "\\libvm*.so";
 	void *handle;
     char *error;
 
@@ -370,7 +370,7 @@ void VideoManFactory::loadModules()
 			path = path.substr( 0, index );
 	#endif
 	#ifdef linux
-		void *handle = dlopen("libVideoMan.so", RTLD_LAZY); 
+		void *handle = dlopen("libVideoMan.so", RTLD_LAZY);
 		link_map *map;
 		if ( dlinfo( handle,  RTLD_DI_LINKMAP, &map ) != -1 )
 		{
@@ -390,7 +390,7 @@ void VideoManFactory::loadModules()
 			_link.append( "/exe");
 			char proc[512];
 			int ch = readlink(_link.c_str(),proc,512);
-			if (ch != -1) 
+			if (ch != -1)
 			{
 				proc[ch] = 0;
 				path = proc;
@@ -469,14 +469,14 @@ VideoInput *VideoManFactory::createVideoInputWindows( const VMInputIdentificatio
 	{
 		DWORD err = GetLastError();
 		LPVOID lpMsgBuf;
-		FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-              FORMAT_MESSAGE_FROM_SYSTEM | 
+		FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+              FORMAT_MESSAGE_FROM_SYSTEM |
               FORMAT_MESSAGE_IGNORE_INSERTS,
-              NULL, 
-              GetLastError(), 
+              NULL,
+              GetLastError(),
               MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-              (LPTSTR) &lpMsgBuf, 
-              0, 
+              (LPTSTR) &lpMsgBuf,
+              0,
               NULL);
 
 		cerr << "ERROR: unable to load DLL "  << moduleName << endl;
@@ -884,7 +884,7 @@ void VideoManFactory::getSupportedIdentifiers( char **&identifiers, int &numIden
 	numIdentifiers = 0;
 	for ( it = identifiersMap.begin(); it != identifiersMap.end(); ++it )
 	{
-		copyStringToChar( it->first, &identifiers[numIdentifiers] );		
+		copyStringToChar( it->first, &identifiers[numIdentifiers] );
 		++numIdentifiers;
 	}
 }
