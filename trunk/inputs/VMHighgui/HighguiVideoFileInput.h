@@ -29,6 +29,12 @@ public:
 	
 	void goToMilisecond( double milisecond );
 
+	void play();
+
+	void pause();
+
 private:	
 	CvCapture *capture;
+	bool step;
+	bool paused;
 };
