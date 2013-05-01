@@ -3,6 +3,7 @@
 #endif
 #include <GL/freeglut.h>
 #include <iostream>
+#include <stdio.h>
 #include "VideoManControl.h"
 #include "controllers/IuEyeCameraController.h"
 
@@ -10,7 +11,7 @@ using namespace std;
 using namespace VideoMan;
 
 /*
-This is an example that shows how to use IDS uEye cameras 
+This is an example that shows how to use IDS uEye cameras
 To use this example, VideoMan must be built with the directive VM_OGLRenderer
 You also need to build the VMIDSuEye input
 */
@@ -49,11 +50,11 @@ bool InitializeVideoMan()
 			controller->getFrameRate( frameRate );
 			float exposure;
 			controller->getShutterTime( exposure );
-			//controller->setFrameRate( 8 );			
+			//controller->setFrameRate( 8 );
 			break;
 		}
 	}
-	videoMan.freeAvailableDevicesList( &deviceList, numDevices );	
+	videoMan.freeAvailableDevicesList( &deviceList, numDevices );
 
 	return ( inputID != -1 );
 }
@@ -62,11 +63,11 @@ bool InitializeVideoMan()
 void glutDisplay(void)
 {
 	//Clear the opengl window
-	glClear( GL_COLOR_BUFFER_BIT );		
+	glClear( GL_COLOR_BUFFER_BIT );
 
 	if ( videoMan.getFrame( inputID ) )
 	{
-		videoMan.updateTexture( inputID );	
+		videoMan.updateTexture( inputID );
 		videoMan.releaseFrame( inputID );
 	}
 	videoMan.renderFrame( inputID );
@@ -76,7 +77,7 @@ void glutDisplay(void)
 
 int main(int argc, char** argv)
 {
-	cout << "This is an example that shows how to use IDS uEye cameras with VMIDSuEye" << endl;	
+	cout << "This is an example that shows how to use IDS uEye cameras with VMIDSuEye" << endl;
 	cout << "=====================================================" << endl;
 	glutInitDisplayMode( GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGBA | GLUT_MULTISAMPLE );
 	glutInitWindowPosition( 0, 0 );
@@ -88,17 +89,17 @@ int main(int argc, char** argv)
 	if ( !InitializeVideoMan() )
 	{
 		cout << "Error intializing VideoMan" << endl;
-		cout << "Pres Enter to exit" << endl;		 
+		cout << "Pres Enter to exit" << endl;
 		getchar();
 		return -1;
 	}
 
 	glutShowWindow();
-	glutReshapeFunc(glutResize );  
+	glutReshapeFunc(glutResize );
     glutDisplayFunc(glutDisplay);
-	glutIdleFunc(glutDisplay);		
+	glutIdleFunc(glutDisplay);
 	glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
-    
+
 	glutMainLoop();
 	return 0;
 }
