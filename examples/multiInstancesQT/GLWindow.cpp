@@ -51,10 +51,14 @@ bool GLWindow::openVideoFile()
 	//Initialize one input from a video file
 	device.fileName = new char[fileName.length() + 1];
 	strcpy( device.fileName, fileName.toAscii().data() );
+	bool withHighgui = false;
 	if ( m_videoMan->supportedIdentifier( "DSHOW_VIDEO_FILE" ) )
 		device.identifier = "DSHOW_VIDEO_FILE"; //using directshow	
 	else if ( m_videoMan->supportedIdentifier( "HIGHGUI_VIDEO_FILE" ) )
-		device.identifier = "HIGHGUI_VIDEO_FILE"; //using highugui	
+	{
+        device.identifier = "HIGHGUI_VIDEO_FILE"; //using highugui
+        withHighgui = true;
+	}
 	else 
 		QMessageBox::critical( this, tr("Video files not supported"), tr("You have to build VMDirectShow or VMHighgui" ) );
 	//play in real-time
@@ -74,6 +78,8 @@ bool GLWindow::openVideoFile()
 			m_timer.start( 30 );
 		}
 		setWindowTitle( QString( device.identifier ) + QString( " - " ) + fileName );
+		if ( withHighgui )
+            m_videoMan->setVerticalFlip( m_inputID, true );
 		delete device.fileName;
 		return true;
 	}

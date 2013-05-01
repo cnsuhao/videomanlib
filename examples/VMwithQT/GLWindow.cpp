@@ -101,9 +101,7 @@ void GLWindow::openVideoFile()
 		m_videoMan.playVideo( videoInputID );
 		m_videoInputIDs.push_back( videoInputID );
         if ( withHighgui )
-        {
             m_videoMan.setVerticalFlip( videoInputID, true );
-        }
 	}
 	delete device.fileName;
 }

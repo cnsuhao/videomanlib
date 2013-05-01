@@ -117,10 +117,14 @@ bool InitializeVideoMan()
 		VMInputIdentification device;
 		//Initialize one input from a video file
 		device.fileName = videoFile;
+		bool withHighgui = false;
 		if ( videoMan.supportedIdentifier( "DSHOW_VIDEO_FILE" ) )
 			device.identifier = "DSHOW_VIDEO_FILE"; //using directshow	
 		else if ( videoMan.supportedIdentifier( "HIGHGUI_VIDEO_FILE" ) )
+		{
 			device.identifier = "HIGHGUI_VIDEO_FILE"; //using highugui	
+			withHighgui = true;
+		}
 		//play in real-time
 		format.clock = true;
 		//Render the audio stream
@@ -137,6 +141,8 @@ bool InitializeVideoMan()
 				cout << "Loaded video file: " << device.fileName << endl;
 			cout << "resolution: " << format.width << "X" << format.height << endl;
 			cout << "Video Length: " << videoLengthSeconds << " seconds and " << videoLengthFrames << " frames" << endl;						
+			if ( withHighgui )
+				videoMan.setVerticalFlip( videoInputID, true );
 			videoMan.playVideo( videoInputID );
 		}
 	}	
