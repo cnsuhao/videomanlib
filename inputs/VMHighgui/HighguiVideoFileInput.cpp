@@ -8,7 +8,8 @@ using namespace VideoMan;
 
 HighguiVideoFileInput::HighguiVideoFileInput(void)
 {
-
+	paused = false;
+	step = false;
 }
 
 HighguiVideoFileInput::~HighguiVideoFileInput(void)
@@ -77,8 +78,12 @@ void HighguiVideoFileInput::releaseFrame( )
 
 char *HighguiVideoFileInput::getFrame( bool wait)
 {
-	IplImage *image = cvRetrieveFrame( capture );//cvQueryFrame( capture );
-	pixelBuffer = image->imageData;
+	if ( !paused || step )
+	{
+		IplImage *image = cvRetrieveFrame( capture );//cvQueryFrame( capture );
+		pixelBuffer = image->imageData;
+		step = false;
+	}
 	return pixelBuffer;
 }
 
@@ -105,9 +110,21 @@ int HighguiVideoFileInput::getPositionFrames()
 void HighguiVideoFileInput::goToFrame( int frame )
 {
 	cvSetCaptureProperty( capture, CV_CAP_PROP_POS_FRAMES, frame );
+	step = true;
 }
 	
 void HighguiVideoFileInput::goToMilisecond( double milisecond )
 {
 	cvSetCaptureProperty( capture, CV_CAP_PROP_POS_MSEC, milisecond );
+	step = true;
+}
+
+void HighguiVideoFileInput::play()
+{
+	paused = false;
+}
+
+void HighguiVideoFileInput::pause()
+{
+	paused = true;
 }
