@@ -64,7 +64,7 @@ void GLWindow::changeMode1()
 }
 
 void GLWindow::openVideoFile()
-{	
+{
 	QString fileName = QFileDialog::getOpenFileName( this, tr("Openg Video File"), m_dirPath );
 	if ( fileName.isEmpty() )
 		return;
@@ -76,25 +76,34 @@ void GLWindow::openVideoFile()
 	//Initialize one input from a video file
 	int videoInputID;
 	VMInputFormat format;
-	VMInputIdentification device;	
+	VMInputIdentification device;
 	device.fileName = new char[fileName.length() + 1];
 	strcpy( device.fileName, fileName.toAscii().data() );
+	bool withHighgui = false;
 	if ( m_videoMan.supportedIdentifier( "DSHOW_VIDEO_FILE" ) )
-		device.identifier = "DSHOW_VIDEO_FILE"; //using directshow	
+		device.identifier = "DSHOW_VIDEO_FILE"; //using directshow
 	else if ( m_videoMan.supportedIdentifier( "HIGHGUI_VIDEO_FILE" ) )
-		device.identifier = "HIGHGUI_VIDEO_FILE"; //using highugui	
-	else 
+	{
+        device.identifier = "HIGHGUI_VIDEO_FILE"; //using highugui
+        withHighgui = true;
+	}
+
+	else
 		QMessageBox::critical( this, tr("Video files not supported"), tr("You have to build VMDirectShow or VMHighgui" ) );
 	//play in real-time
 	format.clock = true;
 	//Render the audio stream
 	format.renderAudio = true;
-	//Initialize the video file is the path 
+	//Initialize the video file is the path
 	makeCurrent();
 	if ( ( videoInputID = m_videoMan.addVideoInput( device, &format ) ) != -1 )
 	{
 		m_videoMan.playVideo( videoInputID );
 		m_videoInputIDs.push_back( videoInputID );
+        if ( withHighgui )
+        {
+            m_videoMan.setVerticalFlip( videoInputID, true );
+        }
 	}
 	delete device.fileName;
 }
@@ -107,16 +116,16 @@ void GLWindow::openCamera()
 	m_videoMan.getAvailableDevices( &deviceList, numDevices ); //list all the available devices
 
 	//Show camera selector dialog
-	CameraSelector *cameraSelector = new CameraSelector( this, true, true );	
+	CameraSelector *cameraSelector = new CameraSelector( this, true, true );
 	//fill the devices list
 	for ( int i = 0; i < numDevices; i++ )
 	{
 		QListWidgetItem *lst =new QListWidgetItem( QString( deviceList[i].identifier ) + QString( " - " ) + QString( deviceList[i].friendlyName ), cameraSelector->listWidget );
 		cameraSelector->listWidget->insertItem(i,lst);
-	}		
+	}
 	cameraSelector->listWidget->show();
 	bool error = false;
-	vector<VMInputIdentification> selected;	
+	vector<VMInputIdentification> selected;
 	if ( cameraSelector->listWidget->count() != 0 )
 	{
 		cameraSelector->exec();
@@ -128,14 +137,14 @@ void GLWindow::openCamera()
 				selected.push_back( deviceList[selectedIndexes[s]] );
 		}
 		else
-			error = true;		
+			error = true;
 	}
 	else
 	{
 		QMessageBox::warning( this, tr("Open Camera"), tr("No device available"), QMessageBox::Ok );
 		error = true;
 	}
-	delete cameraSelector;	
+	delete cameraSelector;
 	if ( error || selected.empty() )
 	{
 		m_videoMan.freeAvailableDevicesList( &deviceList, numDevices );
@@ -159,21 +168,21 @@ void GLWindow::openCamera()
 		}
 		else
 			QMessageBox::critical( this, tr("Error"), tr("Initializing camera " ) + QString( device.friendlyName ) );
-	}	
-	m_videoMan.freeAvailableDevicesList( &deviceList, numDevices );		
+	}
+	m_videoMan.freeAvailableDevicesList( &deviceList, numDevices );
 }
 
 
 void GLWindow::initializeGL()
 {
-	
+
 }
-	
+
 void GLWindow::resizeGL( int width, int height )
 {
 	m_videoMan.changeScreenSize( 0, 0, width, height );
 }
-	
+
 void GLWindow::paintGL()
 {
 	glClear( GL_COLOR_BUFFER_BIT );
