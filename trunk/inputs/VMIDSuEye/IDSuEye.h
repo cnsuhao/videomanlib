@@ -32,6 +32,14 @@ public:
 
 	bool setFrameRate( double frameRate );
 
+	bool setMirrorUpDown( bool enable );	
+
+	bool setMirrorLeftRight( bool enable );
+
+	bool setAutoGain( bool enable );
+
+	bool setAutoShutter( bool enable );
+
 private:
 
 	int colorModeFromPixelFormat( VideoMan::VMPixelFormat pixelFormat );

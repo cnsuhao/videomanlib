@@ -34,4 +34,12 @@ public:
 	virtual void getFrameRate( double &frameRate ) = 0;
 
 	virtual bool setFrameRate( double frameRate ) = 0;
+
+	virtual bool setMirrorUpDown( bool enable ) = 0;
+	
+	virtual bool setMirrorLeftRight( bool enable ) = 0;
+
+	virtual bool setAutoGain( bool enable ) = 0;
+
+	virtual bool setAutoShutter( bool enable ) = 0;
 };

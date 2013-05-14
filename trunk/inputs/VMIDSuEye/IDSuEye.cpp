@@ -307,8 +307,6 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 		//identification.serialNumber = pInfo.ID;
 	}*/
 
-
-
 	//is_GetImageHistogram()
 
     return true;
@@ -487,4 +485,33 @@ bool IDSuEye::setFrameRate( double frameRate )
 {
 	int nRet = is_SetFrameRate( m_hCam, frameRate, &frameRate );
 	return ( nRet == IS_SUCCESS );
+}
+
+
+bool IDSuEye::setMirrorUpDown( bool enable )
+{
+	if ( enable )
+		return ( is_SetRopEffect( m_hCam, IS_SET_ROP_MIRROR_UPDOWN, 1, 0 ) == IS_SUCCESS );
+	else
+		return ( is_SetRopEffect( m_hCam, IS_SET_ROP_MIRROR_UPDOWN, 0, 0 ) == IS_SUCCESS );
+}
+
+bool IDSuEye::setMirrorLeftRight( bool enable )
+{
+	if ( enable )
+		return ( is_SetRopEffect( m_hCam, IS_SET_ROP_MIRROR_LEFTRIGHT, 1, 0 ) == IS_SUCCESS );
+	else
+		return ( is_SetRopEffect( m_hCam, IS_SET_ROP_MIRROR_LEFTRIGHT, 0, 0 ) == IS_SUCCESS );		
+}
+
+bool IDSuEye::setAutoGain( bool enable )
+{
+	double dEnable = ( enable ? 1: 0 );
+	return ( is_SetAutoParameter( m_hCam, IS_SET_ENABLE_AUTO_GAIN, &dEnable, 0) == IS_SUCCESS );
+}
+
+bool IDSuEye::setAutoShutter( bool enable )
+{
+	double dEnable = ( enable ? 1: 0 );
+	return ( is_SetAutoParameter( m_hCam, IS_SET_ENABLE_AUTO_SHUTTER, &dEnable, 0) == IS_SUCCESS );
 }
