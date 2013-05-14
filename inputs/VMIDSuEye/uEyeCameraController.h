@@ -24,6 +24,14 @@ public:
 	void getFrameRate( double &frameRate );
 
 	bool setFrameRate( double frameRate );
+
+	bool setMirrorUpDown( bool enable );
+	
+	bool setMirrorLeftRight( bool enable );
+
+	bool setAutoGain( bool enable );
+
+	bool setAutoShutter( bool enable );
 			
 protected:		
 	IDSuEye *uEyeCamera;

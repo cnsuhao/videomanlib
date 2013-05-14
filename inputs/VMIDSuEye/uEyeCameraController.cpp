@@ -63,3 +63,27 @@ bool uEyeCameraController::setFrameRate( double frameRate )
 	assert( uEyeCamera!= NULL && "setFrameRate: Input not linked" );
 	return uEyeCamera->setFrameRate( frameRate );
 }
+
+bool uEyeCameraController::setMirrorUpDown( bool enable )
+{
+	assert( uEyeCamera!= NULL && "setMirrorUpDown: Input not linked" );
+	return uEyeCamera->setMirrorUpDown( enable );
+}
+
+bool uEyeCameraController::setMirrorLeftRight( bool enable )
+{
+	assert( uEyeCamera!= NULL && "setMirrorLeftRight: Input not linked" );
+	return uEyeCamera->setMirrorLeftRight( enable );
+}
+
+bool uEyeCameraController::setAutoShutter( bool enable )
+{
+	assert( uEyeCamera!= NULL && "setAutoShutter: Input not linked" );
+	return uEyeCamera->setAutoShutter( enable );
+}
+
+bool uEyeCameraController::setAutoGain( bool enable )
+{
+	assert( uEyeCamera!= NULL && "setAutoGain: Input not linked" );
+	return uEyeCamera->setAutoGain( enable );
+}
