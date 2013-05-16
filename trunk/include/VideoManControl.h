@@ -32,7 +32,7 @@ namespace VideoMan
 
 /** \brief Texture filtering options
 */
-enum VMTextureFiltering{ VM_NEAREST = 0, VM_LINEAR = 1};
+enum VMTextureFiltering{ VM_NEAREST /** NEAREST */, VM_LINEAR /** LINEAR */};
 
 /** \brief Control class
 
