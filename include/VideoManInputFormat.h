@@ -50,7 +50,9 @@ struct VMInputIdentification
 
 /** \brief Pixel Formats
 */
-enum VMPixelFormat { VM_RGB24, VM_RGB32, VM_BGR24, VM_BGR32, VM_YUV422, VM_YUV411, VM_IYUV, VM_GREY8, VM_GREY16, VM_RAW8, VM_RAW16, VM_UNKNOWN};
+enum VMPixelFormat { VM_RGB24 /** RGB24 */, VM_RGB32 /** RGB32 */, VM_BGR24 /** BGR24 */, VM_BGR32 /** BGR32 */, 
+					VM_YUV422 /** YUV422 */, VM_YUV411 /** YUV411 */, VM_IYUV /** IYUV */, 
+					VM_GREY8 /** GREY8 */, VM_GREY16 /** GREY16 */, VM_RAW8 /** RAW8 */, VM_RAW16 /** RAW16 */, VM_UNKNOWN /** UNKNOWN */};
 
 /** \brief A class to contain the format of a video input
 

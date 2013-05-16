@@ -27,29 +27,29 @@ public:
 	*/
 	enum ImageProperty
 	{
-		Brightness,
-		Contrast,
-		Hue,
-		Saturation,
-		Sharpness,
-		Gamma,
-		ColorEnable,
-		WhiteBalance,
-		BacklightCompensation,
-		Gain,
+		Brightness, /** Brightness image property */
+		Contrast, /** Contrast image property */
+		Hue, /** Hue image property */
+		Saturation, /** Saturation image property */
+		Sharpness, /** Sharpness image property */
+		Gamma, /** Gamma image property */
+		ColorEnable, /** ColorEnable image property */
+		WhiteBalance, /** WhiteBlance image property */
+		BacklightCompensation, /** BacklightCompensation image property */
+		Gain, /** Gain image property */
 	};
 
 	/** \brief Camera controls
 	*/
 	enum CameraControl
 	{
-		Pan,
-		Tilt,
-		Roll,
-		Zoom,
-		Exposure,
-		Iris,
-		Focus
+		Pan, /** Pan camera control */
+		Tilt, /** Tilt camera control */
+		Roll, /** Roll camera control */
+		Zoom, /** Zoom camera control */
+		Exposure, /** Exposure camera control */
+		Iris, /** Iris camera control */
+		Focus /** Focus camera control */
 	};
 
 	ICaptureDeviceDSController(const char *_identifier) : VideoManPrivate::VideoManInputController( _identifier )
