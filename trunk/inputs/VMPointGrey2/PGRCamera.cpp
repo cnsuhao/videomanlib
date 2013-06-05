@@ -1041,6 +1041,16 @@ bool PGRCamera::setSharpnessControl( bool autoSharp )
 	return ( cam.SetProperty( &prop ) == PGRERROR_OK );	
 }
 
+
+bool PGRCamera::setShutterControl( bool autoShutter )
+{
+	Property prop;
+	prop.type = SHUTTER;
+	cam.GetProperty( &prop );
+	prop.autoManualMode = autoShutter;
+	return ( cam.SetProperty( &prop ) == PGRERROR_OK );	
+}
+
 bool PGRCamera::setShutterTime( float shutterTime )
 {
 	Property prop;

@@ -159,6 +159,11 @@ bool PointGreyController::setShutterTime( float shutterTime )
 	return cameraList[0]->setShutterTime( shutterTime );
 }
 
+bool PointGreyController::setShutterControl( bool autoShutter )
+{
+	return cameraList[0]->setShutterControl( autoShutter );
+}
+
 bool PointGreyController::setFrameRate( float frameRate )
 {
 	return cameraList[0]->setFrameRate( frameRate );
