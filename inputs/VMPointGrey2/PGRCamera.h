@@ -109,6 +109,8 @@ protected:
 	
 	bool setSharpnessControl( bool autoSharp );
 
+	bool setShutterControl( bool autoShutter );
+
 	bool setShutterTime( float shutterTime );
 	
 	bool setFrameRate( double frameRate );

@@ -72,6 +72,12 @@ public:
 	*/
 	bool setShutterTime( float shutterTime );
 
+	/** \brief Enable or disable the auto shutter control
+		\param autpoSharp [in] Enable the shutter control
+		\return True if the shutter control was correctly changed
+	*/
+	bool setShutterControl( bool autoShutter );
+
 	/** \brief Set a framerate
 		\param frameRate [in] The framerate
 		\return True if the framerate was changed
