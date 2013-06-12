@@ -27,20 +27,29 @@
     /usr/include/flycapture/
     )
   #MESSAGE("DBG FlyCapture2_INCLUDE_DIR=${FlyCapture2_INCLUDE_DIR}")
-
-  FIND_LIBRARY(FlyCapture2_LIBRARY
-    NAMES FlyCapture2 libflycapture.so
+  
+  IF (MSVC90)
+	 message("detectado visual studio 2008")
+     SET (LIB_SUF "_v90")
+  ENDIF(MSVC90)
+  IF(MSVC10)
+     message("detectado visual studio 2010")
+     SET (LIB_SUF "_v100")
+	ENDIF (MSVC10)
+  
+FIND_LIBRARY(FlyCapture2_LIBRARY
+    NAMES "FlyCapture2${LIB_SUF}" libflycapture.so
     PATHS 
     "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Point Grey Research, Inc.\\PGRFlyCapture;InstallDir]/lib"
     "$ENV{ProgramFiles}/Point Grey Research/FlyCapture2/lib"
     "$ENV{EXTRA}/lib"
     /usr/lib
     )
-  #MESSAGE("DBG FlyCapture2_LIBRARY=${FlyCapture2_LIBRARY}")
+ # MESSAGE("DBG FlyCapture2_LIBRARY=${FlyCapture2_LIBRARY}")
 
 
   FIND_LIBRARY(FlyCapture2_GUI_LIBRARY
-    NAMES FlyCapture2GUI libflycapturegui.so
+    NAMES "FlyCapture2GUI${LIB_SUF}" libflycapturegui.so
     PATHS 
     "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Point Grey Research, Inc.\\PGRFlyCapture;InstallDir]/lib"
     "$ENV{ProgramFiles}/Point Grey Research/FlyCapture2/lib"
