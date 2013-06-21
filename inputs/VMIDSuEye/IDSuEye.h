@@ -24,13 +24,17 @@ public:
 
 	bool linkController( VideoManPrivate::VideoManInputController *acontroller );
 
-	void getExposure( float &shutterTime );
+	void getExposure( double &shutterTime );
 
-	bool setExposure( float shutterTime );
+	bool setExposure( double shutterTime );
 
 	void getFrameRate( double &frameRate );
 
 	bool setFrameRate( double frameRate );
+
+	void getPixelClock( unsigned int &pixelClock );
+
+	bool setPixelClock( unsigned int pixelClock );
 
 	bool setMirrorUpDown( bool enable );	
 

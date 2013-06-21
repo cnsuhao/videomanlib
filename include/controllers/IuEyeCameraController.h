@@ -27,9 +27,13 @@ public:
 
 	virtual bool setImageROIpos( int x, int y ) = 0;
 	
-	virtual void getShutterTime( float &shutterTime ) = 0;
+	virtual void getShutterTime( double &shutterTime ) = 0;
 
-	virtual bool setShutterTime( float shutterTime ) = 0;
+	virtual bool setShutterTime( double shutterTime ) = 0;
+
+	virtual void getPixelClock( unsigned int &pixelClock ) = 0;
+
+	virtual bool setPixelClock( unsigned int pixelClock ) = 0;
 
 	virtual void getFrameRate( double &frameRate ) = 0;
 

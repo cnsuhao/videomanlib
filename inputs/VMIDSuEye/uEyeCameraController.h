@@ -17,9 +17,13 @@ public:
 
 	bool setImageROIpos( int x, int y );
 
-	void getShutterTime( float &shutterTime );
+	void getShutterTime( double &shutterTime );
 
-	bool setShutterTime( float shutterTime );	
+	bool setShutterTime( double shutterTime );
+	
+	void getPixelClock( unsigned int &pixelClock );
+
+	bool setPixelClock( unsigned int pixelClock );
 
 	void getFrameRate( double &frameRate );
 
