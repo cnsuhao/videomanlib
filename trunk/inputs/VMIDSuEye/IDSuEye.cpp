@@ -465,14 +465,26 @@ bool IDSuEye::linkController( VideoManInputController *acontroller )
 	return false;
 }
 
-void IDSuEye::getExposure( float &shutterTime )
+void IDSuEye::getExposure( double &shutterTime )
 {
 	is_Exposure( m_hCam, IS_EXPOSURE_CMD_GET_EXPOSURE, &shutterTime, sizeof(shutterTime)  );
 }
 
-bool IDSuEye::setExposure( float shutterTime )
+bool IDSuEye::setExposure( double shutterTime )
 {
-	int nRet = is_Exposure( m_hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, &shutterTime, sizeof(shutterTime)  );
+	int nRet = is_PixelClock( m_hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, &shutterTime, sizeof(shutterTime)  );
+	return ( nRet == IS_SUCCESS );
+}
+
+void IDSuEye::getPixelClock( unsigned int &pixelClock )
+{
+	is_PixelClock( m_hCam, IS_PIXELCLOCK_CMD_GET, &pixelClock, sizeof(pixelClock)  );
+
+}
+
+bool IDSuEye::setPixelClock( unsigned int pixelClock )
+{
+	int nRet = is_PixelClock( m_hCam, IS_PIXELCLOCK_CMD_SET,  &pixelClock, sizeof(pixelClock)  );
 	return ( nRet == IS_SUCCESS );
 }
 

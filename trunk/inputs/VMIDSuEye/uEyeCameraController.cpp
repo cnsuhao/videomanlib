@@ -40,16 +40,28 @@ bool uEyeCameraController::setImageROIpos( int x, int y )
 	return uEyeCamera->setImageROIpos( x, y );
 }
 
-void uEyeCameraController::getShutterTime( float &shutterTime )
+void uEyeCameraController::getShutterTime( double &shutterTime )
 {
 	assert( uEyeCamera!= NULL && "setShutterTime: Input not linked" );
 	uEyeCamera->getExposure( shutterTime );
 }
 
-bool uEyeCameraController::setShutterTime( float shutterTime )
+bool uEyeCameraController::setShutterTime( double shutterTime )
 {
 	assert( uEyeCamera!= NULL && "setShutterTime: Input not linked" );
 	return uEyeCamera->setExposure( shutterTime );
+}
+
+void uEyeCameraController::getPixelClock( unsigned int &pixelClock )
+{
+	assert( uEyeCamera!= NULL && "getPixelClock: Input not linked" );
+	uEyeCamera->getPixelClock( pixelClock );
+}
+
+bool uEyeCameraController::setPixelClock( unsigned int pixelClock )
+{
+	assert( uEyeCamera!= NULL && "setPixelClock: Input not linked" );
+	return uEyeCamera->setPixelClock( pixelClock );
 }
 
 void uEyeCameraController::getFrameRate( double &frameRate )
