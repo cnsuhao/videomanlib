@@ -38,6 +38,11 @@ void printGLerror( std::string message, GLenum glErr )
 			cout << message << " " << "GL_INVALID_ENUM" << endl;
 			break;
 		}
+	case GL_INVALID_VALUE:
+		{
+			cout << message << " " << "GL_INVALID_VALUE" << endl;
+			break;
+		}
 	case GL_INVALID_OPERATION:
 		{
 			cout << message << " " << "GL_INVALID_OPERATION" << endl;
@@ -197,6 +202,12 @@ bool VideoManRendererOGL::generateTexture( RendererOGLInput &inputOGL )
 		inputOGL.textureWidth = inputOGL.width;
 		inputOGL.textureHeight = inputOGL.height;
 	}
+	if ( inputOGL.textureWidth > texSize || inputOGL.textureHeight > texSize )
+	{
+		cout << "Error generating texture GPU max texture size is " << texSize << endl;
+		return false;
+	}
+
 
 	float Bpp = static_cast<float>( inputOGL.depth ) / 8.0f;
 	//std::vector<char*> data(textureHeight * textureWidth * static_cast<size_t>( Bpp ), 0);	
@@ -206,7 +217,7 @@ bool VideoManRendererOGL::generateTexture( RendererOGLInput &inputOGL )
 	glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, textureFiltering );
 	glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, textureFiltering );
 	glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP );
-	glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP );	
+	glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP );
 	
 	inputOGL.dataType = GL_UNSIGNED_BYTE;
 	switch ( inputOGL.pixelFormat )
@@ -263,7 +274,7 @@ bool VideoManRendererOGL::generateTexture( RendererOGLInput &inputOGL )
 			break;
 		}
 		default: 
-			{				
+			{
 				return false;
 			}
 	}
