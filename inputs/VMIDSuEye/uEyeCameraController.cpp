@@ -99,3 +99,17 @@ bool uEyeCameraController::setAutoGain( bool enable )
 	assert( uEyeCamera!= NULL && "setAutoGain: Input not linked" );
 	return uEyeCamera->setAutoGain( enable );
 }
+
+
+bool uEyeCameraController::setHardwareGamma( bool enable )
+{
+	assert( uEyeCamera!= NULL && "setHardwareGamma: Input not linked" );
+	return uEyeCamera->setHardwareGamma( enable );
+
+}
+	
+bool uEyeCameraController::getHardwareGamma()
+{
+	assert( uEyeCamera!= NULL && "getHardwareGamma: Input not linked" );
+	return uEyeCamera->getHardwareGamma();
+}

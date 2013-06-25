@@ -44,6 +44,11 @@ public:
 
 	bool setAutoShutter( bool enable );
 
+	bool setHardwareGamma( bool enable );
+	
+	bool getHardwareGamma();
+
+
 private:
 
 	int colorModeFromPixelFormat( VideoMan::VMPixelFormat pixelFormat );

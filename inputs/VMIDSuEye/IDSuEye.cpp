@@ -472,7 +472,7 @@ void IDSuEye::getExposure( double &shutterTime )
 
 bool IDSuEye::setExposure( double shutterTime )
 {
-	int nRet = is_PixelClock( m_hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, &shutterTime, sizeof(shutterTime)  );
+	int nRet = is_Exposure( m_hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, &shutterTime, sizeof(shutterTime)  );
 	return ( nRet == IS_SUCCESS );
 }
 
@@ -526,4 +526,14 @@ bool IDSuEye::setAutoShutter( bool enable )
 {
 	double dEnable = ( enable ? 1: 0 );
 	return ( is_SetAutoParameter( m_hCam, IS_SET_ENABLE_AUTO_SHUTTER, &dEnable, 0) == IS_SUCCESS );
+}
+
+bool IDSuEye::setHardwareGamma( bool enable )
+{
+	return ( is_SetHardwareGamma( m_hCam, enable ? IS_SET_HW_GAMMA_ON : IS_SET_HW_GAMMA_OFF ) == IS_SUCCESS );
+}
+
+bool IDSuEye::getHardwareGamma()
+{
+	return ( is_SetHardwareGamma( m_hCam, IS_GET_HW_GAMMA ) == IS_SET_HW_GAMMA_ON );		
 }

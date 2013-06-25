@@ -36,6 +36,10 @@ public:
 	bool setAutoGain( bool enable );
 
 	bool setAutoShutter( bool enable );
+
+	bool setHardwareGamma( bool enable );
+	
+	bool getHardwareGamma();
 			
 protected:		
 	IDSuEye *uEyeCamera;
