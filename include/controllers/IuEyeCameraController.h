@@ -46,4 +46,8 @@ public:
 	virtual bool setAutoGain( bool enable ) = 0;
 
 	virtual bool setAutoShutter( bool enable ) = 0;
+	
+	virtual bool setHardwareGamma( bool enable ) = 0;
+	
+	virtual bool getHardwareGamma() = 0;
 };
