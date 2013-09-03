@@ -48,10 +48,10 @@ struct VMInputIdentification
 	}
 	void printOut()
 	{
-		if (filename) printf("fileName: %s\n", filename.c_str());	
-		if (friendlyName) printf("friendlyName: %s\n", friendlyName.c_str());	
-		if (uniqueName) printf("uniqueName: %s\n", uniqueName.c_str());	
-		if (identifier) printf("identifier: %s\n", identifier.c_str());	
+		if (filename)     printf(" fileName: %s\n", filename);	
+		if (friendlyName) printf(" friendlyName: %s\n", friendlyName);	
+		if (uniqueName)   printf(" uniqueName: %s\n", uniqueName);	
+		if (identifier)   printf(" identifier: %s\n", identifier);	
 	}
 };
 
