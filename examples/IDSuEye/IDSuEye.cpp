@@ -48,8 +48,8 @@ bool InitializeVideoMan()
 			controller =  ((IuEyeCameraController*)videoMan.createController( 0, "uEye_CAMERA_CONTROLLER" ));
 			double frameRate;
 			controller->getFrameRate( frameRate );
-			float exposure;
-			controller->getShutterTime( exposure );
+			double shutter;
+			controller->getShutterTime( shutter );
 			//controller->setFrameRate( 8 );
 			break;
 		}
