@@ -50,12 +50,23 @@ struct VMInputIdentification
 		uniqueName = 0;
 		identifier = 0;
 	};
-	void printOut()
+	void printOut(int tab=1)
 	{
-		if (fileName)     printf(" fileName: %s\n", fileName);	
-		if (friendlyName) printf(" friendlyName: %s\n", friendlyName);	
-		if (uniqueName)   printf(" uniqueName: %s\n", uniqueName);	
-		if (identifier)   printf(" identifier: %s\n", identifier);	
+		char *spaces=0;
+		if (tab>0)
+		{
+			spaces = new char[tab+1];
+			for (int i=0;i<tab;i++)
+		 		spaces[i]=' ';
+			spaces[tab]='\0';
+		}
+
+		if (fileName)     printf("%sfileName: %s\n", (tab>0)?spaces:"", fileName);	
+		if (friendlyName) printf("%sfriendlyName: %s\n", (tab>0)?spaces:"", friendlyName);	
+		if (uniqueName)   printf("%suniqueName: %s\n", (tab>0)?spaces:"", uniqueName);	
+		if (identifier)   printf("%sidentifier: %s\n", (tab>0)?spaces:"", identifier);	
+
+		if (spaces) delete spaces;
 	};
 };
 
@@ -67,17 +78,17 @@ enum VMPixelFormat { VM_RGB24 /** RGB24 */, VM_RGB32 /** RGB32 */, VM_BGR24 /** 
 
 inline char *pixelFormatToString(VMPixelFormat vp)
 {
-	if (VM_RGB24 == 0)		return "VM_RGB24";
-	else if (VM_RGB32 == 0) return "VM_RGB32";
-	else if (VM_BGR24 == 0) return "VM_BGR24";
-	else if (VM_BGR32 == 0) return "VM_BGR32";
-	else if (VM_YUV422 == 0)return "VM_YUV422";
-	else if (VM_YUV411 == 0)return "VM_YUV411";
-	else if (VM_IYUV == 0)	return "VM_IYUV";
-	else if (VM_GREY8 == 0) return "VM_GREY8";
-	else if (VM_GREY16 == 0)return "VM_GREY16";
-	else if (VM_RAW8 == 0)	return "VM_RAW8";
-	else if (VM_RAW16 == 0) return "VM_RAW16";
+	if (VM_RGB24 == vp)		return "VM_RGB24";
+	else if (VM_RGB32 == vp) return "VM_RGB32";
+	else if (VM_BGR24 == vp) return "VM_BGR24";
+	else if (VM_BGR32 == vp) return "VM_BGR32";
+	else if (VM_YUV422 == vp)return "VM_YUV422";
+	else if (VM_YUV411 == vp)return "VM_YUV411";
+	else if (VM_IYUV == vp)	return "VM_IYUV";
+	else if (VM_GREY8 == vp) return "VM_GREY8";
+	else if (VM_GREY16 == vp)return "VM_GREY16";
+	else if (VM_RAW8 == vp)	return "VM_RAW8";
+	else if (VM_RAW16 == vp) return "VM_RAW16";
 	else return "VM_UNKNOWN";
 };
 /** \brief A class to contain the format of a video input
@@ -129,19 +140,30 @@ public:
 	/** \brief Display in console information about this format object
 		\return void
 	*/
-	void printOut()
+	void printOut(int tab=1)
 	{
-		printf(" depth        :  %d\n", depth);
-		printf(" nChannels    :  %d\n", nChannels);
-		printf(" height       :  %d\n", height); 
-		printf(" width        :  %d\n", width);
-		printf(" fps          :  %.2lf\n", fps);
-		printf(" align        :  %d\n", align);
-		printf(" render audio :  %d\n", renderAudio);
-		printf(" show Dlg     :  %d\n", showDlg);
-		printf(" clock		  :  %d\n", clock);
-		printf(" formatIn	  :  %s\n", pixelFormatToString(formatIn));
-		printf(" formatOut	  :  %s\n", pixelFormatToString(formatOut));
+		char *spaces=0;
+		if (tab>0)
+		{
+			spaces = new char[tab+1];
+			for (int i=0;i<tab;i++)
+		 		spaces[i]=' ';
+			spaces[tab]='\0';
+		}
+
+		printf("%sdepth        :  %d\n",(tab>0)?spaces:"", depth);
+		printf("%snChannels    :  %d\n",(tab>0)?spaces:"", nChannels);
+		printf("%sheight       :  %d\n",(tab>0)?spaces:"", height); 
+		printf("%swidth        :  %d\n",(tab>0)?spaces:"", width);
+		printf("%sfps          :  %.2lf\n",(tab>0)?spaces:"", fps);
+		printf("%salign        :  %d\n",(tab>0)?spaces:"", align);
+		printf("%srender audio :  %d\n",(tab>0)?spaces:"", renderAudio);
+		printf("%sshow Dlg     :  %d\n",(tab>0)?spaces:"", showDlg);
+		printf("%sclock		  :  %d\n",(tab>0)?spaces:"", clock);
+		printf("%sformatIn	  :  %s\n",(tab>0)?spaces:"", pixelFormatToString(formatIn));
+		printf("%sformatOut	  :  %s\n",(tab>0)?spaces:"", pixelFormatToString(formatOut));
+
+		if (spaces) delete spaces;
 	};
 
 	//! \name Image format
