@@ -15,6 +15,7 @@
 #endif
 
 #include <stdio.h>
+#include <string.h>
 
 namespace VideoMan
 {
@@ -91,6 +92,23 @@ inline char *pixelFormatToString(VMPixelFormat vp)
 	else if (VM_RAW16 == vp) return "VM_RAW16";
 	else return "VM_UNKNOWN";
 };
+
+inline VMPixelFormat stringToPixelFormat(char *vp)
+{
+    if (!strcmp(vp,"VM_RGB24"))      	return VM_RGB24;
+    else if (!strcmp(vp,"VM_RGB32")) 	return VM_RGB32;
+    else if (!strcmp(vp,"VM_BGR24")) 	return VM_BGR24;
+    else if (!strcmp(vp,"VM_BGR32")) 	return VM_BGR32;
+    else if (!strcmp(vp,"VM_YUV422"))	return VM_YUV422;
+    else if (!strcmp(vp,"VM_YUV411"))	return VM_YUV411;
+    else if (!strcmp(vp,"VM_IYUV"))		return VM_IYUV;
+    else if (!strcmp(vp,"VM_GREY8")) 	return VM_GREY8;
+    else if (!strcmp(vp,"VM_GREY16"))	return VM_GREY16;
+    else if (!strcmp(vp,"VM_RAW8"))    	return VM_RAW8;
+    else if (!strcmp(vp,"VM_RAW16")) 	return VM_RAW16;
+    else return VM_UNKNOWN;
+};
+
 /** \brief A class to contain the format of a video input
 
 	When you create a video input with VideoManControl::addVideoInput you can indicate some parameters, like resolution, frame rate, 
