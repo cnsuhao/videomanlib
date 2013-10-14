@@ -13,6 +13,7 @@
 #      - VideoMan_LIBS          : The list of libraries to links against.
 #      - VideoMan_LIB_DIR       : The directory where lib files are. Calling LINK_DIRECTORIES
 #                                with this path is NOT needed.
+#      - VideoMan_BIN_DIR       : The directory where VideoMan has been builded
 #      - VideoMan_VERSION       : The  version of this gu build. Example: "1.2.0"
 #      - VideoMan_VERSION_MAJOR : Major version part of gu_VERSION. Example: "1"
 #      - VideoMan_VERSION_MINOR : Minor version part of gu_VERSION. Example: "2"
@@ -36,6 +37,8 @@ INCLUDE_DIRECTORIES(@CMAKE_INCLUDE_DIRS_CONFIGCMAKE@)
 # ======================================================
 # Link directories to add to the user project:
 # ======================================================
+set (VideoMan_BIN_DIR  @CMAKE_BINARY_DIR@/bin)
+
 IF (VIDEOMAN_INCLUDE_PROJECT)
 	LINK_DIRECTORIES("${CMAKE_BINARY_DIR}/bin" )
 	# Provide the libs directory anyway, it may be needed in some cases.
