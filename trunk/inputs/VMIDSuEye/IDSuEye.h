@@ -32,6 +32,8 @@ public:
 
 	bool setFrameRate( double frameRate );
 
+	void getTimeStamp( char* buffer );
+
 	void getPixelClock( unsigned int &pixelClock );
 
 	bool setPixelClock( unsigned int pixelClock );
@@ -62,6 +64,9 @@ private:
 	int m_lMemoryId;		// camera memory - buffer ID
 	char*	m_pcImageMemory;	// camera memory - pointer to buffer
 	SENSORINFO m_sInfo;			// sensor information struct
+	UEYEIMAGEINFO m_uInfo;		// camera timestamp
+	bool m_valid_uInfo;			// boolean for valid/not-valid uInfo
+
 
 	INT		m_nColorMode;		// Y8/RGB16/RGB24/REG32
 	INT		m_nBitsPerPixel;	// number of bits needed store one pixel

@@ -61,7 +61,13 @@ void uEyeCameraController::getPixelClock( unsigned int &pixelClock )
 bool uEyeCameraController::setPixelClock( unsigned int pixelClock )
 {
 	assert( uEyeCamera!= NULL && "setPixelClock: Input not linked" );
-	return uEyeCamera->setPixelClock( pixelClock );
+	return uEyeCamera->setPixelClock( pixelClock );	
+}
+
+void uEyeCameraController::getTimeStamp( char* buffer )
+{
+	assert( uEyeCamera!=NULL && "getTimeStamp: Input not linked" );
+	uEyeCamera->getTimeStamp( buffer );
 }
 
 void uEyeCameraController::getFrameRate( double &frameRate )
