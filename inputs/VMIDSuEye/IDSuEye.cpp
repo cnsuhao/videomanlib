@@ -128,6 +128,13 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 		ss << m_hCam;
 		copyStringToChar( ss.str(), &identification.uniqueName );
 		copyStringToChar( "IDS_uEye_CAMERA", &identification.identifier );
+
+		// Added: mnieto
+		// Enable Messages (to allow timestamps)
+		/*is_EnableMessage(m_hCam,    IS_DEVICE_REMOVED,      GetSafeHwnd());
+		is_EnableMessage(m_hCam,    IS_DEVICE_RECONNECTED,  GetSafeHwnd());
+		is_EnableMessage(m_hCam,    IS_FRAME,               GetSafeHwnd());
+        is_EnableMessage(m_hCam,    IS_TRIGGER,             GetSafeHwnd());*/
 	}
 	else
 	{
@@ -326,7 +333,8 @@ char *IDSuEye::getFrame( bool wait)
 		CloseHandle(m_hEvent);
 		m_hEvent = CreateEvent(NULL, TRUE, FALSE, "");
 		is_InitEvent( m_hCam, m_hEvent, IS_SET_EVENT_FRAME);
-		pixelBuffer = m_pcImageMemory;
+		pixelBuffer = m_pcImageMemory;		
+		m_valid_uInfo = (is_GetImageInfo( m_hCam, m_lMemoryId, &m_uInfo, sizeof(m_uInfo)) == IS_SUCCESS)?(true):(false);				
 		return m_pcImageMemory;
 	}
 	#endif
@@ -499,6 +507,26 @@ bool IDSuEye::setFrameRate( double frameRate )
 	return ( nRet == IS_SUCCESS );
 }
 
+void IDSuEye::getTimeStamp( char* buffer )
+{	
+	//UEYEIMAGEINFO ImageInfo;
+    if (m_valid_uInfo)
+    {
+		stringstream oss;
+		/*oss << m_uInfo.TimestampSystem.wDay << "." 
+			<< m_uInfo.TimestampSystem.wMonth << "."
+            << m_uInfo.TimestampSystem.wYear << ", "
+			<< m_uInfo.TimestampSystem.wHour << ":"
+            << m_uInfo.TimestampSystem.wMinute << ":"
+            << m_uInfo.TimestampSystem.wSecond << ":"
+            << m_uInfo.TimestampSystem.wMilliseconds;*/
+
+		UINT64 u64TimestampDevice = m_uInfo.u64TimestampDevice;
+		oss << u64TimestampDevice;
+
+		strcpy( buffer, oss.str().c_str() );       
+    }
+}
 
 bool IDSuEye::setMirrorUpDown( bool enable )
 {

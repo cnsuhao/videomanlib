@@ -29,6 +29,8 @@ public:
 
 	bool setFrameRate( double frameRate );
 
+	void getTimeStamp( char* buffer );
+
 	bool setMirrorUpDown( bool enable );
 	
 	bool setMirrorLeftRight( bool enable );
