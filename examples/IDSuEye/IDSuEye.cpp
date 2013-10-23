@@ -66,7 +66,11 @@ void glutDisplay(void)
 	glClear( GL_COLOR_BUFFER_BIT );
 
 	if ( videoMan.getFrame( inputID ) )
-	{
+	{			
+		char* buffer = new char(100);
+		controller->getTimeStamp( buffer );
+		cout << string(buffer) << endl;
+		delete[] buffer;
 		videoMan.updateTexture( inputID );
 		videoMan.releaseFrame( inputID );
 	}
