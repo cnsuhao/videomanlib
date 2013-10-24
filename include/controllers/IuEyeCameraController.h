@@ -39,6 +39,10 @@ public:
 
 	virtual bool setFrameRate( double frameRate ) = 0;
 
+	virtual void getTimeStamp( char* buffer ) = 0;
+
+	virtual void getTimeStamp( unsigned long long* timeStamp ) = 0;
+
 	virtual bool setMirrorUpDown( bool enable ) = 0;
 	
 	virtual bool setMirrorLeftRight( bool enable ) = 0;
