@@ -67,9 +67,9 @@ void glutDisplay(void)
 
 	if ( videoMan.getFrame( inputID ) )
 	{			
-		char* buffer = new char(100);
+		char* buffer = new char[100];
 		controller->getTimeStamp( buffer );
-		cout << string(buffer) << endl;
+		//cout << string(buffer) << endl;
 		delete[] buffer;
 		videoMan.updateTexture( inputID );
 		videoMan.releaseFrame( inputID );
