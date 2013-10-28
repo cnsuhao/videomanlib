@@ -527,6 +527,11 @@ void IDSuEye::getTimeStamp( char* buffer )
 		strcpy( buffer, oss.str().c_str() );       
     }
 }
+void IDSuEye::getTimeStamp( unsigned long long* timeStamp )
+{
+	if( m_valid_uInfo)
+		*timeStamp = m_uInfo.u64TimestampDevice;
+}
 
 bool IDSuEye::setMirrorUpDown( bool enable )
 {

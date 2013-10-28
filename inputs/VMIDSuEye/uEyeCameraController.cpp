@@ -70,6 +70,12 @@ void uEyeCameraController::getTimeStamp( char* buffer )
 	uEyeCamera->getTimeStamp( buffer );
 }
 
+void uEyeCameraController::getTimeStamp( unsigned long long* timeStamp )
+{
+	assert( uEyeCamera!=NULL && "getTimeStamp: Input not linked" );
+	uEyeCamera->getTimeStamp( timeStamp );
+}
+
 void uEyeCameraController::getFrameRate( double &frameRate )
 {
 	assert( uEyeCamera!= NULL && "getFrameRate: Input not linked" );
