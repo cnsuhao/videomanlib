@@ -31,6 +31,8 @@ public:
 
 	void getTimeStamp( char* buffer );
 
+	void getTimeStamp( unsigned long long* timeStamp );
+
 	bool setMirrorUpDown( bool enable );
 	
 	bool setMirrorLeftRight( bool enable );

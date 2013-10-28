@@ -30,9 +30,11 @@ public:
 
 	void getFrameRate( double &frameRate );
 
-	bool setFrameRate( double frameRate );
+	bool setFrameRate( double frameRate );	
 
 	void getTimeStamp( char* buffer );
+
+	void getTimeStamp( unsigned long long* timeStamp );	
 
 	void getPixelClock( unsigned int &pixelClock );
 
