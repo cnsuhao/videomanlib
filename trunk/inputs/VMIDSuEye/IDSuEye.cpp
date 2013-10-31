@@ -124,9 +124,23 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 		m_nSizeX = m_sInfo.nMaxWidth;
 		m_nSizeY = m_sInfo.nMaxHeight;
 		copyStringToChar( m_sInfo.strSensorName, &identification.friendlyName );
-		ostringstream ss;
-		ss << m_hCam;
-		copyStringToChar( ss.str(), &identification.uniqueName );
+
+		CAMINFO pInfo;
+		if ( is_GetCameraInfo( m_hCam, &pInfo ) == IS_SUCCESS )
+		{
+			ostringstream ss;
+			ss << (int)pInfo.Select;
+			copyStringToChar( ss.str(), &identification.uniqueName );
+		}
+		else
+		{
+			ostringstream ss;
+			if ( cameraId != 0 )
+				ss << cameraId;
+			else
+				ss << m_hCam;
+			copyStringToChar( ss.str(), &identification.uniqueName );
+		}
 		copyStringToChar( "IDS_uEye_CAMERA", &identification.identifier );
 
 		// Added: mnieto
@@ -144,7 +158,12 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 
 	nRet = IS_NO_SUCCESS;
     if (m_hCam == NULL)
+	{
+		cerr << "Invalid HIDS " << m_hCam << endl;
+		if ( device.uniqueName )
+			cerr << "uniqueName " << string( device.uniqueName ) << endl;
         return false;
+	}
 
 	// Set display mode to DIB
     nRet = is_SetDisplayMode(m_hCam, IS_SET_DM_DIB);
@@ -213,7 +232,10 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 			}
 		}
 		if ( !encontrado )
+		{
+			cerr << "Proper image size not found " << aformat->width << " " << aformat->height << endl;
 			return false;
+		}
 	}
 
 //	is_SetImagePos( m_hCam, 0, 0 );
@@ -238,7 +260,10 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 	//is_AddToSequence( m_hCam, m_pcImageMemory[i], m_lMemoryId[i] );
 	nRet = is_SetImageMem( m_hCam, m_pcImageMemory, m_lMemoryId );
 	if ( nRet != IS_SUCCESS )
+	{
+		cerr << "is_SetImageMem failed" << endl;
 		return false;
+	}
 
     // Enable Messages
     //is_InitEvent()
@@ -252,17 +277,26 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 	#ifdef WIN32
 	m_hEvent = CreateEvent(NULL, TRUE, FALSE, "");
 	if ( m_hEvent == NULL )
+	{
+		cerr << "CreateEvent failed" << endl;
 		return false;
+	}
     #endif
 
 	nRet = is_EnableEvent( m_hCam, IS_SET_EVENT_FRAME);
 	if ( nRet != IS_SUCCESS )
+	{
+		cerr << "is_EnableEvent failed" << endl;		
 		return false;
+	}
 
     #ifdef WIN32
 	nRet = is_InitEvent( m_hCam, m_hEvent, IS_SET_EVENT_FRAME);
 	if ( nRet != IS_SUCCESS )
+	{
+		cerr << "is_InitEvent failed" << endl;		
 		return false;
+	}
     #endif
 	//Start image capture and wait 1000 ms for event to occur
 	/*is_FreezeVideo (hCam, IS_DONT_WAIT);
@@ -285,7 +319,10 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 	// start live video
 	nRet = is_CaptureVideo( m_hCam, IS_WAIT );
 	if ( nRet != IS_SUCCESS )
+	{
+		cerr << "is_CaptureVideo failed" << endl;
 		return false;
+	}
 	//is_FreezeVideo( m_hCam, IS_DONT_WAIT );
 
 	if ( is_SetFrameRate(m_hCam, format.fps, &format.fps ) != IS_SUCCESS )
@@ -298,21 +335,21 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 	double exposure = 4;
 	nRet = is_Exposure( m_hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, &exposure, sizeof(exposure)  );
 	if ( nRet != IS_SUCCESS )
+	{
+		cerr << "is_Exposure failed" << endl;
 		return false;
+	}
 	//after start live video query framerate
 	nRet = is_GetFramesPerSecond( m_hCam, &format.fps );
 	if ( nRet != IS_SUCCESS || format.fps == 0 )
+	{
+		cerr << "is_GetFramesPerSecond failed" << endl;
 		return false;
+	}
 
 	if ( aformat )
 		*aformat = format;
 
-	/*CAMINFO pInfo;
-	if ( is_GetCameraInfo( m_hCam, &pInfo ) == IS_SUCCESS )
-	{
-		//copyStringToChar( pInfo., &identification.identifier );
-		//identification.serialNumber = pInfo.ID;
-	}*/
 
 	//is_GetImageHistogram()
 
