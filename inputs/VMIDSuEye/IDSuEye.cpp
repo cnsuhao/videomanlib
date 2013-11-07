@@ -367,9 +367,7 @@ char *IDSuEye::getFrame( bool wait)
     #ifdef WIN32
 	if ( WaitForSingleObject( m_hEvent, 100 ) == WAIT_OBJECT_0 )
 	{
-		CloseHandle(m_hEvent);
-		m_hEvent = CreateEvent(NULL, TRUE, FALSE, "");
-		is_InitEvent( m_hCam, m_hEvent, IS_SET_EVENT_FRAME);
+		ResetEvent( m_hEvent );
 		pixelBuffer = m_pcImageMemory;		
 		m_valid_uInfo = (is_GetImageInfo( m_hCam, m_lMemoryId, &m_uInfo, sizeof(m_uInfo)) == IS_SUCCESS)?(true):(false);				
 		return m_pcImageMemory;
@@ -606,4 +604,67 @@ bool IDSuEye::setHardwareGamma( bool enable )
 bool IDSuEye::getHardwareGamma()
 {
 	return ( is_SetHardwareGamma( m_hCam, IS_GET_HW_GAMMA ) == IS_SET_HW_GAMMA_ON );		
+}
+
+bool IDSuEye::setExternalTrigger( bool enable, IuEyeCameraController::TriggerMode mode  )
+{
+	INT returned;
+	returned = is_StopLiveVideo(m_hCam, IS_WAIT);
+	if ( !enable )
+		returned = is_SetExternalTrigger( m_hCam, IS_SET_TRIGGER_OFF );
+	else
+	{
+		switch( mode )
+		{
+		case IuEyeCameraController::Software:
+			{
+				returned = is_SetExternalTrigger( m_hCam, IS_SET_TRIGGER_SOFTWARE );
+				break;
+			}
+		case IuEyeCameraController::Falling:
+			{
+				returned = is_SetExternalTrigger( m_hCam, IS_SET_TRIGGER_HI_LO );
+				break;
+			}
+		case IuEyeCameraController::Rising:
+			{
+				returned = is_SetExternalTrigger( m_hCam, IS_SET_TRIGGER_LO_HI );
+				break;
+			}
+		}
+	}
+    returned = is_CaptureVideo(m_hCam, IS_DONT_WAIT);
+	return returned;
+}
+
+bool IDSuEye::setStrobeOutput( bool enable, IuEyeCameraController::StrobeMode mode )
+{
+	UINT nMode = IO_FLASH_MODE_OFF;	
+	if ( enable )	
+	{
+		switch( mode )
+		{
+		case IuEyeCameraController::ConstantLow:
+			{
+				nMode = IO_FLASH_MODE_CONSTANT_LOW;				
+				break;
+			}
+		case IuEyeCameraController::ConstantHigh:
+			{
+				nMode = IO_FLASH_MODE_CONSTANT_HIGH;			
+				break;
+			}
+		case IuEyeCameraController::LowActive:
+			{
+				nMode = IO_FLASH_MODE_TRIGGER_LO_ACTIVE;
+				break;
+			}
+		case IuEyeCameraController::HighActive:
+			{
+				nMode = IO_FLASH_MODE_TRIGGER_HI_ACTIVE;				
+				break;
+			}
+		}		
+	}
+	return ( is_IO(m_hCam, IS_IO_CMD_FLASH_SET_MODE, (void*)&nMode, sizeof(nMode)) == IS_SUCCESS );	
 }

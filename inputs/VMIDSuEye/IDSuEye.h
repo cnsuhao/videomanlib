@@ -2,6 +2,7 @@
 #include "VideoInput.h"
 #include "VideoManInputFormat.h"
 #include <include/ueye.h>
+#include "controllers/IuEyeCameraController.h"
 
 
 class IDSuEye :
@@ -52,6 +53,9 @@ public:
 	
 	bool getHardwareGamma();
 
+	bool setExternalTrigger( bool enable, IuEyeCameraController::TriggerMode mode );
+	
+	bool setStrobeOutput( bool enable, IuEyeCameraController::StrobeMode mode );
 
 private:
 

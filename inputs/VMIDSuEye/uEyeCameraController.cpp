@@ -125,3 +125,15 @@ bool uEyeCameraController::getHardwareGamma()
 	assert( uEyeCamera!= NULL && "getHardwareGamma: Input not linked" );
 	return uEyeCamera->getHardwareGamma();
 }
+
+bool uEyeCameraController::setExternalTrigger( bool enable, IuEyeCameraController::TriggerMode mode )
+{
+	assert( uEyeCamera!= NULL && "setExternalTrigger: Input not linked" );
+	return uEyeCamera->setExternalTrigger( enable, mode );
+}
+
+bool uEyeCameraController::setStrobeOutput( bool enable, IuEyeCameraController::StrobeMode mode )
+{
+	assert( uEyeCamera!= NULL && "setStrobeOutput: Input not linked" );
+	return uEyeCamera->setStrobeOutput( enable, mode );
+}
