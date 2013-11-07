@@ -17,9 +17,29 @@
 	videoMan.deleteController( &controller );	 
 \endcode
 */
-class IuEyeCameraController :public VideoManPrivate::VideoManInputController
+class IuEyeCameraController : public VideoManPrivate::VideoManInputController
 {
 public:
+	/** \brief Triger modes
+	*/
+	enum TriggerMode
+	{
+		Software, /** Software trigger */
+		Falling,  /** Fallign edge trigger */
+		Rising,   /** Rising edge trigger */		
+	};
+
+	/** \brief Strober modes
+	*/
+	enum StrobeMode
+	{
+		ConstantLow,  /** Constant low output */
+		ConstantHigh, /** Constant high output*/
+		LowActive,    /** Low active output */
+		HighActive,   /** High active output */
+	};
+	
+
 	IuEyeCameraController( const char *_identifier ) : VideoManPrivate::VideoManInputController( _identifier ){}
 	virtual ~IuEyeCameraController(void){};
 
@@ -54,4 +74,10 @@ public:
 	virtual bool setHardwareGamma( bool enable ) = 0;
 	
 	virtual bool getHardwareGamma() = 0;
+
+	virtual bool setExternalTrigger( bool enable, TriggerMode mode ) = 0;
+
+	virtual bool setStrobeOutput( bool enable, IuEyeCameraController::StrobeMode mode ) = 0;
+
+
 };
