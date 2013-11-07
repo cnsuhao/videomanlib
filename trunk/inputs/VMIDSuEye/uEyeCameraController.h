@@ -44,6 +44,11 @@ public:
 	bool setHardwareGamma( bool enable );
 	
 	bool getHardwareGamma();
+
+	bool setExternalTrigger( bool enable, IuEyeCameraController::TriggerMode mode );
+
+	bool setStrobeOutput( bool enable, IuEyeCameraController::StrobeMode mode );
+
 			
 protected:		
 	IDSuEye *uEyeCamera;
