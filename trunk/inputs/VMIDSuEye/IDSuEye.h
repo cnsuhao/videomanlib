@@ -57,6 +57,8 @@ public:
 	
 	bool setStrobeOutput( bool enable, IuEyeCameraController::StrobeMode mode );
 
+	void forceTrigger();
+
 private:
 
 	int colorModeFromPixelFormat( VideoMan::VMPixelFormat pixelFormat );
@@ -79,5 +81,5 @@ private:
 	INT		m_nSizeX;			// width of image
 	INT		m_nSizeY;			// height of image
 	INT		m_nPosX;			// left offset of image
-	INT		m_nPosY;			// right offset of image
+	INT		m_nPosY;			// right offset of image	
 };
