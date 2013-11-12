@@ -137,3 +137,9 @@ bool uEyeCameraController::setStrobeOutput( bool enable, IuEyeCameraController::
 	assert( uEyeCamera!= NULL && "setStrobeOutput: Input not linked" );
 	return uEyeCamera->setStrobeOutput( enable, mode );
 }
+
+void uEyeCameraController::forceTrigger()
+{
+	assert( uEyeCamera!= NULL && "forceTrigger: Input not linked" );
+	return uEyeCamera->forceTrigger();
+}

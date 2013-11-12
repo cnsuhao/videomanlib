@@ -49,6 +49,7 @@ public:
 
 	bool setStrobeOutput( bool enable, IuEyeCameraController::StrobeMode mode );
 
+	void forceTrigger();
 			
 protected:		
 	IDSuEye *uEyeCamera;

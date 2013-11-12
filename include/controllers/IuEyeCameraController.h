@@ -79,5 +79,7 @@ public:
 
 	virtual bool setStrobeOutput( bool enable, IuEyeCameraController::StrobeMode mode ) = 0;
 
+	virtual void forceTrigger() = 0;
+
 
 };

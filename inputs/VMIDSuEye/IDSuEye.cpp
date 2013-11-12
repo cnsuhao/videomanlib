@@ -318,12 +318,12 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 
 	// start live video
 	nRet = is_CaptureVideo( m_hCam, IS_WAIT );
+	//nRet = is_FreezeVideo( m_hCam, IS_WAIT );
 	if ( nRet != IS_SUCCESS )
 	{
 		cerr << "is_CaptureVideo failed" << endl;
 		return false;
 	}
-	//is_FreezeVideo( m_hCam, IS_DONT_WAIT );
 
 	if ( is_SetFrameRate(m_hCam, format.fps, &format.fps ) != IS_SUCCESS )
 	{
@@ -360,18 +360,27 @@ void IDSuEye::releaseFrame( )
 {
 	lastPixelBuffer = pixelBuffer;
 	pixelBuffer = NULL;
+	is_UnlockSeqBuf( m_hCam, m_lMemoryId, m_pcImageMemory );	
 }
 
 char *IDSuEye::getFrame( bool wait)
 {
     #ifdef WIN32
-	if ( WaitForSingleObject( m_hEvent, 100 ) == WAIT_OBJECT_0 )
+	DWORD waitRet = WaitForSingleObject( m_hEvent, 400 );
+	if ( waitRet == WAIT_OBJECT_0 )
 	{
+		is_LockSeqBuf(m_hCam, m_lMemoryId, m_pcImageMemory);
 		ResetEvent( m_hEvent );
 		pixelBuffer = m_pcImageMemory;		
 		m_valid_uInfo = (is_GetImageInfo( m_hCam, m_lMemoryId, &m_uInfo, sizeof(m_uInfo)) == IS_SUCCESS)?(true):(false);				
 		return m_pcImageMemory;
 	}
+	/*else if ( waitRet == WAIT_TIMEOUT )
+	{
+		// cancel acquisition
+		is_StopLiveVideo( m_hCam, IS_FORCE_VIDEO_STOP);
+		is_FreezeVideo( m_hCam, IS_DONT_WAIT );	
+	}*/
 	#endif
 	#ifdef linux
 	if ( is_WaitEvent( m_hCam, IS_SET_EVENT_FRAME, 100) == IS_SUCCESS )
@@ -562,6 +571,7 @@ void IDSuEye::getTimeStamp( char* buffer )
 		strcpy( buffer, oss.str().c_str() );       
     }
 }
+
 void IDSuEye::getTimeStamp( unsigned long long* timeStamp )
 {
 	if( m_valid_uInfo)
@@ -667,4 +677,9 @@ bool IDSuEye::setStrobeOutput( bool enable, IuEyeCameraController::StrobeMode mo
 		}		
 	}
 	return ( is_IO(m_hCam, IS_IO_CMD_FLASH_SET_MODE, (void*)&nMode, sizeof(nMode)) == IS_SUCCESS );	
+}
+
+void IDSuEye::forceTrigger()
+{
+	is_ForceTrigger( m_hCam );
 }
