@@ -644,7 +644,7 @@ bool IDSuEye::setExternalTrigger( bool enable, IuEyeCameraController::TriggerMod
 		}
 	}
     returned = is_CaptureVideo(m_hCam, IS_DONT_WAIT);
-	return returned;
+	return ( returned == IS_SUCCESS );
 }
 
 bool IDSuEye::setStrobeOutput( bool enable, IuEyeCameraController::StrobeMode mode )
