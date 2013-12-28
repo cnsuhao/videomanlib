@@ -473,6 +473,8 @@ public:
 	*/
 	void freeAvailableDevicesList( VMInputIdentification **deviceList, int &numDevices );
 
+	double getTimeStamp( const size_t &input );
+
 //@}
 
 //! \name Video file Control

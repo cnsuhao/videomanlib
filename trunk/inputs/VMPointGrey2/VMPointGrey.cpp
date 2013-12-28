@@ -50,7 +50,7 @@ void my_fini()
 #endif
 
 #ifdef WIN32
-#include <windows.h>
+//#include <iostream>
 /*** MODULE INITIALIZATION AND FINALIZATION  ***/
 BOOL APIENTRY DllMain( HANDLE hModule, 
                        DWORD  ul_reason_for_call, 

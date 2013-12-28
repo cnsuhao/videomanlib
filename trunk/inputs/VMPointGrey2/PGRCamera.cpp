@@ -33,8 +33,11 @@ using namespace VideoManPrivate;
 #define GPIO_CTRL_PIN_1 0x1120
 #define GPIO_CTRL_PIN_2 0x1130
 #define GPIO_CTRL_PIN_3 0x1140
+#define GPIO_XTRA_PIN_0 0x1114
 #define GPIO_XTRA_PIN_2 0x1134
 #define GPIO_XTRA_PIN_3 0x1144
+#define GPIO_STRPAT_MASK_PIN_0 0x1118
+#define GPIO_STRPAT_MASK_PIN_1 0x1128
 #define GPIO_STRPAT_MASK_PIN_2 0x1138
 #define GPIO_STRPAT_MASK_PIN_3 0x1148
 #define STROBE_0_CNT 0x1500
@@ -105,7 +108,7 @@ PGRCamera::~PGRCamera(void)
 	//	showControlDlgThread = NULL;
 	//}
 	//Power off
-	cam.WriteRegister( CAMERA_POWER, 0x00000000 );
+	m_camera.WriteRegister( CAMERA_POWER, 0x00000000 );
 	if ( dlg )
 	{
 		dlg->Hide();
@@ -117,7 +120,7 @@ PGRCamera::~PGRCamera(void)
     stop();
     // Disconnect the camera
 	
-	Error error = cam.Disconnect();
+	Error error = m_camera.Disconnect();
     if (error != PGRERROR_OK)
         PrintError( error );
 
@@ -315,7 +318,7 @@ void frameCallback( Image* pImage, const void* pCallbackData )
 		pgrCamerap->lastImage = pImage;
 		
 		if( pgrCamerap->callback )
-			(*pgrCamerap->callback)( pgrCamerap->pixelBuffer, pgrCamerap->inputID, (double)pImage->GetTimeStamp().seconds, pgrCamerap->frameCallbackData );			
+			(*pgrCamerap->callback)( pgrCamerap->pixelBuffer, pgrCamerap->inputID, (double)pImage->GetTimeStamp().seconds + pImage->GetTimeStamp().microSeconds * 1e-6, pgrCamerap->frameCallbackData );			
 	}
 }
 
@@ -324,24 +327,25 @@ void PGRCamera::setFrameCallback( getFrameCallback theCallback, void *data )
 	callback = theCallback ;
 	frameCallbackData = data;
 	stop();
-	Error error = cam.StartCapture( frameCallback, this );
+	Error error = m_camera.StartCapture( frameCallback, this );
 	if (error != PGRERROR_OK)
 		PrintError( error );
-	//cam.SetCallback( frameCallback, this );
+	//m_camera.SetCallback( frameCallback, this );
 }
 
 bool PGRCamera::resetCamera( )
 {
-	Error error = cam.WriteRegister( INITIALIZE,0x80000000 );
+	Error error = m_camera.WriteRegister( INITIALIZE,0x80000000 );
 	return ( error != PGRERROR_OK );
 }
 
 bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat )
 {
+	//Find the requiered camera
 	serialNumber = aSerialNumber;
-
 	if ( aSerialNumber == 0 )
 	{
+		//No specific camera required
 		PGRGuid guid[64];
 		unsigned int psize = 64;
 		CameraSelectionDlg selectionDlg;
@@ -349,7 +353,7 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 		selectionDlg.ShowModal( &ok, guid, &psize );
 		if ( !ok || psize != 1 ) 
 			return false;
-		Error error = cam.Connect(&guid[0]);
+		Error error = m_camera.Connect(&guid[0]);
 		if (error != PGRERROR_OK)
 		{
 			PrintError( error );
@@ -358,6 +362,7 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 	}
 	else
 	{
+		//Find the camera with required serial number
 		Error error;
 		BusManager busMgr;
 		PGRGuid guid;
@@ -368,7 +373,7 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 			return false;
 		}
 
-		error = cam.Connect(&guid);
+		error = m_camera.Connect(&guid);
 		if (error != PGRERROR_OK)
 		{
 			PrintError( error );
@@ -376,20 +381,20 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 		}
 	}
 
+	//Reset the camera
 	resetCamera();
-	//cam.WriteRegister( CAMERA_POWER, 0x80000000 );
-	//setTrigger( false, 3, 14 );
 
+	//Configure format
 	if ( aFormat == NULL || aFormat->showDlg )
 	{
 		// Show the camera configuration dialog.		
 		CameraControlDlg controlDlg;
-		controlDlg.Connect( &cam );
+		controlDlg.Connect( &m_camera );
 		controlDlg.ShowModal();
 		controlDlg.Hide();
 		controlDlg.Disconnect();
-		//Initialize the format		
-		cam.GetVideoModeAndFrameRate( &m_videoMode, &m_frameRate );
+		//Initialize the format
+		m_camera.GetVideoModeAndFrameRate( &m_videoMode, &m_frameRate );
 		bool availableFormat = resolveFormat( m_videoMode, m_frameRate, format );	
 		if ( !availableFormat )
 			return false;
@@ -402,7 +407,7 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 		if ( m_videoMode != VIDEOMODE_FORMAT7 && m_frameRate != FRAMERATE_FORMAT7 ) 
 		{
 			//Check if the combination videomode and framerate is supported
-			Error error = cam.GetVideoModeAndFrameRateInfo( m_videoMode, m_frameRate, &supported );
+			Error error = m_camera.GetVideoModeAndFrameRateInfo( m_videoMode, m_frameRate, &supported );
 			if ( error != PGRERROR_OK )
 			{
 				PrintError( error );
@@ -412,7 +417,7 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 		if ( supported )
 		{
 			//Set standard videomode and framerate						
-			Error error = cam.SetVideoModeAndFrameRate( m_videoMode, m_frameRate );
+			Error error = m_camera.SetVideoModeAndFrameRate( m_videoMode, m_frameRate );
 			if (error != PGRERROR_OK)
 			{
 				PrintError( error );
@@ -433,7 +438,7 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 			{
 				m_fmt7Info.mode = static_cast<Mode>( MODE_0 + currentMode );
 				bool supported;			
-				Error error = cam.GetFormat7Info( &m_fmt7Info, &supported );
+				Error error = m_camera.GetFormat7Info( &m_fmt7Info, &supported );
 				if (error != PGRERROR_OK)
 				{
 					PrintError( error );
@@ -461,7 +466,7 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 
 				// Validate the settings to make sure that they are valid
 				bool valid;
-				Error error = cam.ValidateFormat7Settings( &m_fmt7ImageSettings, &valid, &m_fmt7PacketInfo );
+				Error error = m_camera.ValidateFormat7Settings( &m_fmt7ImageSettings, &valid, &m_fmt7PacketInfo );
 				if (error != PGRERROR_OK)
 				{
 					PrintError( error );
@@ -475,7 +480,7 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 				}
 
 				// Set the settings to the camera
-				error = cam.SetFormat7Configuration( &m_fmt7ImageSettings, m_fmt7PacketInfo.recommendedBytesPerPacket );
+				error = m_camera.SetFormat7Configuration( &m_fmt7ImageSettings, m_fmt7PacketInfo.recommendedBytesPerPacket );
 				if (error != PGRERROR_OK)
 				{
 					PrintError( error );
@@ -494,17 +499,17 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 
 	//Check Image Size and Sensor offset
 	/*unsigned int roiSize;
-	cam.ReadRegister( 0xa0c, &roiSize );
+	m_camera.ReadRegister( 0xa0c, &roiSize );
 	width = roiSize >> 16;
 	//Offest de la imagen dentro del sensor
 	height = roiSize & 0x0000FFFF;
 	unsigned int roiPos;
-	cam.ReadRegister( 0xa08, &roiPos );
+	m_camera.ReadRegister( 0xa08, &roiPos );
 	xOffset = roiPos >> 16;
 	yOffset = roiPos & 0x0000FFFF;*/
 
     // Start capturing images
-	Error error = cam.StartCapture(); //Start Isochronous image capture
+	Error error = m_camera.StartCapture(); //Start Isochronous image capture
     if (error != PGRERROR_OK)
     {
         PrintError( error );
@@ -514,7 +519,7 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 	// Retrieve frame rate property
 	Property frmRate;
 	frmRate.type = FRAME_RATE;
-	error = cam.GetProperty( &frmRate );
+	error = m_camera.GetProperty( &frmRate );
 	if (error != PGRERROR_OK)
 	{
 		PrintError( error );
@@ -533,14 +538,16 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 	
 	// Get the camera information
     CameraInfo camInfo;
-    error = cam.GetCameraInfo(&camInfo);
+	error = m_camera.GetCameraInfo(&camInfo);
     if (error != PGRERROR_OK)
     {
         PrintError( error );
         return false;
     }
+	//Bayer format
 	m_bayerTileFormat = camInfo.bayerTileFormat;
 
+	//Camera identification
 	ostringstream ss;
 	ss << aSerialNumber;
 	copyStringToChar( ss.str(), &identification.uniqueName );
@@ -559,7 +566,7 @@ void PGRCamera::releaseFrame()
 inline char *PGRCamera::getFrame( bool wait )
 {
 	//return pixelBuffer;
-	Error error = cam.RetrieveBuffer( &rawImage );
+	Error error = m_camera.RetrieveBuffer( &rawImage );
 	
     if (error != PGRERROR_OK)
     {
@@ -577,6 +584,7 @@ inline char *PGRCamera::getFrame( bool wait )
     }*/
 	//convertedImage.DeepCopy( &convertedImageCopy );
 	pixelBuffer = (char*)rawImage.GetData();
+	m_timeStamp = rawImage.GetTimeStamp().seconds + rawImage.GetTimeStamp().microSeconds * 1e-6;
 	return pixelBuffer;
 }
 
@@ -595,7 +603,7 @@ void PGRCamera::showPropertyPage()
 	if ( !dlg )
 	{
 		dlg = new CameraControlDlg();
-		dlg->Connect( &cam );
+		dlg->Connect( &m_camera );
 		
 	}
 	dlg->Show();
@@ -774,7 +782,7 @@ bool PGRCamera::resolveFormat( VideoMode videoMode, FrameRate frameRate, VMInput
 			//Get the format 7 configuration
 			unsigned int pPacketSize;
 			float pPercentage;
-			Error error = cam.GetFormat7Configuration( &m_fmt7ImageSettings, &pPacketSize, &pPercentage );
+			Error error = m_camera.GetFormat7Configuration( &m_fmt7ImageSettings, &pPacketSize, &pPercentage );
 			if ( error != PGRERROR_OK )
 			{
 				PrintError( error );
@@ -783,7 +791,7 @@ bool PGRCamera::resolveFormat( VideoMode videoMode, FrameRate frameRate, VMInput
 			//Get the format 7 info
 			m_fmt7Info.mode = m_fmt7ImageSettings.mode;
 			bool supported;			
-			error = cam.GetFormat7Info( &m_fmt7Info, &supported );
+			error = m_camera.GetFormat7Info( &m_fmt7Info, &supported );
 			if (error != PGRERROR_OK)
 			{
 				PrintError( error );
@@ -851,7 +859,7 @@ bool PGRCamera::resolveFormat( VideoMode videoMode, FrameRate frameRate, VMInput
 		{
 			Property frmRate;
 			frmRate.type = FRAME_RATE;
-			Error error = cam.GetProperty( &frmRate );
+			Error error = m_camera.GetProperty( &frmRate );
 			if (error != PGRERROR_OK)
 			{
 				PrintError( error );
@@ -903,9 +911,8 @@ void PGRCamera::getAvailableDevices(  VMInputIdentification **deviceList, int &n
 			PrintError( error );
 			return;
 		}*/
-
-		Camera cam;
-		error = cam.Connect(&guid);
+		Camera camera;
+		error = camera.Connect(&guid);
 		if (error != PGRERROR_OK)
 		{
 			PrintError( error );
@@ -914,7 +921,7 @@ void PGRCamera::getAvailableDevices(  VMInputIdentification **deviceList, int &n
 
 		 // Get the camera information
 		CameraInfo camInfo;	
-		error = cam.GetCameraInfo(&camInfo);
+		error = camera.GetCameraInfo(&camInfo);
 		if (error != PGRERROR_OK)
 		{
 			PrintError( error );
@@ -927,7 +934,7 @@ void PGRCamera::getAvailableDevices(  VMInputIdentification **deviceList, int &n
 		copyStringToChar( "PGR_CAMERA2", &device.identifier );
 		copyStringToChar( camInfo.modelName, &device.friendlyName );
 		(*deviceList)[i] = device;		
-		error = cam.Disconnect();
+		error = camera.Disconnect();
 		if (error != PGRERROR_OK)
 			PrintError( error );
     }
@@ -937,7 +944,7 @@ bool PGRCamera::setImageROI( int x, int y, int width, int height )
 {	
 	if ( m_videoMode == VIDEOMODE_FORMAT7 )
 	{
-		Error error = cam.StopCapture();
+		Error error = m_camera.StopCapture();
 		if (error != PGRERROR_OK)
 		{
 			PrintError( error );
@@ -949,7 +956,7 @@ bool PGRCamera::setImageROI( int x, int y, int width, int height )
 		m_fmt7ImageSettings.height = height;
 		// Validate the settings to make sure that they are valid
 		bool valid;
-		error = cam.ValidateFormat7Settings( &m_fmt7ImageSettings, &valid, &m_fmt7PacketInfo );
+		error = m_camera.ValidateFormat7Settings( &m_fmt7ImageSettings, &valid, &m_fmt7PacketInfo );
 		if (error != PGRERROR_OK)
 		{
 			PrintError( error );
@@ -961,7 +968,7 @@ bool PGRCamera::setImageROI( int x, int y, int width, int height )
 			printf("Format7 settings are not valid\n");
 			return false;
 		}
-		error = cam.SetFormat7Configuration( &m_fmt7ImageSettings, m_fmt7PacketInfo.recommendedBytesPerPacket );
+		error = m_camera.SetFormat7Configuration( &m_fmt7ImageSettings, m_fmt7PacketInfo.recommendedBytesPerPacket );
 		if (error != PGRERROR_OK)
 		{
 			PrintError( error );
@@ -981,9 +988,9 @@ bool PGRCamera::setImageROI( int x, int y, int width, int height )
 
 		//Restart the camera
 		if ( callback )
-			error = cam.StartCapture( frameCallback, this );
+			error = m_camera.StartCapture( frameCallback, this );
 		else
-			error = cam.StartCapture();
+			error = m_camera.StartCapture();
 	    if (error != PGRERROR_OK)
 	    {
 			PrintError( error );
@@ -999,17 +1006,17 @@ bool PGRCamera::setGainControl( bool autoGain )
 {
 	Property prop;
 	prop.type = GAIN;
-	cam.GetProperty( &prop );
+	m_camera.GetProperty( &prop );
 	prop.autoManualMode = autoGain;
 	//prop.valueA = 400;
-	return ( cam.SetProperty( &prop ) == PGRERROR_OK );	
+	return ( m_camera.SetProperty( &prop ) == PGRERROR_OK );	
 }
 
 bool PGRCamera::getGainControl()
 {
 	Property prop;
 	prop.type = GAIN;
-	cam.GetProperty( &prop );
+	m_camera.GetProperty( &prop );
 	return prop.autoManualMode;
 }
 
@@ -1017,28 +1024,28 @@ bool PGRCamera::setExposureControl( bool autoExp )
 {
 	Property prop;
 	prop.type = AUTO_EXPOSURE;
-	cam.GetProperty( &prop );
+	m_camera.GetProperty( &prop );
 	prop.autoManualMode = autoExp;
-	return ( cam.SetProperty( &prop ) == PGRERROR_OK );	
+	return ( m_camera.SetProperty( &prop ) == PGRERROR_OK );	
 }
 
 bool PGRCamera::setSharpnessControlValue(float value)
 {
 	Property prop;
 	prop.type = SHARPNESS;
-	cam.GetProperty( &prop );
+	m_camera.GetProperty( &prop );
 	prop.autoManualMode = false;
 	prop.valueA = (unsigned int)value;	
-	return ( cam.SetProperty( &prop ) == PGRERROR_OK );	
+	return ( m_camera.SetProperty( &prop ) == PGRERROR_OK );	
 }
 
 bool PGRCamera::setSharpnessControl( bool autoSharp )
 {
 	Property prop;
 	prop.type = SHARPNESS;
-	cam.GetProperty( &prop );
+	m_camera.GetProperty( &prop );
 	prop.autoManualMode = autoSharp;
-	return ( cam.SetProperty( &prop ) == PGRERROR_OK );	
+	return ( m_camera.SetProperty( &prop ) == PGRERROR_OK );	
 }
 
 
@@ -1046,20 +1053,20 @@ bool PGRCamera::setShutterControl( bool autoShutter )
 {
 	Property prop;
 	prop.type = SHUTTER;
-	cam.GetProperty( &prop );
+	m_camera.GetProperty( &prop );
 	prop.autoManualMode = autoShutter;
-	return ( cam.SetProperty( &prop ) == PGRERROR_OK );	
+	return ( m_camera.SetProperty( &prop ) == PGRERROR_OK );	
 }
 
 bool PGRCamera::setShutterTime( float shutterTime )
 {
 	Property prop;
 	prop.type = SHUTTER;
-	cam.GetProperty( &prop );
+	m_camera.GetProperty( &prop );
 	prop.autoManualMode = false;
 	prop.absControl = true;
 	prop.absValue = shutterTime;
-	return ( cam.SetProperty( &prop ) == PGRERROR_OK );	
+	return ( m_camera.SetProperty( &prop ) == PGRERROR_OK );	
 }
 
 bool PGRCamera::moveImageROI( int x, int y )
@@ -1067,14 +1074,14 @@ bool PGRCamera::moveImageROI( int x, int y )
 	unsigned long position = 0; 
 	position |= x + m_fmt7Info.imageHStepSize;
 	position = ( position << 16 ) | y + m_fmt7Info.imageVStepSize;
-	Error error = cam.WriteRegister( videoModeBase[m_fmt7Info.mode] + IMAGE_POSITION, position );
+	Error error = m_camera.WriteRegister( videoModeBase[m_fmt7Info.mode] + IMAGE_POSITION, position );
 	return ( error == PGRERROR_OK );
 }
 
 unsigned int PGRCamera::getRegisterValue(unsigned long _register )
 {
 	unsigned int value;
-	cam.ReadRegister( _register, &value );	
+	m_camera.ReadRegister( _register, &value );	
 	return value;
 }
 
@@ -1124,14 +1131,14 @@ int PGRCamera::buildColorCoding( VMPixelFormat pixelFormat )
 bool PGRCamera::setTrigger( bool triggerOn, int source, int mode )
 {
 	TriggerMode triger;
-	cam.GetTriggerMode( &triger );	
+	m_camera.GetTriggerMode( &triger );	
 	triger.onOff = triggerOn;
 	if ( triggerOn )
 	{
 		triger.source = source;
 		triger.mode = mode;
 	}
-	Error error = cam.SetTriggerMode( &triger );
+	Error error = m_camera.SetTriggerMode( &triger );
 	if ( error != PGRERROR_OK )
 	{
 		PrintError( error );
@@ -1142,7 +1149,7 @@ bool PGRCamera::setTrigger( bool triggerOn, int source, int mode )
 
 bool PGRCamera::fireSoftwareTrigger( bool broadcast )
 {
-	return ( cam.FireSoftwareTrigger( broadcast ) == PGRERROR_OK );
+	return ( m_camera.FireSoftwareTrigger( broadcast ) == PGRERROR_OK );
 }
 
 bool PGRCamera::setStrobeOutput( bool onOff, float delay, float duration,	unsigned int polarity, unsigned int source )
@@ -1153,7 +1160,7 @@ bool PGRCamera::setStrobeOutput( bool onOff, float delay, float duration,	unsign
 	strobeControl.duration = duration;
 	strobeControl.onOff = onOff;	
 	strobeControl.polarity = polarity;
-	error = cam.SetStrobe( &strobeControl );
+	Error error = m_camera.SetStrobe( &strobeControl );
 	if ( error != PGRERROR_OK )
 	{
 		PrintError( error );
@@ -1164,7 +1171,7 @@ bool PGRCamera::setStrobeOutput( bool onOff, float delay, float duration,	unsign
 
 void PGRCamera::stop()
 {
-	Error error = cam.StopCapture();
+	Error error = m_camera.StopCapture();
     if (error != PGRERROR_OK)           
         PrintError( error );
 }
@@ -1173,10 +1180,15 @@ bool PGRCamera::setFrameRate( double frameRate )
 {
 	Property prop;
 	prop.type = FRAME_RATE;
-	cam.GetProperty( &prop );
+	m_camera.GetProperty( &prop );
 	prop.autoManualMode = false;
 	prop.absControl = true;
 	prop.onOff = true;
 	prop.absValue = (float)frameRate;
-	return ( cam.SetProperty( &prop ) == PGRERROR_OK );	
+	return ( m_camera.SetProperty( &prop ) == PGRERROR_OK );	
+}
+
+double PGRCamera::getTimeStamp()
+{
+	return m_timeStamp;
 }

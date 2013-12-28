@@ -93,6 +93,8 @@ public:
 	/** CAPTURE DEVICES METHODS **/
 	virtual void showPropertyPage(){}
 
+	virtual double getTimeStamp(){return 0;}
+
 	/** USER INPUT METHODS **/
 	virtual void setImage( char *image ){}
 
