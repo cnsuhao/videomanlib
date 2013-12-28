@@ -87,8 +87,10 @@ public:
 	friend class PointGreyController;
 	friend void frameCallback( FlyCapture2::Image* pImage, const void* pCallbackData );
 
+	double getTimeStamp();
+
 protected: 
-	FlyCapture2::Camera cam;
+	FlyCapture2::Camera m_camera;
 	FlyCapture2::BayerTileFormat m_bayerTileFormat;
 
 	bool setImageROI( int x, int y, int width, int height );
@@ -194,10 +196,10 @@ private:
 
 
 	VideoManPrivate::VideoManInputController *controller;
+	double m_timeStamp;
 
 	//int width, height;
 	//int xOffset,yOffset;
 	//int xROI, yROI, wROI, hROI;
-
 };
 #endif

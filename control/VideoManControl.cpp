@@ -600,3 +600,9 @@ bool VideoManControl::supportedIdentifier( const char *identifier )
 {
 	return videoManPrivate->factory.supportedIdentifier( identifier );
 }
+
+double VideoManControl::getTimeStamp( const size_t &input )
+{
+	assert( videoManPrivate->videoList.find( input ) != videoManPrivate->videoList.end() && "getTimeStamp: Index out of range");
+	return videoManPrivate->videoList[input]->getTimeStamp();
+}
