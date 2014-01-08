@@ -93,7 +93,7 @@ inline char *pixelFormatToString(VMPixelFormat vp)
 	else return "VM_UNKNOWN";
 };
 
-inline VMPixelFormat stringToPixelFormat(char *vp)
+inline VMPixelFormat stringToPixelFormat(const char *vp)
 {
     if (!strcmp(vp,"VM_RGB24"))      	return VM_RGB24;
     else if (!strcmp(vp,"VM_RGB32")) 	return VM_RGB32;
