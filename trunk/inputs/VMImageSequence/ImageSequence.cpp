@@ -51,8 +51,8 @@ bool ImgSeq::initSequence( const char *adirPath, VMInputFormat *aFormat )
 	{
 		if ( fd.dwFileAttributes & dwAttr )
 		{
-			string fileName = fd.cFileName;			 
-			if ( img = cvLoadImage( (dirPath + "/" + fileName).c_str() ) )
+			string fileName = fd.cFileName;
+			if ( img = cvLoadImage( (dirPath + "/" + fileName).c_str(), CV_LOAD_IMAGE_ANYCOLOR ) )
 			{
 				format.width = img->width;
 				format.height = img->height;
@@ -108,7 +108,7 @@ void ImgSeq::readNextImage()
 			{
 				string fileName = fd.cFileName;				
 				IplImage *img2;
-				if ( img2 = cvLoadImage( (dirPath + "/" + fileName).c_str() ) )
+				if ( img2 = cvLoadImage( (dirPath + "/" + fileName).c_str(), CV_LOAD_IMAGE_ANYCOLOR ) )
 				{
 					if ( img->width == img2->width && img->height == img2->height && img->depth == img2->depth && img->nChannels == img2->nChannels )
 					{		
@@ -159,7 +159,7 @@ bool ImgSeq::initSequence( const char *adirPath, VMInputFormat *aFormat )
 	while( img == NULL && ( dent = readdir( dir ) ) )
 	{
 		std::string fileName = dent->d_name;			 
-		if ( img = cvLoadImage( (dirPath + "/" + fileName).c_str() ) )
+		if ( img = cvLoadImage( (dirPath + "/" + fileName).c_str(), CV_LOAD_IMAGE_ANYCOLOR ) )
 		{
 			format.width = img->width;
 			format.height = img->height;
@@ -205,7 +205,7 @@ void ImgSeq::readNextImage()
 	{
 		std::string fileName = dent->d_name;			 
 		IplImage *img2;
-		if ( img2 = cvLoadImage( (dirPath + "/" + fileName).c_str() ) )
+		if ( img2 = cvLoadImage( (dirPath + "/" + fileName).c_str(), CV_LOAD_IMAGE_ANYCOLOR ) )
 		{
 			if ( img->width == img2->width && img->height == img2->height && img->depth == img2->depth && img->nChannels == img2->nChannels )
 			{
