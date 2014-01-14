@@ -23,6 +23,12 @@ VMOpenNI
 )
 ENDIF(VIDEOMAN_BUILD_INPUT_VMOpenNI)
 
+#option(VIDEOMAN_BUILD_INPUT_VMGenicam "Build Genicam input module for GenICam cameras" OFF)
+IF(VIDEOMAN_BUILD_INPUT_VMGenicam)
+SUBDIRS( VMGenicam )
+ENDIF(VIDEOMAN_BUILD_INPUT_VMGenicam)
+
+
 ENDIF(WIN32)
 
 IF(UNIX)
