@@ -395,8 +395,14 @@ bool PGRGigECamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFor
 	//Reset the camera
 	resetCamera();
 
+	Mode mode;
+	m_camera.GetGigEImagingMode( &mode );
+	GigEImageSettings imageSettings;
+	m_camera.GetGigEImageSettings( &imageSettings );
+	m_camera.SetGigEImageSettings( &imageSettings );
+
 	//Configure format
-	if ( aFormat == NULL || aFormat->showDlg )
+	/*if ( aFormat == NULL || aFormat->showDlg )
 	{
 		// Show the camera configuration dialog.		
 		CameraControlDlg controlDlg;
@@ -528,18 +534,12 @@ bool PGRGigECamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFor
 				return false;
 			}
 		}
-	}
+	}*/
 
-	//Check Image Size and Sensor offset
-	/*unsigned int roiSize;
-	m_camera.ReadRegister( 0xa0c, &roiSize );
-	width = roiSize >> 16;
-	//Offest de la imagen dentro del sensor
-	height = roiSize & 0x0000FFFF;
-	unsigned int roiPos;
-	m_camera.ReadRegister( 0xa08, &roiPos );
-	xOffset = roiPos >> 16;
-	yOffset = roiPos & 0x0000FFFF;*/
+
+
+		
+
     // Start capturing images
 	error = m_camera.StartCapture(); //Start Isochronous image capture
     if (error != PGRERROR_OK)
@@ -547,6 +547,16 @@ bool PGRGigECamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFor
         PrintError( error );
         return false;
     }
+
+	EmbeddedImageInfo m_embeddedInfo;
+error = m_camera.GetEmbeddedImageInfo(&m_embeddedInfo);
+		if( error != PGRERROR_OK )
+		{
+			return false;
+		}
+
+		m_embeddedInfo.timestamp.onOff = true;
+		error = m_camera.SetEmbeddedImageInfo(&m_embeddedInfo);
 
 	// Retrieve frame rate property
 	Property frmRate;
@@ -559,18 +569,14 @@ bool PGRGigECamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFor
 	}				
 	format.fps = frmRate.absValue;
 
-	//Check the video mode and initialize the format	
-	/*bool availableFormat = resolveFormat( videoMode, frameRate, format );	
-	if ( !availableFormat )
-		return false;*/
-	
+
 	//Change the user's format
 	if ( aFormat != NULL )	
 		*aFormat = format; 
 	
 	//Bayer format
 	m_bayerTileFormat = camInfo.bayerTileFormat;
-
+	
 	//Camera identification
 	ostringstream ss;
 	ss << aSerialNumber;
@@ -608,6 +614,13 @@ inline char *PGRGigECamera::getFrame( bool wait )
     }*/
 	//convertedImage.DeepCopy( &convertedImageCopy );
 	pixelBuffer = (char*)rawImage.GetData();
+	//TimeStamp timeStamp;
+	//m_camera.GetCycleTime( &timeStamp );
+	
+	TimeStamp timeStamp = rawImage.GetTimeStamp();
+	//m_timeStamp = timeStamp.seconds + timeStamp.microSeconds * 1e-6;
+	m_timeStamp = timeStamp.cycleSeconds + timeStamp.cycleOffset * 1e-4;
+
 	return pixelBuffer;
 }
 
@@ -967,7 +980,7 @@ void PGRGigECamera::getAvailableDevices(  VMInputIdentification **deviceList, in
 
 bool PGRGigECamera::setImageROI( int x, int y, int width, int height )
 {	
-	if ( m_videoMode == VIDEOMODE_FORMAT7 )
+	/*if ( m_videoMode == VIDEOMODE_FORMAT7 )
 	{
 		Error error = m_camera.StopCapture();
 		if (error != PGRERROR_OK)
@@ -1023,7 +1036,7 @@ bool PGRGigECamera::setImageROI( int x, int y, int width, int height )
 		}
 		return true;
 	}
-	cout << "Camera is not initialized with Format 7" << endl;
+	cout << "Camera is not initialized with Format 7" << endl;*/
 	return false;
 }
 
@@ -1212,3 +1225,8 @@ bool PGRGigECamera::setFrameRate( double frameRate )
 	prop.absValue = (float)frameRate;
 	return ( m_camera.SetProperty( &prop ) == PGRERROR_OK );	
 }
+
+	double PGRGigECamera::getTimeStamp()
+	{
+		return m_timeStamp;
+	}
