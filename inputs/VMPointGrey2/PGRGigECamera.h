@@ -1,5 +1,5 @@
-#ifndef PGR_CAMERA2
-#define PGR_CAMERA2
+#ifndef PGR_GIGECAMERA2
+#define PGR_GIGECAMERA2
 
 //#include <windows.h>
 
@@ -142,6 +142,7 @@ private:
 	bool resetCamera( );
 
 	int buildColorCoding( VideoMan::VMPixelFormat pixelFormat );
+	double getTimeStamp();
 
 
 /*	void processAvi( std::string &rawFileName, std::string &outputFileName );
@@ -194,6 +195,7 @@ private:
 
 
 	VideoManPrivate::VideoManInputController *controller;
+	double m_timeStamp;
 
 	//int width, height;
 	//int xOffset,yOffset;
