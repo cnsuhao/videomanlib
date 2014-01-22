@@ -317,8 +317,10 @@ void frameCallback( Image* pImage, const void* pCallbackData )
 		pgrCamerap->pixelBuffer = (char*)pImage->GetData();	
 		pgrCamerap->lastImage = pImage;
 		
+		TimeStamp timeStamp = pImage->GetTimeStamp();	
+		pgrCamerap->m_timeStamp = timeStamp.cycleSeconds + timeStamp.cycleOffset * 1e-4;
 		if( pgrCamerap->callback )
-			(*pgrCamerap->callback)( pgrCamerap->pixelBuffer, pgrCamerap->inputID, (double)pImage->GetTimeStamp().seconds + pImage->GetTimeStamp().microSeconds * 1e-6, pgrCamerap->frameCallbackData );			
+			(*pgrCamerap->callback)( pgrCamerap->pixelBuffer, pgrCamerap->inputID, pgrCamerap->m_timeStamp, pgrCamerap->frameCallbackData );
 	}
 }
 
@@ -516,6 +518,16 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
         return false;
     }
 
+	EmbeddedImageInfo m_embeddedInfo;
+	error = m_camera.GetEmbeddedImageInfo(&m_embeddedInfo);
+	if( error != PGRERROR_OK )
+	{
+        PrintError( error );
+		return false;
+	}
+	m_embeddedInfo.timestamp.onOff = true;
+	error = m_camera.SetEmbeddedImageInfo(&m_embeddedInfo);
+
 	// Retrieve frame rate property
 	Property frmRate;
 	frmRate.type = FRAME_RATE;
@@ -584,7 +596,8 @@ inline char *PGRCamera::getFrame( bool wait )
     }*/
 	//convertedImage.DeepCopy( &convertedImageCopy );
 	pixelBuffer = (char*)rawImage.GetData();
-	m_timeStamp = rawImage.GetTimeStamp().seconds + rawImage.GetTimeStamp().microSeconds * 1e-6;
+	TimeStamp timeStamp = rawImage.GetTimeStamp();	
+	m_timeStamp = timeStamp.cycleSeconds + timeStamp.cycleOffset * 1e-4;
 	return pixelBuffer;
 }
 
