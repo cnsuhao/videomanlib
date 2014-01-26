@@ -72,7 +72,7 @@ int PointGreyController::getNumberOfCameras()
 
 bool PointGreyController::setRegister( unsigned int reg, unsigned int value )
 {
-	Error error = cameraList[0]->m_camera.WriteRegister( reg, value ); 	
+	Error error = cameraList[0]->m_camera->WriteRegister( reg, value ); 	
     if ( error != PGRERROR_OK )
 		printf( "%s\n", error.GetDescription() );
 	return false;
@@ -124,7 +124,7 @@ void PointGreyController::UnlockBuffers()
 void PointGreyController::printCameraInfo()
 {
 	CameraInfo camInfo;
-	Error error = cameraList[0]->m_camera.GetCameraInfo(&camInfo);
+	Error error = cameraList[0]->m_camera->GetCameraInfo(&camInfo);
     if (error == PGRERROR_OK)    
 		PrintInfo(&camInfo);
 }
