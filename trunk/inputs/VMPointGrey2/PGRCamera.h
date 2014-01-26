@@ -13,8 +13,9 @@
 
 #include "FlyCapture2Defs.h"
 #include "FlyCapture2GUI.h"
-#include "Camera.h"
+#include "CameraBase.h"
 #include "Image.h"
+#include "BusManager.h"
 
 
 #define PGR_PROJECT_NAME "VideoMan"
@@ -90,7 +91,8 @@ public:
 	double getTimeStamp();
 
 protected: 
-	FlyCapture2::Camera m_camera;
+	FlyCapture2::CameraBase *m_camera;
+
 	FlyCapture2::BayerTileFormat m_bayerTileFormat;
 
 	bool setImageROI( int x, int y, int width, int height );
@@ -134,8 +136,7 @@ private:
 	FlyCapture2::VideoMode buildVideoMode( VideoMan::VMInputFormat format );
 
 	FlyCapture2::FrameRate buildFrameRate( double fps );
-
-	void getFirstPixelFormatSupported(const FlyCapture2::Format7Info &fmt7Info,FlyCapture2::PixelFormat &fmt7PixFmt);
+	
 
 	FlyCapture2::PixelFormat buildPixelFormat( VideoMan::VMPixelFormat pixelFormat );
 
@@ -194,9 +195,13 @@ private:
 	FlyCapture2::Format7ImageSettings m_fmt7ImageSettings;
 	FlyCapture2::Format7PacketInfo m_fmt7PacketInfo;
 
+	FlyCapture2::GigEImageSettingsInfo m_GigEImageSettingsInfo;
+
 
 	VideoManPrivate::VideoManInputController *controller;
 	double m_timeStamp;
+	FlyCapture2::InterfaceType m_interfaceType;
+
 
 	//int width, height;
 	//int xOffset,yOffset;

@@ -1,3 +1,6 @@
+#include "Camera.h"
+#include "GigECamera.h"
+
 #include "PGRCamera.h"
 #include <sstream>
 #include <iostream>
@@ -108,7 +111,7 @@ PGRCamera::~PGRCamera(void)
 	//	showControlDlgThread = NULL;
 	//}
 	//Power off
-	m_camera.WriteRegister( CAMERA_POWER, 0x00000000 );
+	m_camera->WriteRegister( CAMERA_POWER, 0x00000000 );
 	if ( dlg )
 	{
 		dlg->Hide();
@@ -120,7 +123,7 @@ PGRCamera::~PGRCamera(void)
     stop();
     // Disconnect the camera
 	
-	Error error = m_camera.Disconnect();
+	Error error = m_camera->Disconnect();
     if (error != PGRERROR_OK)
         PrintError( error );
 
@@ -236,20 +239,6 @@ FlyCapture2::VideoMode PGRCamera::buildVideoMode( VMInputFormat format )
 	}
 	return VIDEOMODE_FORMAT7;
 }
-void PGRCamera::getFirstPixelFormatSupported(const FlyCapture2::Format7Info &fmt7Info,FlyCapture2::PixelFormat &fmt7PixFmt)
-{
-	if ((fmt7Info.pixelFormatBitField & PIXEL_FORMAT_RGB)==PIXEL_FORMAT_RGB) fmt7PixFmt=PIXEL_FORMAT_RGB;
-	else if ((fmt7Info.pixelFormatBitField & PIXEL_FORMAT_RGBU) == PIXEL_FORMAT_RGBU) fmt7PixFmt=PIXEL_FORMAT_RGBU;
-	else if ((fmt7Info.pixelFormatBitField & PIXEL_FORMAT_BGR )==PIXEL_FORMAT_BGR) fmt7PixFmt=PIXEL_FORMAT_BGR;
-	else if ((fmt7Info.pixelFormatBitField & PIXEL_FORMAT_BGRU) == PIXEL_FORMAT_BGRU ) fmt7PixFmt=PIXEL_FORMAT_BGRU;
-	else if ((fmt7Info.pixelFormatBitField & PIXEL_FORMAT_422YUV8) == PIXEL_FORMAT_422YUV8) fmt7PixFmt=PIXEL_FORMAT_422YUV8;
-	else if ((fmt7Info.pixelFormatBitField & PIXEL_FORMAT_411YUV8) == PIXEL_FORMAT_411YUV8) fmt7PixFmt=PIXEL_FORMAT_411YUV8;
-	else if ((fmt7Info.pixelFormatBitField & PIXEL_FORMAT_MONO8) == PIXEL_FORMAT_MONO8) fmt7PixFmt=PIXEL_FORMAT_MONO8;
-	else if ((fmt7Info.pixelFormatBitField & PIXEL_FORMAT_MONO16) == PIXEL_FORMAT_MONO16) fmt7PixFmt=PIXEL_FORMAT_MONO16;
-	else if ((fmt7Info.pixelFormatBitField & PIXEL_FORMAT_RAW8) == PIXEL_FORMAT_RAW8) fmt7PixFmt=PIXEL_FORMAT_RAW8;
-	else if ((fmt7Info.pixelFormatBitField & PIXEL_FORMAT_RAW16) == PIXEL_FORMAT_RAW16) fmt7PixFmt=PIXEL_FORMAT_RAW16;
-
-}
 
 FlyCapture2::PixelFormat PGRCamera::buildPixelFormat( VMPixelFormat pixelFormat )
 {
@@ -329,209 +318,371 @@ void PGRCamera::setFrameCallback( getFrameCallback theCallback, void *data )
 	callback = theCallback ;
 	frameCallbackData = data;
 	stop();
-	Error error = m_camera.StartCapture( frameCallback, this );
+	Error error = m_camera->StartCapture( frameCallback, this );
 	if (error != PGRERROR_OK)
 		PrintError( error );
-	//m_camera.SetCallback( frameCallback, this );
+	//m_camera->SetCallback( frameCallback, this );
 }
 
 bool PGRCamera::resetCamera( )
 {
-	Error error = m_camera.WriteRegister( INITIALIZE,0x80000000 );
-	return ( error != PGRERROR_OK );
+	Error error = m_camera->WriteRegister( INITIALIZE,0x80000000 );
+	if (error != PGRERROR_OK)
+	{
+		PrintError( error );
+		return false;
+	}
+	return true;
+}
+
+PixelFormat findSupportedPixelFormat( int pixelFormatBitField )
+{
+	if ( ( pixelFormatBitField & PIXEL_FORMAT_RGB ) == PIXEL_FORMAT_RGB )
+		return PIXEL_FORMAT_RGB;
+	else if ( ( pixelFormatBitField & PIXEL_FORMAT_BGR ) == PIXEL_FORMAT_BGR )
+		return PIXEL_FORMAT_BGR;
+	else if ( ( pixelFormatBitField & PIXEL_FORMAT_RGB8 ) == PIXEL_FORMAT_RGB8)
+		return PIXEL_FORMAT_RGB8;
+	else if ( ( pixelFormatBitField & PIXEL_FORMAT_MONO8 ) == PIXEL_FORMAT_MONO8 )
+		return PIXEL_FORMAT_MONO8;
+	else if ( ( pixelFormatBitField & PIXEL_FORMAT_MONO16 ) == PIXEL_FORMAT_MONO16 )
+		return PIXEL_FORMAT_MONO16;
+	else if ( ( pixelFormatBitField & PIXEL_FORMAT_RAW8 ) == PIXEL_FORMAT_RAW8 )
+		return PIXEL_FORMAT_RAW8;
+	else if ( ( pixelFormatBitField & PIXEL_FORMAT_RAW16 ) == PIXEL_FORMAT_RAW16 )
+		return PIXEL_FORMAT_RAW16;	
+	else if ( ( pixelFormatBitField & PIXEL_FORMAT_RGBU ) == PIXEL_FORMAT_RGBU )
+		return PIXEL_FORMAT_RGBU;
+	else if ( ( pixelFormatBitField & PIXEL_FORMAT_BGRU ) == PIXEL_FORMAT_BGRU )
+		return PIXEL_FORMAT_BGRU;
+	else if ( ( pixelFormatBitField & PIXEL_FORMAT_411YUV8 )  == PIXEL_FORMAT_411YUV8 )
+		return PIXEL_FORMAT_411YUV8;
+	else if ( ( pixelFormatBitField & PIXEL_FORMAT_422YUV8 ) == PIXEL_FORMAT_422YUV8 )
+		return PIXEL_FORMAT_422YUV8;
+	else if ( ( pixelFormatBitField & PIXEL_FORMAT_444YUV8 ) == PIXEL_FORMAT_444YUV8 )
+		return PIXEL_FORMAT_444YUV8;
+	else if ( ( pixelFormatBitField & PIXEL_FORMAT_RGB16 ) == PIXEL_FORMAT_RGB16 )
+		return PIXEL_FORMAT_RGB16;
+	else if ( ( pixelFormatBitField & PIXEL_FORMAT_S_RGB16 ) == PIXEL_FORMAT_S_RGB16 )
+		return PIXEL_FORMAT_S_RGB16;
+	else if ( ( pixelFormatBitField & PIXEL_FORMAT_BGR16 ) == PIXEL_FORMAT_BGR16 )
+		return PIXEL_FORMAT_BGR16;	
+	else if ( ( pixelFormatBitField & PIXEL_FORMAT_BGRU16 ) == PIXEL_FORMAT_BGRU16 )
+		return PIXEL_FORMAT_BGRU16;	
+	else if ( ( pixelFormatBitField & PIXEL_FORMAT_MONO12 ) == PIXEL_FORMAT_MONO12 )
+		return PIXEL_FORMAT_MONO12;
+	else if ( ( pixelFormatBitField & PIXEL_FORMAT_RAW12 ) == PIXEL_FORMAT_RAW12 )
+		return PIXEL_FORMAT_RAW12;
+	else if ( ( pixelFormatBitField & PIXEL_FORMAT_422YUV8_JPEG ) == PIXEL_FORMAT_422YUV8_JPEG )
+		return PIXEL_FORMAT_422YUV8_JPEG;
+	return UNSPECIFIED_PIXEL_FORMAT;        
 }
 
 bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat )
 {
 	//Find the requiered camera
 	serialNumber = aSerialNumber;
+	BusManager busMgr;	
+	PGRGuid guid;
 	if ( aSerialNumber == 0 )
 	{
-		//No specific camera required
-		PGRGuid guid[64];
+		//No specific camera required		
 		unsigned int psize = 64;
 		CameraSelectionDlg selectionDlg;
 		bool ok;
-		selectionDlg.ShowModal( &ok, guid, &psize );
+		selectionDlg.ShowModal( &ok, &guid, &psize );
 		if ( !ok || psize != 1 ) 
-			return false;
-		Error error = m_camera.Connect(&guid[0]);
-		if (error != PGRERROR_OK)
-		{
-			PrintError( error );
-			return false;
-		}
+			return false;		
 	}
 	else
 	{
 		//Find the camera with required serial number
 		Error error;
-		BusManager busMgr;
-		PGRGuid guid;
 		error = busMgr.GetCameraFromSerialNumber( aSerialNumber, &guid );
 		if (error != PGRERROR_OK)
 		{
 			PrintError( error );
 			return false;
 		}
+	}
 
-		error = m_camera.Connect(&guid);
-		if (error != PGRERROR_OK)
-		{
-			PrintError( error );
-			return false;
-		}
+	//get interface type
+	Error error = busMgr.GetInterfaceTypeFromGuid( &guid, &m_interfaceType );
+	if (error != PGRERROR_OK)
+	{
+		PrintError( error );
+		return false;
+	}
+
+	//Create canera and connect
+	if ( m_interfaceType == INTERFACE_GIGE )
+		m_camera = new GigECamera;
+	else
+		m_camera = new Camera;
+	error = m_camera->Connect( &guid );
+	if (error != PGRERROR_OK)
+	{
+		PrintError( error );
+		return false;
 	}
 
 	//Reset the camera
-	resetCamera();
+	if ( !resetCamera() )
+		return false;
 
 	//Configure format
 	if ( aFormat == NULL || aFormat->showDlg )
 	{
+		//No specific format required
 		// Show the camera configuration dialog.		
 		CameraControlDlg controlDlg;
-		controlDlg.Connect( &m_camera );
+		controlDlg.Connect( m_camera );
 		controlDlg.ShowModal();
 		controlDlg.Hide();
 		controlDlg.Disconnect();
-		//Initialize the format
-		m_camera.GetVideoModeAndFrameRate( &m_videoMode, &m_frameRate );
-		bool availableFormat = resolveFormat( m_videoMode, m_frameRate, format );	
-		if ( !availableFormat )
-			return false;
-	}
-	else if ( aFormat != NULL )
-	{
-		m_videoMode = buildVideoMode( *aFormat );		
-		m_frameRate = buildFrameRate( aFormat->fps );
-		bool supported = false;
-		if ( m_videoMode != VIDEOMODE_FORMAT7 && m_frameRate != FRAMERATE_FORMAT7 ) 
+		//Get camera's current format to initialize videoman format
+		if ( m_interfaceType == INTERFACE_GIGE )
 		{
-			//Check if the combination videomode and framerate is supported
-			Error error = m_camera.GetVideoModeAndFrameRateInfo( m_videoMode, m_frameRate, &supported );
-			if ( error != PGRERROR_OK )
+			GigECamera* camera = static_cast<GigECamera*>(m_camera);
+			GigEImageSettings imageSettings;
+			error = camera->GetGigEImageSettings( &imageSettings );
+			if (error != PGRERROR_OK)
 			{
 				PrintError( error );
 				return false;
-			}
-		}
-		if ( supported )
-		{
-			//Set standard videomode and framerate						
-			Error error = m_camera.SetVideoModeAndFrameRate( m_videoMode, m_frameRate );
+			}			
+			error = camera->GetGigEImageSettingsInfo( &m_GigEImageSettingsInfo );
 			if (error != PGRERROR_OK)
 			{
 				PrintError( error );
 				return false;
 			}
-			//Initialize the format member
+			if ( imageSettings.width != m_GigEImageSettingsInfo.maxWidth || imageSettings.height != m_GigEImageSettingsInfo.maxHeight )
+			{
+				roiMode = true;
+				xRoi = imageSettings.offsetX;
+				yRoi = imageSettings.offsetY;
+				wRoi = imageSettings.width;
+				hRoi = imageSettings.height;
+			}
+			VMPixelFormat pixelFormat = resolvePixelFormat( imageSettings.pixelFormat );		
+			//framerate
+			Property prop;
+			prop.type = FRAME_RATE;
+			error = camera->GetProperty( &prop );
+			if (error != PGRERROR_OK)
+			{
+				PrintError( error );
+				return false;
+			}
+
+			format.SetFormat( m_GigEImageSettingsInfo.maxWidth, m_GigEImageSettingsInfo.maxHeight, prop.absValue, pixelFormat, pixelFormat );
+		}
+		else
+		{
+			Camera* camera = static_cast<Camera*>(m_camera);
+			camera->GetVideoModeAndFrameRate( &m_videoMode, &m_frameRate );
 			bool availableFormat = resolveFormat( m_videoMode, m_frameRate, format );	
 			if ( !availableFormat )
 				return false;
 		}
-		else		
+	}
+	else if ( aFormat != NULL )
+	{
+		//Specific format required
+		if ( m_interfaceType == INTERFACE_GIGE )
 		{
-			PixelFormat fmt7PixFmt = buildPixelFormat( aFormat->getPixelFormatOut() );
-			// Find the Format 7 mode that matches aFormat
-			// Query for available Format 7 modes			
-			bool found = false;
-			for ( int currentMode = 0; !found && currentMode < NUM_MODES; ++currentMode )
+			GigECamera* camera = static_cast<GigECamera*>(m_camera);
+			GigEImageSettings imageSettings;
+			PixelFormat requestedPixelFormat;
+			if ( aFormat->getPixelFormatOut() != VM_UNKNOWN )
 			{
-				m_fmt7Info.mode = static_cast<Mode>( MODE_0 + currentMode );
-				bool supported;			
-				Error error = m_camera.GetFormat7Info( &m_fmt7Info, &supported );
-				if (error != PGRERROR_OK)
+				requestedPixelFormat = buildPixelFormat( aFormat->getPixelFormatOut() );				
+				imageSettings.pixelFormat = requestedPixelFormat;
+			}
+			bool found = false;					
+			for ( int i = 0; i < NUM_MODES && !found; i++ )
+			{
+				bool isSupported;
+				camera->QueryGigEImagingMode( (Mode)i, &isSupported );
+				if ( isSupported )
 				{
-					PrintError( error );
-					return false;
-				}
-				if ( supported && m_fmt7Info.maxWidth == aFormat->width && m_fmt7Info.maxHeight == aFormat->height &&
-					( aFormat->getPixelFormatOut() == VM_UNKNOWN || ( ( m_fmt7Info.pixelFormatBitField & fmt7PixFmt ) == fmt7PixFmt ) ) )
-				{
-					//same resolution and pixelFormat
-					found = true;
+					error = camera->SetGigEImagingMode( (Mode)i );
+					if (error != PGRERROR_OK)
+					{
+						PrintError( error );
+						return false;
+					}
+					camera->GetGigEImageSettingsInfo( &m_GigEImageSettingsInfo );
+					if ( aFormat->getPixelFormatOut() == VM_UNKNOWN || ( ( m_GigEImageSettingsInfo.pixelFormatBitField & requestedPixelFormat ) == requestedPixelFormat ) )
+					{
+						if ( m_GigEImageSettingsInfo.maxWidth == aFormat->width && m_GigEImageSettingsInfo.maxHeight == aFormat->height )
+						{	
+							imageSettings.offsetX = 0;
+							imageSettings.offsetY = 0;
+							imageSettings.height = m_GigEImageSettingsInfo.maxHeight;
+							imageSettings.width = m_GigEImageSettingsInfo.maxWidth;
+							if ( aFormat->getPixelFormatOut() == VM_UNKNOWN )
+								imageSettings.pixelFormat = findSupportedPixelFormat( m_GigEImageSettingsInfo.pixelFormatBitField );
+
+							error = camera->SetGigEImageSettings( &imageSettings );
+							if (error != PGRERROR_OK)
+							{
+								PrintError( error );
+								return false;
+							}
+							else
+							{
+								found = true;
+								//framerate
+								setFrameRate( aFormat->fps );
+								format.SetFormat( imageSettings.width, imageSettings.height, aFormat->fps, resolvePixelFormat( imageSettings.pixelFormat ), resolvePixelFormat( imageSettings.pixelFormat ) );								
+							}
+						}
+					}
 				}
 			}
-			if ( found )
+			if ( !found )
 			{
-				if (aFormat->getPixelFormatOut() == VM_UNKNOWN ) 
-					getFirstPixelFormatSupported(m_fmt7Info,fmt7PixFmt);
-
-				format.SetFormat( m_fmt7Info.maxWidth, m_fmt7Info.maxHeight, aFormat->fps, resolvePixelFormat( fmt7PixFmt ), resolvePixelFormat( fmt7PixFmt ) );
-				m_fmt7ImageSettings.mode = m_fmt7Info.mode;
-				m_fmt7ImageSettings.offsetX = 0;
-				m_fmt7ImageSettings.offsetY = 0;
-				m_fmt7ImageSettings.width = m_fmt7Info.maxWidth;
-				m_fmt7ImageSettings.height = m_fmt7Info.maxHeight;
-				m_fmt7ImageSettings.pixelFormat = fmt7PixFmt;
-
-				// Validate the settings to make sure that they are valid
-				bool valid;
-				Error error = m_camera.ValidateFormat7Settings( &m_fmt7ImageSettings, &valid, &m_fmt7PacketInfo );
+				cerr << "Format not supported" << endl;
+				return false;
+			}
+		}
+		else
+		{
+			Camera* camera = static_cast<Camera*>(m_camera);
+			m_videoMode = buildVideoMode( *aFormat );		
+			m_frameRate = buildFrameRate( aFormat->fps );
+			bool supported = false;
+			if ( m_videoMode != VIDEOMODE_FORMAT7 && m_frameRate != FRAMERATE_FORMAT7 ) 
+			{
+				//Check if the combination videomode and framerate is supported
+				Error error = camera->GetVideoModeAndFrameRateInfo( m_videoMode, m_frameRate, &supported );
+				if ( error != PGRERROR_OK )
+				{
+					PrintError( error );
+					return false;
+				}
+			}
+			if ( supported )
+			{
+				//Set standard videomode and framerate						
+				Error error = camera->SetVideoModeAndFrameRate( m_videoMode, m_frameRate );
 				if (error != PGRERROR_OK)
 				{
 					PrintError( error );
 					return false;
 				}
-				if ( !valid )
+				//Initialize videoman format
+				bool availableFormat = resolveFormat( m_videoMode, m_frameRate, format );	
+				if ( !availableFormat )
+					return false;
+			}
+			else		
+			{
+				PixelFormat fmt7PixFmt = buildPixelFormat( aFormat->getPixelFormatOut() );
+				// Find the Format 7 mode that matches aFormat
+				// Query for available Format 7 modes			
+				bool found = false;
+				for ( int currentMode = 0; !found && currentMode < NUM_MODES; ++currentMode )
 				{
-					// Settings are not valid
+					m_fmt7Info.mode = static_cast<Mode>( MODE_0 + currentMode );					
+					Error error = camera->GetFormat7Info( &m_fmt7Info, &supported );
+					if (error != PGRERROR_OK)
+					{
+						PrintError( error );
+						return false;
+					}
+					if ( supported && m_fmt7Info.maxWidth == aFormat->width && m_fmt7Info.maxHeight == aFormat->height &&
+						( aFormat->getPixelFormatOut() == VM_UNKNOWN || ( ( m_fmt7Info.pixelFormatBitField & fmt7PixFmt ) == fmt7PixFmt ) ) )
+					{
+						//same resolution and pixelFormat
+						found = true;
+					}
+				}
+				if ( found )
+				{
+					if (aFormat->getPixelFormatOut() == VM_UNKNOWN ) 
+						fmt7PixFmt = findSupportedPixelFormat(m_fmt7Info.pixelFormatBitField);
+
+					format.SetFormat( m_fmt7Info.maxWidth, m_fmt7Info.maxHeight, aFormat->fps, resolvePixelFormat( fmt7PixFmt ), resolvePixelFormat( fmt7PixFmt ) );
+					m_fmt7ImageSettings.mode = m_fmt7Info.mode;
+					m_fmt7ImageSettings.offsetX = 0;
+					m_fmt7ImageSettings.offsetY = 0;
+					m_fmt7ImageSettings.width = m_fmt7Info.maxWidth;
+					m_fmt7ImageSettings.height = m_fmt7Info.maxHeight;
+					m_fmt7ImageSettings.pixelFormat = fmt7PixFmt;
+
+					// Validate the settings to make sure that they are valid
+					bool valid;
+					Error error = camera->ValidateFormat7Settings( &m_fmt7ImageSettings, &valid, &m_fmt7PacketInfo );
+					if (error != PGRERROR_OK)
+					{
+						PrintError( error );
+						return false;
+					}
+					if ( !valid )
+					{
+						// Settings are not valid
+						printf("Format7 settings are not valid\n");
+						return false;
+					}
+
+					// Set the settings to the camera
+					error = camera->SetFormat7Configuration( &m_fmt7ImageSettings, m_fmt7PacketInfo.recommendedBytesPerPacket );
+					if (error != PGRERROR_OK)
+					{
+						PrintError( error );
+						return false;
+					}
+
+					setFrameRate( aFormat->fps );
+				}
+				else
+				{
 					printf("Format7 settings are not valid\n");
 					return false;
 				}
-
-				// Set the settings to the camera
-				error = m_camera.SetFormat7Configuration( &m_fmt7ImageSettings, m_fmt7PacketInfo.recommendedBytesPerPacket );
-				if (error != PGRERROR_OK)
-				{
-					PrintError( error );
-					return false;
-				}
-
-				setFrameRate( aFormat->fps );
-			}
-			else
-			{
-				printf("Format7 settings are not valid\n");
-				return false;
-			}
-		}		
+			}		
+		}
 	}
 
 	//Check Image Size and Sensor offset
 	/*unsigned int roiSize;
-	m_camera.ReadRegister( 0xa0c, &roiSize );
+	m_camera->ReadRegister( 0xa0c, &roiSize );
 	width = roiSize >> 16;
 	//Offest de la imagen dentro del sensor
 	height = roiSize & 0x0000FFFF;
 	unsigned int roiPos;
-	m_camera.ReadRegister( 0xa08, &roiPos );
+	m_camera->ReadRegister( 0xa08, &roiPos );
 	xOffset = roiPos >> 16;
 	yOffset = roiPos & 0x0000FFFF;*/
 
+	
+
     // Start capturing images
-	Error error = m_camera.StartCapture(); //Start Isochronous image capture
+	error = m_camera->StartCapture(); //Start Isochronous image capture
     if (error != PGRERROR_OK)
     {
         PrintError( error );
         return false;
     }
 
+	//Set embedded time stamp info 
 	EmbeddedImageInfo m_embeddedInfo;
-	error = m_camera.GetEmbeddedImageInfo(&m_embeddedInfo);
+	error = m_camera->GetEmbeddedImageInfo(&m_embeddedInfo);
 	if( error != PGRERROR_OK )
 	{
         PrintError( error );
 		return false;
 	}
 	m_embeddedInfo.timestamp.onOff = true;
-	error = m_camera.SetEmbeddedImageInfo(&m_embeddedInfo);
+	error = m_camera->SetEmbeddedImageInfo(&m_embeddedInfo);
 
 	// Retrieve frame rate property
 	Property frmRate;
 	frmRate.type = FRAME_RATE;
-	error = m_camera.GetProperty( &frmRate );
+	error = m_camera->GetProperty( &frmRate );
 	if (error != PGRERROR_OK)
 	{
 		PrintError( error );
@@ -550,7 +701,7 @@ bool PGRCamera::initCamera( unsigned long aSerialNumber, VMInputFormat *aFormat 
 	
 	// Get the camera information
     CameraInfo camInfo;
-	error = m_camera.GetCameraInfo(&camInfo);
+	error = m_camera->GetCameraInfo(&camInfo);
     if (error != PGRERROR_OK)
     {
         PrintError( error );
@@ -578,7 +729,7 @@ void PGRCamera::releaseFrame()
 inline char *PGRCamera::getFrame( bool wait )
 {
 	//return pixelBuffer;
-	Error error = m_camera.RetrieveBuffer( &rawImage );
+	Error error = m_camera->RetrieveBuffer( &rawImage );
 	
     if (error != PGRERROR_OK)
     {
@@ -616,7 +767,7 @@ void PGRCamera::showPropertyPage()
 	if ( !dlg )
 	{
 		dlg = new CameraControlDlg();
-		dlg->Connect( &m_camera );
+		dlg->Connect( m_camera );
 		
 	}
 	dlg->Show();
@@ -793,9 +944,10 @@ bool PGRCamera::resolveFormat( VideoMode videoMode, FrameRate frameRate, VMInput
 		case VIDEOMODE_FORMAT7:
 		{
 			//Get the format 7 configuration
+			Camera* camera = static_cast<Camera*>(m_camera);
 			unsigned int pPacketSize;
 			float pPercentage;
-			Error error = m_camera.GetFormat7Configuration( &m_fmt7ImageSettings, &pPacketSize, &pPercentage );
+			Error error = camera->GetFormat7Configuration( &m_fmt7ImageSettings, &pPacketSize, &pPercentage );
 			if ( error != PGRERROR_OK )
 			{
 				PrintError( error );
@@ -804,7 +956,7 @@ bool PGRCamera::resolveFormat( VideoMode videoMode, FrameRate frameRate, VMInput
 			//Get the format 7 info
 			m_fmt7Info.mode = m_fmt7ImageSettings.mode;
 			bool supported;			
-			error = m_camera.GetFormat7Info( &m_fmt7Info, &supported );
+			error = camera->GetFormat7Info( &m_fmt7Info, &supported );
 			if (error != PGRERROR_OK)
 			{
 				PrintError( error );
@@ -817,7 +969,7 @@ bool PGRCamera::resolveFormat( VideoMode videoMode, FrameRate frameRate, VMInput
 				yRoi = m_fmt7ImageSettings.offsetY;
 				wRoi = m_fmt7ImageSettings.width;
 				hRoi = m_fmt7ImageSettings.height;
-			}
+			}			
 			rFormat.SetFormat( m_fmt7Info.maxWidth, m_fmt7Info.maxHeight, 30, resolvePixelFormat( m_fmt7ImageSettings.pixelFormat ), resolvePixelFormat( m_fmt7ImageSettings.pixelFormat ) );
 			break;
 		}
@@ -872,7 +1024,7 @@ bool PGRCamera::resolveFormat( VideoMode videoMode, FrameRate frameRate, VMInput
 		{
 			Property frmRate;
 			frmRate.type = FRAME_RATE;
-			Error error = m_camera.GetProperty( &frmRate );
+			Error error = m_camera->GetProperty( &frmRate );
 			if (error != PGRERROR_OK)
 			{
 				PrintError( error );
@@ -954,41 +1106,35 @@ void PGRCamera::getAvailableDevices(  VMInputIdentification **deviceList, int &n
 }
 
 bool PGRCamera::setImageROI( int x, int y, int width, int height )
-{	
-	if ( m_videoMode == VIDEOMODE_FORMAT7 )
+{
+	if ( m_interfaceType == INTERFACE_GIGE )
 	{
-		Error error = m_camera.StopCapture();
+		Error error = m_camera->StopCapture();
 		if (error != PGRERROR_OK)
 		{
 			PrintError( error );
 			return false;
 		}
-		m_fmt7ImageSettings.offsetX = x;
-		m_fmt7ImageSettings.offsetY = y;
-		m_fmt7ImageSettings.width = width;
-		m_fmt7ImageSettings.height = height;
-		// Validate the settings to make sure that they are valid
-		bool valid;
-		error = m_camera.ValidateFormat7Settings( &m_fmt7ImageSettings, &valid, &m_fmt7PacketInfo );
+		GigECamera* camera = static_cast<GigECamera*>(m_camera);
+		GigEImageSettings imageSettings;
+		error = camera->GetGigEImageSettings( &imageSettings );
 		if (error != PGRERROR_OK)
 		{
 			PrintError( error );
 			return false;
 		}
-		if ( !valid )
-		{
-			// Settings are not valid
-			printf("Format7 settings are not valid\n");
-			return false;
-		}
-		error = m_camera.SetFormat7Configuration( &m_fmt7ImageSettings, m_fmt7PacketInfo.recommendedBytesPerPacket );
+		imageSettings.offsetX = x;
+		imageSettings.offsetY = y;
+		imageSettings.width = width;
+		imageSettings.height = height;		
+		GigEImageSettingsInfo info;
+		error = camera->GetGigEImageSettingsInfo( &info );
 		if (error != PGRERROR_OK)
 		{
 			PrintError( error );
 			return false;
 		}
-
-		if ( m_fmt7ImageSettings.width != m_fmt7Info.maxWidth || m_fmt7ImageSettings.height != m_fmt7Info.maxHeight )
+		if ( imageSettings.width != info.maxWidth || imageSettings.height != info.maxHeight )
 		{
 			roiMode = true;
 			xRoi = x;
@@ -999,17 +1145,86 @@ bool PGRCamera::setImageROI( int x, int y, int width, int height )
 		else
 			roiMode = false;
 
+		error = camera->SetGigEImageSettings( &imageSettings );
+		if (error != PGRERROR_OK)
+		{
+			PrintError( error );
+			return false;
+		}
+
 		//Restart the camera
 		if ( callback )
-			error = m_camera.StartCapture( frameCallback, this );
+			error = m_camera->StartCapture( frameCallback, this );
 		else
-			error = m_camera.StartCapture();
-	    if (error != PGRERROR_OK)
-	    {
+			error = m_camera->StartCapture();
+		if (error != PGRERROR_OK)
+		{
 			PrintError( error );
 			return false;
 		}
 		return true;
+
+	}
+	else
+	{
+		Camera* camera = static_cast<Camera*>(m_camera);
+		if ( m_videoMode == VIDEOMODE_FORMAT7 )
+		{
+			Error error = m_camera->StopCapture();
+			if (error != PGRERROR_OK)
+			{
+				PrintError( error );
+				return false;
+			}
+			m_fmt7ImageSettings.offsetX = x;
+			m_fmt7ImageSettings.offsetY = y;
+			m_fmt7ImageSettings.width = width;
+			m_fmt7ImageSettings.height = height;
+			// Validate the settings to make sure that they are valid
+			bool valid;
+			error = camera->ValidateFormat7Settings( &m_fmt7ImageSettings, &valid, &m_fmt7PacketInfo );
+			if (error != PGRERROR_OK)
+			{
+				PrintError( error );
+				return false;
+			}
+			if ( !valid )
+			{
+				// Settings are not valid
+				printf("Format7 settings are not valid\n");
+				return false;
+			}
+			error = camera->SetFormat7Configuration( &m_fmt7ImageSettings, m_fmt7PacketInfo.recommendedBytesPerPacket );
+			if (error != PGRERROR_OK)
+			{
+				PrintError( error );
+				return false;
+			}
+
+			if ( m_fmt7ImageSettings.width != m_fmt7Info.maxWidth || m_fmt7ImageSettings.height != m_fmt7Info.maxHeight )
+			{
+				roiMode = true;
+				xRoi = x;
+				yRoi = y;
+				wRoi = width;
+				hRoi = height;
+			}
+			else
+				roiMode = false;
+
+			//Restart the camera
+			if ( callback )
+				error = m_camera->StartCapture( frameCallback, this );
+			else
+				error = m_camera->StartCapture();
+			if (error != PGRERROR_OK)
+			{
+				PrintError( error );
+				return false;
+			}
+			return true;
+		}
+
 	}
 	cout << "Camera is not initialized with Format 7" << endl;
 	return false;
@@ -1019,17 +1234,17 @@ bool PGRCamera::setGainControl( bool autoGain )
 {
 	Property prop;
 	prop.type = GAIN;
-	m_camera.GetProperty( &prop );
+	m_camera->GetProperty( &prop );
 	prop.autoManualMode = autoGain;
 	//prop.valueA = 400;
-	return ( m_camera.SetProperty( &prop ) == PGRERROR_OK );	
+	return ( m_camera->SetProperty( &prop ) == PGRERROR_OK );	
 }
 
 bool PGRCamera::getGainControl()
 {
 	Property prop;
 	prop.type = GAIN;
-	m_camera.GetProperty( &prop );
+	m_camera->GetProperty( &prop );
 	return prop.autoManualMode;
 }
 
@@ -1037,28 +1252,28 @@ bool PGRCamera::setExposureControl( bool autoExp )
 {
 	Property prop;
 	prop.type = AUTO_EXPOSURE;
-	m_camera.GetProperty( &prop );
+	m_camera->GetProperty( &prop );
 	prop.autoManualMode = autoExp;
-	return ( m_camera.SetProperty( &prop ) == PGRERROR_OK );	
+	return ( m_camera->SetProperty( &prop ) == PGRERROR_OK );	
 }
 
 bool PGRCamera::setSharpnessControlValue(float value)
 {
 	Property prop;
 	prop.type = SHARPNESS;
-	m_camera.GetProperty( &prop );
+	m_camera->GetProperty( &prop );
 	prop.autoManualMode = false;
 	prop.valueA = (unsigned int)value;	
-	return ( m_camera.SetProperty( &prop ) == PGRERROR_OK );	
+	return ( m_camera->SetProperty( &prop ) == PGRERROR_OK );	
 }
 
 bool PGRCamera::setSharpnessControl( bool autoSharp )
 {
 	Property prop;
 	prop.type = SHARPNESS;
-	m_camera.GetProperty( &prop );
+	m_camera->GetProperty( &prop );
 	prop.autoManualMode = autoSharp;
-	return ( m_camera.SetProperty( &prop ) == PGRERROR_OK );	
+	return ( m_camera->SetProperty( &prop ) == PGRERROR_OK );	
 }
 
 
@@ -1066,20 +1281,20 @@ bool PGRCamera::setShutterControl( bool autoShutter )
 {
 	Property prop;
 	prop.type = SHUTTER;
-	m_camera.GetProperty( &prop );
+	m_camera->GetProperty( &prop );
 	prop.autoManualMode = autoShutter;
-	return ( m_camera.SetProperty( &prop ) == PGRERROR_OK );	
+	return ( m_camera->SetProperty( &prop ) == PGRERROR_OK );	
 }
 
 bool PGRCamera::setShutterTime( float shutterTime )
 {
 	Property prop;
 	prop.type = SHUTTER;
-	m_camera.GetProperty( &prop );
+	m_camera->GetProperty( &prop );
 	prop.autoManualMode = false;
 	prop.absControl = true;
 	prop.absValue = shutterTime;
-	return ( m_camera.SetProperty( &prop ) == PGRERROR_OK );	
+	return ( m_camera->SetProperty( &prop ) == PGRERROR_OK );	
 }
 
 bool PGRCamera::moveImageROI( int x, int y )
@@ -1087,28 +1302,41 @@ bool PGRCamera::moveImageROI( int x, int y )
 	unsigned long position = 0; 
 	position |= x + m_fmt7Info.imageHStepSize;
 	position = ( position << 16 ) | y + m_fmt7Info.imageVStepSize;
-	Error error = m_camera.WriteRegister( videoModeBase[m_fmt7Info.mode] + IMAGE_POSITION, position );
+	Error error = m_camera->WriteRegister( videoModeBase[m_fmt7Info.mode] + IMAGE_POSITION, position );
 	return ( error == PGRERROR_OK );
 }
 
 unsigned int PGRCamera::getRegisterValue(unsigned long _register )
 {
 	unsigned int value;
-	m_camera.ReadRegister( _register, &value );	
+	m_camera->ReadRegister( _register, &value );	
 	return value;
 }
 
 bool PGRCamera::getROIUnits( int &Hmax, int &Vmax, int &Hunit, int &Vunit, int &HPosUnit, int &VPosUnit )
 {
-	if ( m_videoMode == VIDEOMODE_FORMAT7 )
+	if ( m_interfaceType == INTERFACE_GIGE )
 	{
-		Hmax = m_fmt7Info.maxWidth;
-		Vmax = m_fmt7Info.maxHeight;
-		Hunit = m_fmt7Info.imageHStepSize;
-		Vunit = m_fmt7Info.imageVStepSize;
-		HPosUnit = m_fmt7Info.offsetHStepSize;
-		VPosUnit = m_fmt7Info.offsetVStepSize;
+		Hmax = m_GigEImageSettingsInfo.maxWidth;
+		Vmax = m_GigEImageSettingsInfo.maxHeight;
+		Hunit = m_GigEImageSettingsInfo.imageHStepSize;
+		Vunit = m_GigEImageSettingsInfo.imageVStepSize;
+		HPosUnit = m_GigEImageSettingsInfo.offsetHStepSize;
+		VPosUnit = m_GigEImageSettingsInfo.offsetVStepSize;
 		return true;
+	}
+	else
+	{
+		if ( m_videoMode == VIDEOMODE_FORMAT7 )
+		{
+			Hmax = m_fmt7Info.maxWidth;
+			Vmax = m_fmt7Info.maxHeight;
+			Hunit = m_fmt7Info.imageHStepSize;
+			Vunit = m_fmt7Info.imageVStepSize;
+			HPosUnit = m_fmt7Info.offsetHStepSize;
+			VPosUnit = m_fmt7Info.offsetVStepSize;
+			return true;
+		}
 	}
 	return false;
 }
@@ -1144,14 +1372,14 @@ int PGRCamera::buildColorCoding( VMPixelFormat pixelFormat )
 bool PGRCamera::setTrigger( bool triggerOn, int source, int mode )
 {
 	TriggerMode triger;
-	m_camera.GetTriggerMode( &triger );	
+	m_camera->GetTriggerMode( &triger );	
 	triger.onOff = triggerOn;
 	if ( triggerOn )
 	{
 		triger.source = source;
 		triger.mode = mode;
 	}
-	Error error = m_camera.SetTriggerMode( &triger );
+	Error error = m_camera->SetTriggerMode( &triger );
 	if ( error != PGRERROR_OK )
 	{
 		PrintError( error );
@@ -1162,7 +1390,7 @@ bool PGRCamera::setTrigger( bool triggerOn, int source, int mode )
 
 bool PGRCamera::fireSoftwareTrigger( bool broadcast )
 {
-	return ( m_camera.FireSoftwareTrigger( broadcast ) == PGRERROR_OK );
+	return ( m_camera->FireSoftwareTrigger( broadcast ) == PGRERROR_OK );
 }
 
 bool PGRCamera::setStrobeOutput( bool onOff, float delay, float duration,	unsigned int polarity, unsigned int source )
@@ -1173,7 +1401,7 @@ bool PGRCamera::setStrobeOutput( bool onOff, float delay, float duration,	unsign
 	strobeControl.duration = duration;
 	strobeControl.onOff = onOff;	
 	strobeControl.polarity = polarity;
-	Error error = m_camera.SetStrobe( &strobeControl );
+	Error error = m_camera->SetStrobe( &strobeControl );
 	if ( error != PGRERROR_OK )
 	{
 		PrintError( error );
@@ -1184,7 +1412,7 @@ bool PGRCamera::setStrobeOutput( bool onOff, float delay, float duration,	unsign
 
 void PGRCamera::stop()
 {
-	Error error = m_camera.StopCapture();
+	Error error = m_camera->StopCapture();
     if (error != PGRERROR_OK)           
         PrintError( error );
 }
@@ -1193,12 +1421,12 @@ bool PGRCamera::setFrameRate( double frameRate )
 {
 	Property prop;
 	prop.type = FRAME_RATE;
-	m_camera.GetProperty( &prop );
+	m_camera->GetProperty( &prop );
 	prop.autoManualMode = false;
 	prop.absControl = true;
 	prop.onOff = true;
 	prop.absValue = (float)frameRate;
-	return ( m_camera.SetProperty( &prop ) == PGRERROR_OK );	
+	return ( m_camera->SetProperty( &prop ) == PGRERROR_OK );	
 }
 
 double PGRCamera::getTimeStamp()
