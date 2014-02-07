@@ -81,7 +81,7 @@ char *HighguiVideoFileInput::getFrame( bool wait)
 	if ( !paused || step )
 	{
 		IplImage *image = cvRetrieveFrame( capture );//cvQueryFrame( capture );
-		pixelBuffer = image->imageData;
+		if (image) pixelBuffer = image->imageData;
 		step = false;
 	}
 	return pixelBuffer;
