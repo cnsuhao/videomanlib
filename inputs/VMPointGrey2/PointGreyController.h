@@ -100,6 +100,15 @@ public:
 	*/
 	bool setImageROI( int x, int y, int width, int height );
 
+	/** \brief Set a region of interest
+		\param x [in] X coordinate of the ROI's top left corner
+		\param y [in] Y coordinate of the ROI's top left corner
+		\param width [in] Width of the ROI
+		\param height [in] Height of the ROI
+		\return True if the ROI was set (the camera can take some frames to use the new ROI coordinates)
+	*/
+	bool getImageROI( int &x, int &y, int &width, int &height );
+
 	/** \brief Get the units of the region of interest
 		\param Hmax [out] Maximum image width
 		\param Vmax [out] Maximum image height

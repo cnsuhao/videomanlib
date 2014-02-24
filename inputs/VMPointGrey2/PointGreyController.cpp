@@ -178,6 +178,14 @@ bool PointGreyController::setImageROI( int x, int y, int width, int height )
 {
 	return cameraList[0]->setImageROI( x, y, width, height );
 }
+bool PointGreyController::getImageROI( int &x, int &y, int &width, int &height )
+{
+	cameraList[0]->getImageRoi( x, y, width, height );
+	int w,h;
+	w = cameraList[0]->getVideoManInputFormat().width;
+	h = cameraList[0]->getVideoManInputFormat().height;
+	return (width!=w || height!=h);
+}
 
 bool PointGreyController::getROIUnits( int &Hmax, int &Vmax, int &imageHStepSize, int &imageVStepSize, int &offsetHStepSize, int &offsetVStepSize )
 {
