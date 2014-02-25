@@ -22,16 +22,16 @@ public:
 	virtual ~VideoInput( void )
 	{
 		if ( identification.uniqueName )
-			delete identification.uniqueName;
+			delete [] identification.uniqueName;
 		identification.uniqueName = NULL;
 		if ( identification.friendlyName )
-			delete identification.friendlyName;
+			delete [] identification.friendlyName;
 		identification.friendlyName = NULL;
 		if ( identification.identifier )
-			delete identification.identifier;
+			delete [] identification.identifier;
 		identification.identifier = NULL;
 		if ( identification.fileName )
-			delete identification.fileName;
+			delete [] identification.fileName;
 		identification.fileName = NULL;
 	};
 

@@ -30,7 +30,7 @@ void copyStringToChar( const std::string &src, char **dst )
 void freeChar( char **src )
 {
 	if ( *src )
-	{delete *src;
+	{delete [] *src;
 		*src = NULL;
 	}
 }
