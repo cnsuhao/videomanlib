@@ -41,7 +41,7 @@ void freeChar( char **src )
 {
 	if ( *src )
 	{
-		delete *src;
+		delete [] *src;
 		*src = NULL;
 	}
 }
@@ -174,7 +174,7 @@ void VideoManFactory::freeAvailableDevicesList( VMInputIdentification **deviceLi
 		freeChar( &(*deviceList)[d].friendlyName );
 		freeChar( &(*deviceList)[d].identifier );
 	}
-	delete *deviceList;
+	delete [] *deviceList;
 	*deviceList = NULL;
 	numDevices = 0;
 }
@@ -628,7 +628,7 @@ void VideoManFactory::getAvailableDevices( VMInputIdentification **deviceList, i
 				++deviceInd;
 			}
 			//freeAvailableDevicesList( &list, deviceLists[t].first );
-			delete list;
+			delete [] list;
 		}
 	}
 }

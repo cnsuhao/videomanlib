@@ -717,6 +717,7 @@ bool VideoManRendererOGL::getScreenCoords( const size_t &v, int &left, int &bott
 	l = b = 0;
 	t = (float)theInput.height;
 	r = (float)theInput.width;
+	//calculate the screen coordinates of the input's image corners
 	imageToScreenCoords( v, l, b );
 	imageToScreenCoords( v, r, t );	
 	if ( theInput.horizontalFlip )

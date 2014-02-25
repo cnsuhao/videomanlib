@@ -24,7 +24,7 @@ void freeChar( char **src )
 {
 	if ( *src )
 	{
-		delete *src;
+		delete [] *src;
 		*src = NULL;
 	}
 }
@@ -104,7 +104,7 @@ void freeAvailableDevices( VMInputIdentification **deviceList, int &numDevices )
 		freeChar( &(*deviceList)[d].friendlyName );
 		freeChar( &(*deviceList)[d].identifier );
 	}
-	delete *deviceList;
+	delete [] *deviceList;
 	*deviceList = NULL;
 	numDevices = 0;
 }
