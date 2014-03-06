@@ -81,5 +81,6 @@ public:
 
 	virtual void forceTrigger() = 0;
 
+	virtual bool setBrightnessReference( double reference ) = 0;
 
 };
