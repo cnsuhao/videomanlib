@@ -50,6 +50,8 @@ public:
 	bool setStrobeOutput( bool enable, IuEyeCameraController::StrobeMode mode );
 
 	void forceTrigger();
+
+	bool setBrightnessReference( double reference );
 			
 protected:		
 	IDSuEye *uEyeCamera;

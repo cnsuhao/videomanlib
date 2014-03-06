@@ -143,3 +143,9 @@ void uEyeCameraController::forceTrigger()
 	assert( uEyeCamera!= NULL && "forceTrigger: Input not linked" );
 	return uEyeCamera->forceTrigger();
 }
+
+bool uEyeCameraController::setBrightnessReference( double reference )
+{
+	assert( uEyeCamera!= NULL && "setBrightnessReference: Input not linked" );
+	return uEyeCamera->setBrightnessReference( reference );
+}

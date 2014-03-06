@@ -59,6 +59,8 @@ public:
 
 	void forceTrigger();
 
+	bool setBrightnessReference( double reference );
+
 private:
 
 	int colorModeFromPixelFormat( VideoMan::VMPixelFormat pixelFormat );
