@@ -332,9 +332,7 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 	}
 
 	//Default Brightness reference
-	double nominal = 128;
-	nRet = is_SetAutoParameter( m_hCam, IS_SET_AUTO_REFERENCE, &nominal, 0  );
-	if ( nRet != IS_SUCCESS )
+	if ( !setBrightnessReference( 128 ) )
 	{
 		cerr << "is_SetAutoParameter IS_SET_AUTO_REFERENCE failed" << endl;
 		return false;
@@ -349,7 +347,7 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 		return false;
 	}
 
-	//Default Auto Gain Max
+	//Default Auto speed
 	double speed = 50;
 	nRet = is_SetAutoParameter( m_hCam, IS_SET_AUTO_SPEED, &speed, 0  );
 	if ( nRet != IS_SUCCESS )
@@ -702,4 +700,10 @@ bool IDSuEye::setStrobeOutput( bool enable, IuEyeCameraController::StrobeMode mo
 void IDSuEye::forceTrigger()
 {
 	is_ForceTrigger( m_hCam );
+}
+
+bool IDSuEye::setBrightnessReference( double reference )
+{
+	int nRet = is_SetAutoParameter( m_hCam, IS_SET_AUTO_REFERENCE, &reference, 0  );
+	return ( nRet == IS_SUCCESS );
 }
