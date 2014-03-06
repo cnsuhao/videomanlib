@@ -331,14 +331,34 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 		return false;
 	}
 
-	//Exposure = 1/FrameRate
-	double exposure = 4;
-	nRet = is_Exposure( m_hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, &exposure, sizeof(exposure)  );
+	//Default Brightness reference
+	double nominal = 128;
+	nRet = is_SetAutoParameter( m_hCam, IS_SET_AUTO_REFERENCE, &nominal, 0  );
 	if ( nRet != IS_SUCCESS )
 	{
-		cerr << "is_Exposure failed" << endl;
+		cerr << "is_SetAutoParameter IS_SET_AUTO_REFERENCE failed" << endl;
 		return false;
 	}
+
+	//Default Auto Gain Max
+	double gainMax = 100;
+	nRet = is_SetAutoParameter( m_hCam, IS_SET_AUTO_GAIN_MAX, &gainMax, 0  );
+	if ( nRet != IS_SUCCESS )
+	{
+		cerr << "is_SetAutoParameter IS_SET_AUTO_GAIN_MAX failed" << endl;
+		return false;
+	}
+
+	//Default Auto Gain Max
+	double speed = 50;
+	nRet = is_SetAutoParameter( m_hCam, IS_SET_AUTO_SPEED, &speed, 0  );
+	if ( nRet != IS_SUCCESS )
+	{
+		cerr << "is_SetAutoParameter IS_SET_AUTO_SPEED failed" << endl;
+		return false;
+	}
+	
+
 	//after start live video query framerate
 	nRet = is_GetFramesPerSecond( m_hCam, &format.fps );
 	if ( nRet != IS_SUCCESS || format.fps == 0 )
