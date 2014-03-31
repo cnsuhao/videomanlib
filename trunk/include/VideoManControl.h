@@ -126,6 +126,8 @@ public:
 		\return true if the identifier is supported
 	*/
 	bool supportedIdentifier( const char *identifier );
+
+	void setVerbose( bool verbose );
 //@}
 
 //! \name Video inputs control
