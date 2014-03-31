@@ -51,6 +51,7 @@ class VideoManFactory
 
 	std::vector< std::string > moduleList;
 	bool modulesLoaded;	
+	bool verbose;
 
 public:
 	VideoManFactory(void);
@@ -79,6 +80,8 @@ public:
 	VideoManPrivate::VideoManInputController *createController( const char *controllerIdentifier );
 
 	void deleteController( VideoManPrivate::VideoManInputController **controller );
+
+	void setVerbose( bool verbose );
 };
 };
 #endif

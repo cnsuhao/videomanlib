@@ -29,6 +29,7 @@ protected:
 	size_t nextInputID;
 	VideoManRenderer *renderer;		//The object that draws the image in the screen
 	VideoManFactory factory;		//The object that creates the video inputs
+	bool verbose;
 };
 };
 #endif

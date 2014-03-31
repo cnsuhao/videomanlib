@@ -12,6 +12,7 @@
 	#include <sys/types.h>
 	#include <dirent.h>
     #include <string.h>
+	#include <unistd.h>
 #endif
 
 using namespace std;
@@ -68,6 +69,7 @@ void cloneDeviceList( const VMInputIdentification *src, VMInputIdentification *&
 VideoManFactory::VideoManFactory(void)
 {
 	modulesLoaded = false;
+	verbose = true;
 }
 
 void VideoManFactory::deleteInput( VideoInput **input )
@@ -201,7 +203,8 @@ void VideoManFactory::LoadModulesWindows( const std::string &path )
 			std::string fileName = path + "\\" + fd.cFileName;
 			if ( fileName.rfind(".dll") != std::string::npos )
 			{
-				cout << "loading " << fileName << endl;
+				if ( verbose )
+					cout << "loading " << fileName << endl;
 				HINSTANCE hinstLib = LoadLibrary(  fileName.c_str() );
 				if ( !hinstLib )
 				{
@@ -400,7 +403,8 @@ void VideoManFactory::loadModules()
 			std::cout << "You must copy the vm*.so to your binary path" << std::endl;
 		}
 	#endif
-	std::cout << "Videoman loaded from " << path << std::endl;
+	if ( verbose )
+		std::cout << "Videoman loaded from " << path << std::endl;
 
 	moduleList.clear();
 	identifiersMap.clear();
@@ -414,20 +418,21 @@ void VideoManFactory::loadModules()
 	#endif
 
 	//Print info
-	cout << "Number of loaded input modules " <<  moduleList.size() << endl;
-	for ( size_t m = 0; m < moduleList.size(); ++m )
-		cout << moduleList[m] << endl;
-
-	cout << "Number of available identifiers " <<  identifiersMap.size() + 1 << endl;
-	cout << "USER_INPUT" << endl;
-	std::map< std::string, std::string >::iterator it;
-	for ( it = identifiersMap.begin(); it != identifiersMap.end(); ++it )
-		cout << it->first << endl;
-
-	cout << "Number of available controllers " <<  controllersMap.size() << endl;
-	for ( it = controllersMap.begin(); it != controllersMap.end(); ++it )
+	if ( verbose )
 	{
-		cout << it->first << endl;
+		cout << "Number of loaded input modules " <<  moduleList.size() << endl;
+		for ( size_t m = 0; m < moduleList.size(); ++m )
+			cout << moduleList[m] << endl;
+		cout << "Number of available identifiers " <<  identifiersMap.size() + 1 << endl;
+		cout << "USER_INPUT" << endl;
+	
+		std::map< std::string, std::string >::iterator it;
+		for ( it = identifiersMap.begin(); it != identifiersMap.end(); ++it )
+			cout << it->first << endl;	
+
+		cout << "Number of available controllers " <<  controllersMap.size() << endl;
+		for ( it = controllersMap.begin(); it != controllersMap.end(); ++it )
+			cout << it->first << endl;
 	}
 	modulesLoaded = true;
 }
@@ -912,4 +917,10 @@ bool VideoManFactory::supportedIdentifier( const char *_identifier )
 			return true;
 	}
 	return false;
+}
+
+
+void VideoManFactory::setVerbose( bool _verbose )
+{
+	verbose = _verbose;
 }
