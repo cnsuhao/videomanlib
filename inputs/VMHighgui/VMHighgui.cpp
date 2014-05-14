@@ -102,12 +102,34 @@ VideoInput *initVideoInput( const VMInputIdentification &device, VMInputFormat *
 //extern "C" VMHIGHGUI_API void getAvailableDevices( VMInputIdentification **deviceList, int &numDevices );
 void getAvailableDevices( VMInputIdentification **deviceList, int &numDevices )
 {
-	/*(*deviceList) = new VMInputIdentification[1];
-	string identifier = "HIGHGUI_CAPTURE_DEVICE";
-	(*deviceList)[0].identifier = new char[identifier.length() + 1];
-	strcpy( deviceList[0]->identifier, identifier.c_str() );	*/
-	*deviceList = NULL;
-	numDevices = 0;
+	int i = 0;
+    bool fexit = false;
+    numDevices=0;
+
+    while(!fexit && i<50)
+    {
+        cv::VideoCapture cap;
+        cap.open(i);
+        if (!cap.isOpened())
+            fexit = true;
+        else i++;
+
+       
+       
+    }   
+    if (fexit)
+    {
+        (*deviceList) = new VMInputIdentification[i];
+        for (int k=0;k<i;k++)
+        {
+            string identifier = "HIGHGUI_CAPTURE_DEVICE";
+            (*deviceList)[0].identifier = new char[identifier.length() + 1];
+            strcpy( deviceList[k]->identifier, identifier.c_str() );   
+        }
+   
+        numDevices=i;
+    }
+
 }
 
 //extern "C" VMHIGHGUI_API void freeAvailableDevices( VMInputIdentification **deviceList, int &numDevices );
