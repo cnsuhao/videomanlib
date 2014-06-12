@@ -148,10 +148,10 @@ bool IDSFalconFrameGrabber::initBoard( const unsigned long &hids, VMInputFormat 
 			if ( is_GetBoardInfo( m_hBoard, &info ) == IS_SUCCESS )
 			{
 				ostringstream ss;
-				ss << info.ID << " " << (int)m_hBoard;
+				ss << info.ID << " " << (unsigned long)m_hBoard;
 				copyStringToChar( ss.str(), &identification.friendlyName );												
 				ostringstream ss2;
-				ss2 << (int)m_hBoard;
+				ss2 << (unsigned long)m_hBoard;
 				copyStringToChar( ss2.str(), &identification.uniqueName );
 				init = true;
 			}
@@ -387,7 +387,7 @@ void IDSFalconFrameGrabber::getAvailableDevices( VMInputIdentification **deviceL
 			//int m_nBoardType = is_GetBoardType( (HIDS)( n + 1 ) );
 			VMInputIdentification device;
 			ostringstream ss;
-			ss << info.ID << " " << (int)falc;			
+			ss << info.ID << " " << (unsigned long)falc;			
 			copyStringToChar( ss.str(), &device.friendlyName );			
 			ostringstream ss2;
 			if ( number == 1 )
