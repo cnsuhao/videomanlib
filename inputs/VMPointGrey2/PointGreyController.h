@@ -100,7 +100,7 @@ public:
 	*/
 	bool setImageROI( int x, int y, int width, int height );
 
-	/** \brief Set a region of interest
+	/** \brief Get the region of interest
 		\param x [in] X coordinate of the ROI's top left corner
 		\param y [in] Y coordinate of the ROI's top left corner
 		\param width [in] Width of the ROI
