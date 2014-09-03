@@ -513,35 +513,12 @@ double VideoFileDShow::getLengthSeconds()
 
 double VideoFileDShow::getPositionSeconds()
 {
-	//cout << "get " << seconds2referenceTime( LastSampleTime ) << endl;
-	//return LastSampleTime;
-	LONGLONG position, stopTime;
-	if ( pMS != NULL)
-	{
-		pMS->GetPositions(&position, &stopTime );
-		const double time = referenceTime2seconds( position );		
-		return time;
-	}
-	return 0.0;
+	return LastSampleTime;	
 }
 
 int VideoFileDShow::getPositionFrames()
 {
-	LONGLONG position, stopTime;
-	if ( pMS != NULL)
-	{
-		pMS->GetPositions(&position, &stopTime );
-		const int time = static_cast<int>( floor( static_cast<double>( position )  / avgTimePerFrame ) );
-		//cout << "get " << position << " " << time << endl;
-		//const int time2 = static_cast<int>( ( (double)seconds2referenceTime( LastSampleTime )  / avgTimePerFrame ) );
-		//cout << "get2 " << seconds2referenceTime( LastSampleTime ) << " " << time2 << endl;
-		return time;
-	}
-	return 0;
-
-	const int time = static_cast<int>( ( (double)seconds2referenceTime( LastSampleTime )  / avgTimePerFrame ) );
-	cout << "get " << seconds2referenceTime( LastSampleTime ) << " " << time << endl;
-	return time;
+	return static_cast<int>( floor( static_cast<double>( seconds2referenceTime( LastSampleTime ) )  / avgTimePerFrame ) );
 }
 
 bool VideoFileDShow::supportFrameCallback()
@@ -581,13 +558,13 @@ HRESULT WINAPI VideoFileDShow::SampleCB( double SampleTime, IMediaSample *pSampl
 	{
 		if ( mediaSample == NULL )
 		{
-			//const int frame = static_cast<int>( ( (double)seconds2referenceTime( SampleTime )  / avgTimePerFrame ) );
-			//cout << "mediaSample " << SampleTime <<endl;
 			LastSampleTime = SampleTime;
 			pSample->AddRef();
 			mediaSample = pSample;
 
 			mediaSample->GetPointer((BYTE**)&pixelBuffer);
+			//LONGLONG start, end;
+			//mediaSample->GetMediaTime( &start, &end );						
 			frameCaptured = true;
 			if ( callback )
 				(*callback)( pixelBuffer, inputID, SampleTime, frameCallbackData );
