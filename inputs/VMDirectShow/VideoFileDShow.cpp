@@ -513,12 +513,12 @@ double VideoFileDShow::getLengthSeconds()
 
 double VideoFileDShow::getPositionSeconds()
 {
-	return LastSampleTime;	
+	return referenceTime2seconds( LastSampleTime );	
 }
 
 int VideoFileDShow::getPositionFrames()
 {
-	return static_cast<int>( floor( static_cast<double>( seconds2referenceTime( LastSampleTime ) )  / avgTimePerFrame ) );
+	return static_cast<int>( floor( LastSampleTime / avgTimePerFrame ) );
 }
 
 bool VideoFileDShow::supportFrameCallback()
@@ -558,13 +558,13 @@ HRESULT WINAPI VideoFileDShow::SampleCB( double SampleTime, IMediaSample *pSampl
 	{
 		if ( mediaSample == NULL )
 		{
-			LastSampleTime = SampleTime;
 			pSample->AddRef();
 			mediaSample = pSample;
 
 			mediaSample->GetPointer((BYTE**)&pixelBuffer);
-			//LONGLONG start, end;
-			//mediaSample->GetMediaTime( &start, &end );						
+			LONGLONG start, end;
+			mediaSample->GetMediaTime( &start, &end );
+			LastSampleTime = start * avgTimePerFrame;
 			frameCaptured = true;
 			if ( callback )
 				(*callback)( pixelBuffer, inputID, SampleTime, frameCallbackData );
