@@ -562,9 +562,16 @@ HRESULT WINAPI VideoFileDShow::SampleCB( double SampleTime, IMediaSample *pSampl
 			mediaSample = pSample;
 
 			mediaSample->GetPointer((BYTE**)&pixelBuffer);
-			LONGLONG start, end;
-			mediaSample->GetMediaTime( &start, &end );
-			LastSampleTime = start * avgTimePerFrame;
+			LONGLONG start=0, end=0;
+			HRESULT hr = mediaSample->GetMediaTime( &start, &end );
+			if (hr == S_OK)
+				LastSampleTime = start * avgTimePerFrame;
+			else 
+			{
+				std::cout << "Using SampleTime instead of GetMediaTime (0x" << hex << hr << ")" << std::endl;
+			    LastSampleTime = seconds2referenceTime(SampleTime);
+			}
+
 			frameCaptured = true;
 			if ( callback )
 				(*callback)( pixelBuffer, inputID, SampleTime, frameCallbackData );
