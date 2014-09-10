@@ -321,6 +321,8 @@ HRESULT VideoFileDShow::prepareMedia( const std::string &name, VMInputFormat *aF
 
 	if ( aFormat != NULL  && !aFormat->clock )
 	{
+		std::cout << "Removing Sync Source (clock: "<< aFormat->clock << ") ..." << std::endl;
+
 		IMediaFilter *pMediaFilter = NULL;
 		hr = pGB->QueryInterface(IID_IMediaFilter, (void**)&pMediaFilter);
 		if ( !FAILED(hr) )
@@ -456,7 +458,11 @@ void VideoFileDShow::goToFrame( int frame )
 	
 	//LONGLONG time = static_cast<LONGLONG>( frame );
 	//Tranform from frames to referenceTime
-	LONGLONG time = static_cast<LONGLONG>( avgTimePerFrame * frame + avgTimePerFrame * 0.5 );
+	LONGLONG time = static_cast<LONGLONG>( avgTimePerFrame * frame);// + avgTimePerFrame * 0.5 );
+	//double stime = referenceTime2seconds(time);	
+	//std::cout << "go:  f ("<< frame <<")  t: ("<< stime<<")"<<std::endl;
+	//printf("go: f(%d) cf: (%lf)\n",frame,stime);
+
 	//cout << "goto " << frame << " " << referenceTime2seconds(time) << endl;
 	if ( pMS != NULL)
 		pMS->SetPositions(&time,AM_SEEKING_AbsolutePositioning ,
@@ -518,7 +524,11 @@ double VideoFileDShow::getPositionSeconds()
 
 int VideoFileDShow::getPositionFrames()
 {
-	return static_cast<int>( floor( LastSampleTime / avgTimePerFrame ) );
+	int  currentframe=static_cast<int>( roundDecimals( LastSampleTime / avgTimePerFrame ) );
+
+	//std::cout << "get:  lst ("<< seconds<<")  cf: ("<< currentframe<<")"<<std::endl;
+	//printf("get: lst(%lf) cf: (%d)\n",seconds,currentframe);
+	return currentframe;
 }
 
 bool VideoFileDShow::supportFrameCallback()
@@ -562,14 +572,18 @@ HRESULT WINAPI VideoFileDShow::SampleCB( double SampleTime, IMediaSample *pSampl
 			mediaSample = pSample;
 
 			mediaSample->GetPointer((BYTE**)&pixelBuffer);
-			LONGLONG start=0, end=0;
+			LONGLONG start=0, end=0,current=0,stop=0;
+			
 			HRESULT hr = mediaSample->GetMediaTime( &start, &end );
+			
 			if (hr == S_OK)
 				LastSampleTime = start * avgTimePerFrame;
 			else 
 			{
-				std::cout << "Using SampleTime instead of GetMediaTime (0x" << hex << hr << ")" << std::endl;
 			    LastSampleTime = seconds2referenceTime(SampleTime);
+				//std::cout << "Using SampleTime instead of GetMediaTime (0x" << hex << hr << ": "<< dec << start << "-"<< end <<" : st (" <<SampleTime << ")  lst (" << LastSampleTime << ")"<< std::endl;
+				//printf("Using SampleTime instead of GetMediaTime st(%lf) lst(%lf)\n",SampleTime,LastSampleTime);
+	
 			}
 
 			frameCaptured = true;
