@@ -46,7 +46,7 @@ public:
 
 private:
 	
-	IplImage *img;
+	cv::Mat img;
 	
 	std::string dirPath;
 
@@ -58,6 +58,8 @@ private:
 	#ifdef linux
 		DIR *dir;
 		pthread_t thread;
+		struct dirent **dent;
+		int numImage;
 	#endif
 };
 

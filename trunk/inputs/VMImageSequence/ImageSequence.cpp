@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <string>
+#include <list>
 
 #include "ImageSequence.h"
 
@@ -12,7 +13,6 @@ using namespace VideoMan;
 
 ImgSeq::ImgSeq(void)
 {
-	img = NULL;
 }
 
 ImgSeq::~ImgSeq(void)
@@ -26,9 +26,7 @@ ImgSeq::~ImgSeq(void)
 		}*/
 	#endif
 	#ifdef linux
-		closedir( dir );
-	#endif
-	cvReleaseImage(&img);
+	#endif	
 	
 }
 
@@ -52,30 +50,32 @@ bool ImgSeq::initSequence( const char *adirPath, VMInputFormat *aFormat )
 		if ( fd.dwFileAttributes & dwAttr )
 		{
 			string fileName = fd.cFileName;
-			if ( img = cvLoadImage( (dirPath + "/" + fileName).c_str(), CV_LOAD_IMAGE_ANYCOLOR ) )
-			{
-				format.width = img->width;
-				format.height = img->height;
-				string channelSeq = img->channelSeq;
-				if ( img->nChannels == 3 && img->depth == 8 && channelSeq == "BGR" )
+			img = cv::imread( (dirPath + "/" + fileName).c_str(), CV_LOAD_IMAGE_ANYCOLOR );
+			if ( !img.empty() )
+			{				
+				format.width = img.cols;
+				format.height = img.rows;				
+				if ( img.channels() == 3 && img.type() == CV_8UC3 )
 					format.setPixelFormat( VM_BGR24, VM_BGR24 );
-				else if ( img->nChannels == 3 && img->depth == 8  )
+				else if ( img.channels() == 3 && img.type() == CV_8UC3 )
 					format.setPixelFormat( VM_RGB24, VM_RGB24 );
-				else if ( img->nChannels == 1 && img->depth == 8)
+				else if ( img.channels() == 1 && img.type() == CV_8UC1 )
 					format.setPixelFormat( VM_GREY8, VM_GREY8 );
-				else if ( img->nChannels == 1 && img->depth == 16)
+				else if ( img.channels() == 1 && img.type() == CV_16UC1 )
 					format.setPixelFormat( VM_GREY16, VM_GREY16 );
 				else
 					return false;
-				if ( img->origin == 0 )
-					cvFlip( img, img, 0 );
+				format.align = 1;
+				///if ( img->origin == 0 )
+				///	cvFlip( img, img, 0 );
+				cv::flip( img, img, 0 );
 			}
 		}
-	}while( img == NULL && FindNextFile( hFind, &fd) );	
+	}while( img.empty() && FindNextFile( hFind, &fd) );	
 
-	if ( img ) 
+	if ( !img.empty() ) 
 	{
-		pixelBuffer = img->imageData;
+		pixelBuffer = (char*)img.data;
 		if ( aFormat )
 			*aFormat = format;
 
@@ -106,11 +106,12 @@ void ImgSeq::readNextImage()
 		{
 			//if ( fd.dwFileAttributes & dwAttr )
 			{
-				string fileName = fd.cFileName;				
-				IplImage *img2;
-				if ( img2 = cvLoadImage( (dirPath + "/" + fileName).c_str(), CV_LOAD_IMAGE_ANYCOLOR ) )
+				string fileName = fd.cFileName;
+				string filePath= dirPath + "/" + fileName;
+				cv::Mat img2 = cv::imread( filePath, CV_LOAD_IMAGE_ANYCOLOR );			
+				if ( !img2.empty() )
 				{
-					if ( img->width == img2->width && img->height == img2->height && img->depth == img2->depth && img->nChannels == img2->nChannels )
+					if ( img.cols == img2.cols && img.rows == img2.rows && img.depth() == img2.depth() && img.channels() == img2.channels() )
 					{		
 						/*CRITICAL_SECTION csNewEvent;
 						InitializeCriticalSection(&csNewEvent);
@@ -118,15 +119,15 @@ void ImgSeq::readNextImage()
 						pixelBuffer = NULL;
 						LeaveCriticalSection(&csNewEvent);
 						DeleteCriticalSection(&csNewEvent);*/
-						cvReleaseImage( &img );
 						img = img2;
-						if ( img->origin == 0 )
-							cvFlip( img, img, 0 );
-						pixelBuffer = img->imageData;
+						//if ( img->origin == 0 )
+							//cvFlip( img, img, 0 );
+						cv::flip( img, img, 0 );
+						pixelBuffer = (char*)img.data;
 						newImage = true;
 					}
-					else
-						cvReleaseImage( &img2 );
+					//else
+						//cvReleaseImage( &img2 );
 				}
 			}
 		}
@@ -145,10 +146,28 @@ void ImgSeq::releaseFrame( )
 #endif
 
 #ifdef linux
+
+
+int alphasort2( const struct dirent **d1,
+               const struct dirent **d2)
+{
+	std::string a = (*d1)->d_name;
+	std::string b = (*d2)->d_name;
+	if ( a == b )
+	return 0;
+	std::list<string> list;
+	list.push_back( a );
+	list.push_back( b );
+	list.sort();	
+	if ( list.front() == a )
+		return 1;	
+   return -1;
+}
+			   
 bool ImgSeq::initSequence( const char *adirPath, VMInputFormat *aFormat )
 {
-	dirPath = adirPath;
-	struct dirent *dent;
+	numImage = 0;
+	dirPath = adirPath;	
 	struct stat stbuf;
 	char buf[PATH_MAX];
 	if(!(dir = opendir(dirPath.c_str())))
@@ -156,34 +175,41 @@ bool ImgSeq::initSequence( const char *adirPath, VMInputFormat *aFormat )
 		perror("opendir()");
 		return false;
 	}
-	while( img == NULL && ( dent = readdir( dir ) ) )
+	//while( img.empty() && ( dent = readdir( dir ) ) )	
+	numImage = scandir( dirPath.c_str(), &dent, NULL, alphasort2 );	
+	while( img.empty() && --numImage >= 0 )	
 	{
-		std::string fileName = dent->d_name;			 
-		if ( img = cvLoadImage( (dirPath + "/" + fileName).c_str(), CV_LOAD_IMAGE_ANYCOLOR ) )
-		{
-			format.width = img->width;
-			format.height = img->height;
-				string channelSeq = img->channelSeq;
-			if ( img->nChannels == 3 && img->depth == 8 && channelSeq == "BGR" )
+		std::string fileName = dent[numImage]->d_name;			 		
+		img = cv::imread( (dirPath + "/" + fileName).c_str(), CV_LOAD_IMAGE_ANYCOLOR );
+		if ( !img.empty() )
+		{		
+			format.width = img.cols;
+			format.height = img.rows;
+			if ( img.channels() == 3 && img.type() == CV_8UC3 )
 				format.setPixelFormat( VM_BGR24, VM_BGR24 );
-			else if ( img->nChannels == 3 && img->depth == 8 )
+			else if ( img.channels() == 3 && img.type() == CV_8UC3 )
 				format.setPixelFormat( VM_RGB24, VM_RGB24 );
-			else if ( img->nChannels == 1 && img->depth == 8)
+			else if ( img.channels() == 1 && img.type() == CV_8UC1 )
 				format.setPixelFormat( VM_GREY8, VM_GREY8 );
-			else if ( img->nChannels == 1 && img->depth == 16)
+			else if ( img.channels() == 1 && img.type() == CV_16UC1 )
 				format.setPixelFormat( VM_GREY16, VM_GREY16 );
 			else
-				return false;			
-			if ( img->origin == 0 )
-				cvFlip( img, img, 0 );
+				return false;
+			//if ( img->origin == 0 )
+//				cvFlip( img, img, 0 );
 
-		}
+		}		
 	}
-	if ( img ) 
+	if ( !img.empty() ) 
 	{
-		pixelBuffer = img->imageData;
+		pixelBuffer = (char*)img.data;
 		if ( aFormat )
 			*aFormat = format;
+		
+		const string identifier = "IMAGE_SEQUENCE";
+		identification.identifier = new char[identifier.length() + 1];
+		strcpy( identification.identifier, identifier.c_str() );
+		
 		return true;
 	}
 	return false;
@@ -198,26 +224,23 @@ void *run(void *parameters)
 void ImgSeq::readNextImage()
 {
 	if( !dir )			
-		return;
-	struct dirent *dent;
-	bool newImage = false;
-	while( !newImage && ( dent = readdir( dir ) ) )
+		return;	
+	bool newImage = false;			
+	while( !newImage && --numImage >= 0 )
 	{
-		std::string fileName = dent->d_name;			 
-		IplImage *img2;
-		if ( img2 = cvLoadImage( (dirPath + "/" + fileName).c_str(), CV_LOAD_IMAGE_ANYCOLOR ) )
+		std::string fileName = dent[numImage]->d_name;			 		
+		cv::Mat img2 = cv::imread( (dirPath + "/" + fileName).c_str(), CV_LOAD_IMAGE_ANYCOLOR );					
 		{
-			if ( img->width == img2->width && img->height == img2->height && img->depth == img2->depth && img->nChannels == img2->nChannels )
+			if ( img.cols == img2.cols && img.rows == img2.rows && img.depth() == img2.depth() && img.channels() == img2.channels() )
 			{
-				cvReleaseImage( &img );
 				img = img2;
-				if ( img->origin == 0 )
-					cvFlip( img, img, 0 );
-				pixelBuffer = img->imageData;
+				//if ( img->origin == 0 )
+					//cvFlip( img, img, 0 );
+				pixelBuffer = (char*)img.data;
 				newImage = true;
 			}
-			else
-				cvReleaseImage( &img2 );
+			//else
+				//cvReleaseImage( &img2 );
 		}
 	}
 	pthread_exit(NULL);
