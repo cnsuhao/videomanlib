@@ -103,6 +103,38 @@ VMPixelFormat IDSuEye::pixelFormatFromColorMode( int colorMode )
 	}
 }
 
+bool IDSuEye::configureFormatFromSensorColorMode( char sensoeColorMode )
+{
+	switch( sensoeColorMode )
+	{
+		case IS_COLORMODE_BAYER:
+		{
+			m_nColorMode = IS_CM_RGB8_PACKED;
+			m_nBitsPerPixel = 24;
+			format.setPixelFormat( VM_RGB24, VM_RGB24 );
+			return true;
+			break;
+		}
+		case IS_COLORMODE_CBYCRY:
+		{
+			m_nColorMode = IS_CM_BGR8_PACKED;
+			m_nBitsPerPixel = 24;
+			format.setPixelFormat( VM_RGB24, VM_RGB24 );
+			return true;
+			break;
+		}
+		case IS_COLORMODE_MONOCHROME:
+		{
+			m_nColorMode = IS_CM_MONO8;
+			m_nBitsPerPixel = 8;
+			format.setPixelFormat( VM_GREY8, VM_GREY8 );
+			return true;
+			break;
+		}
+	}
+	return false;
+}
+
 bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *aformat )
 {
 	int cameraId = 0;
@@ -143,7 +175,6 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 		}
 		copyStringToChar( "IDS_uEye_CAMERA", &identification.identifier );
 
-		// Added: mnieto
 		// Enable Messages (to allow timestamps)
 		/*is_EnableMessage(m_hCam,    IS_DEVICE_REMOVED,      GetSafeHwnd());
 		is_EnableMessage(m_hCam,    IS_DEVICE_RECONNECTED,  GetSafeHwnd());
@@ -167,39 +198,32 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 
 	// Set display mode to DIB
     nRet = is_SetDisplayMode(m_hCam, IS_SET_DM_DIB);
-	if ( !aformat || aformat->getPixelFormatIn() == VM_UNKNOWN )
+	if ( !aformat )
 	{
-		//Get Image size
-		IS_RECT rectAOI;
-		nRet = is_AOI(m_hCam, IS_AOI_IMAGE_GET_AOI, (void*)&rectAOI, sizeof(rectAOI));
-		if (nRet == IS_SUCCESS)
-		{
-		  int x     = rectAOI.s32X;
-		  int y     = rectAOI.s32Y;
-		  m_nSizeX = rectAOI.s32Width;
-		  m_nSizeY = rectAOI.s32Height;
-		}
-		else
-		{
-			cerr << "Error getting AOI" << endl;
+		if ( !configureFormatFromSensorColorMode( m_sInfo.nColorMode ) )
 			return false;
-		}
-
-		if (m_sInfo.nColorMode == IS_COLORMODE_BAYER)
-		{
-			m_nColorMode = IS_CM_RGB8_PACKED;
-			m_nBitsPerPixel = 24;
-			format.SetFormat( m_nSizeX, m_nSizeY, 30.0, VM_RGB24, VM_RGB24 );
-		}
-		else
-		{
-			m_nColorMode = IS_CM_MONO8;
-			m_nBitsPerPixel = 8;
-			format.SetFormat( m_nSizeX, m_nSizeY, 30.0, VM_GREY8, VM_GREY8 );
-		}
+		format.width = m_nSizeX;
+		format.height = m_nSizeY;
 	}
 	else
 	{
+		//Set the desired format
+		if ( aformat->getPixelFormatIn() == VM_UNKNOWN )
+		{
+			if ( !configureFormatFromSensorColorMode( m_sInfo.nColorMode ) )
+				return false;
+		}
+		else
+		{
+			format.setPixelFormat( aformat->getPixelFormatIn(),aformat->getPixelFormatIn() );
+			m_nColorMode = colorModeFromPixelFormat( aformat->getPixelFormatIn() );
+		}
+		m_nSizeX = aformat->width;
+		m_nSizeY = aformat->height;
+		format.width = m_nSizeX;
+		format.height = m_nSizeY;
+		format.fps = aformat->fps;
+	}
 		// Get number of available formats and size of list
 		UINT count;
 		UINT bytesNeeded = sizeof(IMAGE_FORMAT_LIST);
@@ -212,20 +236,13 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 		pformatList->nNumListElements = count;
 		nRet = is_ImageFormat( m_hCam, IMGFRMT_CMD_GET_LIST, pformatList, bytesNeeded );
 
-		//Set the desired format
-		format.setPixelFormat( aformat->getPixelFormatIn(),aformat->getPixelFormatIn() );
-		m_nColorMode = colorModeFromPixelFormat( aformat->getPixelFormatIn() );
-		m_nSizeX = aformat->width;
-		m_nSizeY = aformat->height;
-		format.width = m_nSizeX;
-		format.height = m_nSizeY;
-		format.fps = aformat->fps;
+		
 
 		//Check if an image size matches the format
 		bool encontrado = false;
 		for ( int f = 0; !encontrado && f < (int)pformatList->nNumListElements; ++f )
 		{
-			if ( pformatList->FormatInfo[f].nWidth == aformat->width && pformatList->FormatInfo[f].nHeight == aformat->height )
+			if ( pformatList->FormatInfo[f].nWidth == m_nSizeX && pformatList->FormatInfo[f].nHeight == m_nSizeY )
 			{
 				encontrado = true;
 				nRet = is_ImageFormat( m_hCam, IMGFRMT_CMD_SET_FORMAT, &pformatList->FormatInfo[f].nFormatID, sizeof(pformatList->FormatInfo[f].nFormatID) );
@@ -233,10 +250,12 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 		}
 		if ( !encontrado )
 		{
-			cerr << "Proper image size not found " << aformat->width << " " << aformat->height << endl;
+			cerr << "Proper image size not found " << m_nSizeX << " " << m_nSizeY << endl;
+			free(ptr);
 			return false;
 		}
-	}
+		free(ptr);
+	
 
 //	is_SetImagePos( m_hCam, 0, 0 );
 	// set the desired color mode
@@ -361,7 +380,7 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 	nRet = is_GetFramesPerSecond( m_hCam, &format.fps );
 	if ( nRet != IS_SUCCESS || format.fps == 0 )
 	{
-		cerr << "is_GetFramesPerSecond failed" << endl;
+		cerr << "is_GetFramesPerSecond failed "  << nRet << " " << format.fps << endl;
 		return false;
 	}
 
@@ -449,7 +468,7 @@ void IDSuEye::getAvailableDevices( VMInputIdentification **deviceList, int &numD
 					}
 				}
 			}
-			delete pucl;
+			delete [] pucl;
 		}
 	}
 	if ( tempList.size() > 0 )

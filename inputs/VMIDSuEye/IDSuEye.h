@@ -65,6 +65,7 @@ private:
 
 	int colorModeFromPixelFormat( VideoMan::VMPixelFormat pixelFormat );
 	VideoMan::VMPixelFormat pixelFormatFromColorMode( int colorMode );
+	bool configureFormatFromSensorColorMode( char sensoeColorMode );
 
 	VideoManPrivate::VideoManInputController *controller;
 	char* lastPixelBuffer;	//The last captured frame
@@ -78,7 +79,7 @@ private:
 	bool m_valid_uInfo;			// boolean for valid/not-valid uInfo
 
 
-	INT		m_nColorMode;		// Y8/RGB16/RGB24/REG32
+	int		m_nColorMode;		// Y8/RGB16/RGB24/REG32
 	INT		m_nBitsPerPixel;	// number of bits needed store one pixel
 	INT		m_nSizeX;			// width of image
 	INT		m_nSizeY;			// height of image
