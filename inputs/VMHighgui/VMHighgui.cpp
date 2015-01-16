@@ -113,23 +113,18 @@ void getAvailableDevices( VMInputIdentification **deviceList, int &numDevices )
         if (!cap.isOpened())
             fexit = true;
         else i++;
-
-       
-       
     }   
     if (fexit)
     {
-        (*deviceList) = new VMInputIdentification[i];
+        *deviceList = new VMInputIdentification[i];
         for (int k=0;k<i;k++)
         {
             string identifier = "HIGHGUI_CAPTURE_DEVICE";
-            (*deviceList)[0].identifier = new char[identifier.length() + 1];
-            strcpy( deviceList[k]->identifier, identifier.c_str() );   
+            (*deviceList)[k].identifier = new char[identifier.length() + 1];
+            strcpy( (*deviceList)[k].identifier, identifier.c_str() );
         }
-   
         numDevices=i;
     }
-
 }
 
 //extern "C" VMHIGHGUI_API void freeAvailableDevices( VMInputIdentification **deviceList, int &numDevices );
