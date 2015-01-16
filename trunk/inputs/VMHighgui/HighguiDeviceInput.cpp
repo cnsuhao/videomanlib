@@ -44,6 +44,8 @@ bool HighguiDeviceInput::initInput( const VMInputIdentification &device, VMInput
 			return false;		
 		if ( !capture.retrieve( image ) )
 			return false;		
+		format.width = image.cols;
+		format.height = image.rows;
 		format.nChannels = image.channels();
 		format.depth = image.depth();
 		if ( image.channels() == 3 )
@@ -79,7 +81,6 @@ char *HighguiDeviceInput::getFrame( bool wait)
 {
 	if ( capture.grab() )
 	{
-		cv::Mat image;
 		if ( capture.retrieve( image ) )
 			pixelBuffer = (char*)image.data;
 	}

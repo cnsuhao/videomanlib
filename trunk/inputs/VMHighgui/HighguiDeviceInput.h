@@ -19,4 +19,6 @@ public:
 
 private:	
 	cv::VideoCapture capture;
+	cv::Mat image;
+
 };
