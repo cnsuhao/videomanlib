@@ -726,3 +726,47 @@ bool IDSuEye::setBrightnessReference( double reference )
 	int nRet = is_SetAutoParameter( m_hCam, IS_SET_AUTO_REFERENCE, &reference, 0  );
 	return ( nRet == IS_SUCCESS );
 }
+
+bool IDSuEye::setAutoBrightnessROI( int x, int y, int width, int height )
+{
+	IS_RECT rectAOI;
+	rectAOI.s32X     = x;
+	rectAOI.s32Y     = y;
+	rectAOI.s32Width = width;
+	rectAOI.s32Height = height;
+	int nRet = is_AOI( m_hCam, IS_AOI_AUTO_BRIGHTNESS_SET_AOI, (void*)&rectAOI, sizeof(rectAOI));
+	return ( nRet == IS_SUCCESS );
+}
+
+void IDSuEye::getAutoBrightnessROI( int &x, int &y, int &width, int &height )
+{
+	IS_RECT rectAOI;
+	int nRet = is_AOI( m_hCam, IS_AOI_AUTO_BRIGHTNESS_GET_AOI, (void*)&rectAOI, sizeof(rectAOI));
+	x = rectAOI.s32X;
+	y = rectAOI.s32Y;
+	width = rectAOI.s32Width;
+	height = rectAOI.s32Height;
+}
+
+
+bool IDSuEye::setAutoWhiteBalanceROI( int x, int y, int width, int height )
+{
+	IS_RECT rectAOI;
+	rectAOI.s32X     = x;
+	rectAOI.s32Y     = y;
+	rectAOI.s32Width = width;
+	rectAOI.s32Height = height;
+	int nRet = is_AOI( m_hCam, IS_AOI_AUTO_WHITEBALANCE_SET_AOI, (void*)&rectAOI, sizeof(rectAOI));
+	return ( nRet == IS_SUCCESS );
+}
+
+
+void IDSuEye::getAutoWhiteBalanceROI( int &x, int &y, int &width, int &height )
+{
+	IS_RECT rectAOI;
+	int nRet = is_AOI( m_hCam, IS_AOI_AUTO_WHITEBALANCE_GET_AOI, (void*)&rectAOI, sizeof(rectAOI));
+	x = rectAOI.s32X;
+	y = rectAOI.s32Y;
+	width = rectAOI.s32Width;
+	height = rectAOI.s32Height;
+}

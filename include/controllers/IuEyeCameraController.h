@@ -83,4 +83,12 @@ public:
 
 	virtual bool setBrightnessReference( double reference ) = 0;
 
+	virtual bool setAutoBrightnessROI( int x, int y, int width, int height ) = 0;
+
+	virtual void getAutoBrightnessROI( int &x, int &y, int &width, int &height ) = 0;
+	
+	virtual bool setAutoWhiteBalanceROI( int x, int y, int width, int height ) = 0;
+	
+	virtual void getAutoWhiteBalanceROI( int &x, int &y, int &width, int &height ) = 0;
+
 };
