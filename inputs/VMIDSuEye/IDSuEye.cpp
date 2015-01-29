@@ -218,44 +218,57 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 			format.setPixelFormat( aformat->getPixelFormatIn(),aformat->getPixelFormatIn() );
 			m_nColorMode = colorModeFromPixelFormat( aformat->getPixelFormatIn() );
 		}
-		m_nSizeX = aformat->width;
-		m_nSizeY = aformat->height;
-		format.width = m_nSizeX;
-		format.height = m_nSizeY;
-		format.fps = aformat->fps;
-	}
-		// Get number of available formats and size of list
-		UINT count;
-		UINT bytesNeeded = sizeof(IMAGE_FORMAT_LIST);
-		nRet = is_ImageFormat( m_hCam, IMGFRMT_CMD_GET_NUM_ENTRIES, &count, sizeof(count) );
-		bytesNeeded += (count - 1) * sizeof(IMAGE_FORMAT_INFO);
-		void* ptr = malloc(bytesNeeded);
-		// Create and fill list
-		IMAGE_FORMAT_LIST* pformatList = (IMAGE_FORMAT_LIST*) ptr;
-		pformatList->nSizeOfListEntry = sizeof(IMAGE_FORMAT_INFO);
-		pformatList->nNumListElements = count;
-		nRet = is_ImageFormat( m_hCam, IMGFRMT_CMD_GET_LIST, pformatList, bytesNeeded );
-
 		
+		format.width = aformat->width;
+		format.height = aformat->height;
+		format.fps = aformat->fps;
 
-		//Check if an image size matches the format
-		bool encontrado = false;
-		for ( int f = 0; !encontrado && f < (int)pformatList->nNumListElements; ++f )
+		if ( aformat->width != m_nSizeX && aformat->height != m_nSizeY )
 		{
-			if ( pformatList->FormatInfo[f].nWidth == m_nSizeX && pformatList->FormatInfo[f].nHeight == m_nSizeY )
+			//The requested resolution does not match the native sensor resolution
+			// Get number of available formats and size of list
+			UINT count;
+			UINT bytesNeeded = sizeof(IMAGE_FORMAT_LIST);
+			nRet = is_ImageFormat( m_hCam, IMGFRMT_CMD_GET_NUM_ENTRIES, &count, sizeof(count) );
+			bytesNeeded += (count - 1) * sizeof(IMAGE_FORMAT_INFO);
+			void* ptr = malloc(bytesNeeded);
+			// Create and fill list
+			IMAGE_FORMAT_LIST* pformatList = (IMAGE_FORMAT_LIST*) ptr;
+			pformatList->nSizeOfListEntry = sizeof(IMAGE_FORMAT_INFO);
+			pformatList->nNumListElements = count;
+			nRet = is_ImageFormat( m_hCam, IMGFRMT_CMD_GET_LIST, pformatList, bytesNeeded );		
+
+			//Check if an image size matches the format
+			bool encontrado = false;
+			for ( int f = 0; !encontrado && f < (int)pformatList->nNumListElements; ++f )
 			{
-				encontrado = true;
-				nRet = is_ImageFormat( m_hCam, IMGFRMT_CMD_SET_FORMAT, &pformatList->FormatInfo[f].nFormatID, sizeof(pformatList->FormatInfo[f].nFormatID) );
+				if ( pformatList->FormatInfo[f].nWidth == aformat->width && pformatList->FormatInfo[f].nHeight == aformat->height )
+				{
+					encontrado = true;
+					nRet = is_ImageFormat( m_hCam, IMGFRMT_CMD_SET_FORMAT, &pformatList->FormatInfo[f].nFormatID, sizeof(pformatList->FormatInfo[f].nFormatID) );
+					m_nSizeX = aformat->width;
+					m_nSizeY = aformat->height;
+					format.width = m_nSizeX;
+					format.height = m_nSizeY;
+				}
 			}
-		}
-		if ( !encontrado )
-		{
-			cerr << "Proper image size not found " << m_nSizeX << " " << m_nSizeY << endl;
+			if ( !encontrado )
+			{
+				cerr << "Proper image size not found " << m_nSizeX << " " << m_nSizeY << endl;
+				free(ptr);
+				return false;
+			}
 			free(ptr);
-			return false;
 		}
-		free(ptr);
-	
+	}
+
+	//Get image ROI configuration
+	IS_RECT rectAOI;
+	is_AOI( m_hCam, IS_AOI_IMAGE_GET_AOI, (void*)&rectAOI, sizeof(rectAOI));
+	m_nSizeX = rectAOI.s32Width;
+	m_nSizeY = rectAOI.s32Height;
+	m_nPosX = rectAOI.s32X;
+	m_nPosY = rectAOI.s32Y;
 
 //	is_SetImagePos( m_hCam, 0, 0 );
 	// set the desired color mode
@@ -367,14 +380,18 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 	}
 
 	//Default Auto speed
-	double speed = 50;
+	double speed = 100;
 	nRet = is_SetAutoParameter( m_hCam, IS_SET_AUTO_SPEED, &speed, 0  );
 	if ( nRet != IS_SUCCESS )
 	{
 		cerr << "is_SetAutoParameter IS_SET_AUTO_SPEED failed" << endl;
 		return false;
 	}
-	
+
+	double hysteresis = 2;
+	is_SetAutoParameter( m_hCam, IS_SET_AUTO_HYSTERESIS, &hysteresis, 0  );	
+	double skip = 4;
+	is_SetAutoParameter( m_hCam, IS_SET_AUTO_SKIPFRAMES, &skip, 0  );
 
 	//after start live video query framerate
 	nRet = is_GetFramesPerSecond( m_hCam, &format.fps );
@@ -509,6 +526,7 @@ bool IDSuEye::setImageROI( int x, int y, int width, int height )
 		cerr << "Invalid AOI" << endl;
 		return false;
 	}
+
 	if (is_AllocImageMem(m_hCam, width, height, m_nBitsPerPixel, &m_pcImageMemory, &m_lMemoryId ) != IS_SUCCESS)
 	{
 		cerr << "Memory allocation failed!" << endl;
