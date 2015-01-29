@@ -149,3 +149,27 @@ bool uEyeCameraController::setBrightnessReference( double reference )
 	assert( uEyeCamera!= NULL && "setBrightnessReference: Input not linked" );
 	return uEyeCamera->setBrightnessReference( reference );
 }
+
+bool uEyeCameraController::setAutoBrightnessROI( int x, int y, int width, int height )
+{
+	assert( uEyeCamera!= NULL && "setAutoBrightnessROI: Input not linked" );
+	return uEyeCamera->setAutoBrightnessROI( x, y, width, height );
+}
+
+void uEyeCameraController::getAutoBrightnessROI( int &x, int &y, int &width, int &height )
+{
+	assert( uEyeCamera!= NULL && "getAutoBrightnessROI: Input not linked" );
+	uEyeCamera->getAutoBrightnessROI( x, y, width, height );
+}
+
+bool uEyeCameraController::setAutoWhiteBalanceROI( int x, int y, int width, int height )
+{
+	assert( uEyeCamera!= NULL && "setAutoWhiteBalanceROI: Input not linked" );
+	return uEyeCamera->setAutoWhiteBalanceROI( x, y, width, height );
+}
+
+void uEyeCameraController::getAutoWhiteBalanceROI( int &x, int &y, int &width, int &height )
+{
+	assert( uEyeCamera!= NULL && "getAutoWhiteBalanceROI: Input not linked" );
+	uEyeCamera->getAutoWhiteBalanceROI( x, y, width, height );
+}

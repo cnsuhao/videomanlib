@@ -61,6 +61,14 @@ public:
 
 	bool setBrightnessReference( double reference );
 
+	bool setAutoBrightnessROI( int x, int y, int width, int height );
+
+	void getAutoBrightnessROI( int &x, int &y, int &width, int &height );
+	
+	bool setAutoWhiteBalanceROI( int x, int y, int width, int height );
+	
+	void getAutoWhiteBalanceROI( int &x, int &y, int &width, int &height );
+
 private:
 
 	int colorModeFromPixelFormat( VideoMan::VMPixelFormat pixelFormat );
