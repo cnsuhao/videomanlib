@@ -176,9 +176,18 @@ bool IDSFalconFrameGrabber::initBoard( const unsigned long &hids, VMInputFormat 
 	int ret = is_SetVideoInput( m_hBoard, IS_SET_VIDEO_IN_1 );
 
 	//Sleep( 2000 );
-
-	int c = is_SetVideoMode (m_hBoard, IS_SET_VM_PAL ); //IS_SET_VM_NTSC 
-	c = is_SetVideoMode (m_hBoard, IS_GET_VIDEO_MODE );
+	bool usePal = true;
+	if ( usePal )
+	{
+		is_SetVideoMode (m_hBoard, IS_SET_VM_PAL );
+		format.fps = 25;
+	}
+	else
+	{
+		is_SetVideoMode (m_hBoard, IS_SET_VM_NTSC );
+		format.fps = 30;
+	}
+	int c = is_SetVideoMode (m_hBoard, IS_GET_VIDEO_MODE );
 	if ( c == IS_NO_SUCCESS )
 		return false;
 
