@@ -349,7 +349,13 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 
 
 	// start live video
-	nRet = is_CaptureVideo( m_hCam, IS_WAIT );
+	for(int i=0; i<20; i++)
+	{
+		nRet = is_CaptureVideo( m_hCam, IS_DONT_WAIT );
+		if(nRet == IS_SUCCESS)
+			break;
+		Sleep(150);
+	}
 	//nRet = is_FreezeVideo( m_hCam, IS_WAIT );
 	if ( nRet != IS_SUCCESS )
 	{
@@ -394,13 +400,15 @@ bool IDSuEye::initInput( const VMInputIdentification &device, VMInputFormat *afo
 	is_SetAutoParameter( m_hCam, IS_SET_AUTO_SKIPFRAMES, &skip, 0  );
 
 	//after start live video query framerate
+	/*
 	nRet = is_GetFramesPerSecond( m_hCam, &format.fps );
+	cout << "is_GetFramesPerSecond " << format.fps << endl;
 	if ( nRet != IS_SUCCESS || format.fps == 0 )
 	{
 		cerr << "is_GetFramesPerSecond failed "  << nRet << " " << format.fps << endl;
 		return false;
 	}
-
+	*/
 	if ( aformat )
 		*aformat = format;
 
@@ -490,7 +498,7 @@ void IDSuEye::getAvailableDevices( VMInputIdentification **deviceList, int &numD
 	}
 	if ( tempList.size() > 0 )
 	{
-		numDevices = tempList.size();
+		numDevices = (int)tempList.size();
 		*deviceList = new VMInputIdentification[tempList.size()];
 		for ( size_t d = 0; d < tempList.size(); ++d )
 			(*deviceList)[d] = tempList[d];
