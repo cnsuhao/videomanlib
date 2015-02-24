@@ -109,6 +109,7 @@ void VideoManControlPrivate::deleteInputs()
 	for ( VIDEO_LIST::iterator it = videoList.begin(); it != videoList.end(); it++ )
 		deleteInput( it );
 	videoList.clear();
+	nextInputID = 0;
 }
 
 void VideoManControl::deleteInputs()
