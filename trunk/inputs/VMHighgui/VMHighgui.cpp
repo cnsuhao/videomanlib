@@ -126,11 +126,14 @@ void getAvailableDevices( VMInputIdentification **deviceList, int &numDevices )
 			std::stringstream ss;
 			ss << "Device " << k;
 
+			(*deviceList)[k].friendlyName = new char[ss.str().length() + 1];
+			strcpy((*deviceList)[k].friendlyName, ss.str().c_str());
+
+			ss.clear();
+			ss << k;
 			(*deviceList)[k].uniqueName = new char[ss.str().length() + 1];
 			strcpy((*deviceList)[k].uniqueName, ss.str().c_str());
 
-			(*deviceList)[k].friendlyName = new char[ss.str().length() + 1];
-			strcpy((*deviceList)[k].friendlyName, ss.str().c_str());
         }
         numDevices=i;
     }
