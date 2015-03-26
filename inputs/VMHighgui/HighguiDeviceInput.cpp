@@ -67,6 +67,17 @@ bool HighguiDeviceInput::initInput( const VMInputIdentification &device, VMInput
 		identification.identifier = new char[identifier.length() + 1];
 		strcpy( identification.identifier, identifier.c_str() );
 
+		std::stringstream ss;
+		ss << "Device " << id;
+
+		identification.friendlyName = new char[ss.str().length() + 1];
+		strcpy(identification.friendlyName, ss.str().c_str());
+
+		ss.clear();
+		ss << id;
+		identification.uniqueName = new char[ss.str().length() + 1];
+		strcpy(identification.uniqueName, ss.str().c_str());
+
 		return true;
 	}
 	return false;
