@@ -1,6 +1,5 @@
 LINK_DIRECTORIES(
-	  ${VideoMan_BINARY_DIR}/bin/
-	  ${CMAKE_CURRENT_SOURCE_DIR}/lib
+	  ${VideoMan_BINARY_DIR}/bin/	  
 )
 
 
