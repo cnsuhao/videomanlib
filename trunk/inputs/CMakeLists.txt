@@ -83,4 +83,9 @@ VMIDSFalcon
 )
 ENDIF(VIDEOMAN_BUILD_INPUT_VMIDSFalcon)
 
-
+option(VIDEOMAN_BUILD_INPUT_VMImagingSource "Build VMImagingSource input module for The Imaging Source cameras and frame-grabbers" OFF)
+IF(VIDEOMAN_BUILD_INPUT_VMImagingSource)
+SUBDIRS(
+VMImagingSource
+)
+ENDIF(VIDEOMAN_BUILD_INPUT_VMImagingSource)
