@@ -62,7 +62,7 @@ bool ImageFile::initInput( const char *imagePath, VMInputFormat *aFormat )
 		if ( aFormat )
 			*aFormat = format;
 
-		const string identifier = "IMAGE_SEQUENCE";
+		const string identifier = "IMAGE_FILE";
 		identification.identifier = new char[identifier.length() + 1];
 		strcpy( identification.identifier, identifier.c_str() );
 		return true;
