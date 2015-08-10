@@ -46,7 +46,7 @@ void TISinput::getAvailableDevices(  VMInputIdentification **deviceList, int &nu
 		return;
 		
 	*deviceList = new VMInputIdentification[numDevices];
-	for (unsigned int i=0; i < numDevices; i++)
+	for ( int i=0; i < numDevices; i++)
     {
 		VMInputIdentification device;
 
@@ -166,7 +166,24 @@ bool TISinput::initInput( const VideoMan::VMInputIdentification &device, VideoMa
 		default:
 			return false;
 	}
+
+	//Config initial properties
+	IC_SetPropertySwitch ( m_hGrabber, "Exposure", "Auto", 1 );	
 	 
+	if ( aformat )
+		*aformat = format;
+	
+	//Fill identification info
+	char *deviceName = IC_GetDeviceName( m_hGrabber );
+	int len = 1024;
+	char *uniqueName = new char[len];
+	if ( IC_GetUniqueName( m_hGrabber, uniqueName, len ) == IC_SUCCESS )			
+		copyStringToChar( uniqueName, &identification.uniqueName );		
+	delete uniqueName;
+	if ( deviceName )
+		copyStringToChar( deviceName, &identification.friendlyName );	
+	copyStringToChar( "TIS_CAMERA", &identification.identifier );
+
 	//IC_ShowPropertyDialog( m_hGrabber );   
 
 	return true;
@@ -189,6 +206,7 @@ char *TISinput::getFrame( bool wait)
 	if ( IC_SnapImage( m_hGrabber, -1 ) == IC_SUCCESS )
 	{
 		pixelBuffer = (char*)IC_GetImagePtr( m_hGrabber ); 
+		return pixelBuffer;
 	}		
 	return NULL;
 }
