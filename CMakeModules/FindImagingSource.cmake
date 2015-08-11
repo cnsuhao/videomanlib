@@ -11,7 +11,7 @@ ELSE(WIN32)
 ENDIF(WIN32) 
 
 IF(ImagingSource_SDK)	
-	SET(ImagingSource_INCLUDE_DIR ${ImagingSource_SDK})
+	SET(ImagingSource_INCLUDE_DIR "${ImagingSource_SDK}/include")
 	IF(WIN32)
 		SET(ImagingSource_LIBRARIES "${ImagingSource_SDK}/bin/win32/tisgrabber.lib")   
 	ELSE(WIN32)
