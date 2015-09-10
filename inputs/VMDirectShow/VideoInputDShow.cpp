@@ -22,7 +22,7 @@ VideoInputDShow::VideoInputDShow(void)
 
 VideoInputDShow::~VideoInputDShow(void)
 {
-	#ifdef _DEBUG
+	#ifndef NDEBUG
 		removeFromRot(dwRegisterROT);
 		dwRegisterROT = 0;
 	#endif

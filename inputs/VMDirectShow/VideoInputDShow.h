@@ -34,8 +34,6 @@ public:
 	ULONG WINAPI Release();
 
 	// ISampleGrabberCB interfaces
-//	HRESULT WINAPI SampleCB(double SampleTime, IMediaSample *pSample);
-//	HRESULT WINAPI BufferCB(double sampleTimeSec, BYTE* bufferPtr, long bufferLength);
 	virtual HRESULT WINAPI SampleCB(double SampleTime, IMediaSample *pSample) = 0;
 	virtual HRESULT WINAPI BufferCB(double sampleTimeSec, BYTE* bufferPtr, long bufferLength) = 0;
 
@@ -64,7 +62,7 @@ protected:
 	ISampleGrabber *sampleGrabber;
 	IBaseFilter *videoSource;
 
-	#ifdef _DEBUG
+	#ifndef NDEBUG
 		DWORD dwRegisterROT;
 	#endif
 

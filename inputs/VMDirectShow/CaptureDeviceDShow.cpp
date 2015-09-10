@@ -355,7 +355,7 @@ HRESULT CaptureDeviceDShow::prepareMedia( std::string &friendlyName, std::string
 	if ( FAILED( hr = autoConnectFilters(pSG,1,pVideoRenderer,1,pGB) ) )
 		return hr;
 	
-	#ifdef _DEBUG
+	#ifndef NDEBUG
 		hr = addToRot( pGB, &dwRegisterROT );
 	#endif
 

@@ -122,7 +122,7 @@ const char **getIdentifiers( int &_numIdentifiers )
 
 char *checkVersion( )
 {
-	#ifdef _DEBUG
+	#ifndef NDEBUG
 		return "DEBUG" ;			 
 	#endif
 	#ifdef NDEBUG
