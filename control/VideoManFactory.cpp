@@ -218,7 +218,7 @@ void VideoManFactory::LoadModulesWindows( const std::string &path )
 				if ( checkVersion == NULL )
 					continue;
 				string version = checkVersion();
-				#ifdef _DEBUG
+				#ifndef NDEBUG
 					if  ( version != "DEBUG" )
 					{
 						FreeLibrary(hinstLib);
@@ -303,7 +303,7 @@ void VideoManFactory::LoadModulesLinux( const std::string &path )
 			if ((error = dlerror()) != NULL)
 				continue;
 			string version = (*checkVersion)();
-			#ifdef _DEBUG
+			#ifndef NDEBUG
 				if  ( version != "DEBUG" )
 				{
 					dlclose(handle);
@@ -356,7 +356,7 @@ void VideoManFactory::loadModules()
 {
 	std::string path;
 	#ifdef WIN32
-		#ifdef _DEBUG
+		#ifndef NDEBUG
 			HINSTANCE hInstance = GetModuleHandle("videomand.dll");
 		#endif
 		#ifdef NDEBUG
@@ -373,9 +373,15 @@ void VideoManFactory::loadModules()
 			path = path.substr( 0, index );
 	#endif
 	#ifdef linux
-		void *handle = dlopen("libVideoMan.so", RTLD_LAZY);
+		void *handle = NULL; 
+		#ifndef NDEBUG			
+            handle = dlopen("libVideoMand.so", RTLD_LAZY);
+        #endif
+        #ifdef NDEBUG
+            handle = dlopen("libVideoMan.so", RTLD_LAZY);
+        #endif 
 		link_map *map;
-		if ( dlinfo( handle,  RTLD_DI_LINKMAP, &map ) != -1 )
+		if ( handle && dlinfo( handle,  RTLD_DI_LINKMAP, &map ) != -1 )
 		{
 			path = map->l_name;
 			std::string::size_type index;
