@@ -77,7 +77,7 @@ const char **getIdentifiers( int &_numIdentifiers )
 //extern "C" IMG_SEQ_API char* checkVersion( );
 char* checkVersion( )
 {
-	#ifdef _DEBUG
+	#ifndef NDEBUG
 		return "DEBUG" ;			
 	#endif
 	#ifdef NDEBUG

@@ -152,7 +152,7 @@ VideoManInputController *createController( const char *identifier )
 
 char* checkVersion( )
 {
-	#ifdef _DEBUG
+	#ifndef NDEBUG
 		return "DEBUG" ;			
 	#endif
 	#ifdef NDEBUG

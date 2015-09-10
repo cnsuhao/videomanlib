@@ -166,7 +166,7 @@ const char **getIdentifiers( int &_numIdentifiers )
 //extern "C" VMHIGHGUI_API char* checkVersion( );
 char* checkVersion( )
 {
-	#ifdef _DEBUG
+	#ifndef NDEBUG
 		return "DEBUG" ;			
 	#endif
 	#ifdef NDEBUG
