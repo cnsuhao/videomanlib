@@ -89,3 +89,10 @@ SUBDIRS(
 VMImagingSource
 )
 ENDIF(VIDEOMAN_BUILD_INPUT_VMImagingSource)
+
+option(VIDEOMAN_BUILD_INPUT_VMFFmpeg "Build VMFFmpeg input module for video files using FFmpeg libraries" OFF)
+IF(VIDEOMAN_BUILD_INPUT_VMFFmpeg)
+SUBDIRS(
+VMFFmpeg
+)
+ENDIF(VIDEOMAN_BUILD_INPUT_VMFFmpeg)
