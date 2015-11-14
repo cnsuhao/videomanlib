@@ -41,8 +41,8 @@ public:
 
 
 private:
-
-	void readNextFrame( bool wait );
+		
+	void seek( double seekSecond );
 
 	AVFormatContext *m_avFormatContext;
 	AVCodecContext *m_codecContext;
