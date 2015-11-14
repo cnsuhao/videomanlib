@@ -35,7 +35,8 @@ VideoFile::VideoFile(void)
 	m_frame = NULL;
 	m_scaledFrame = NULL;
 	m_paused = true;
-	m_lastFrameIndex = m_lastFramePos = 0;
+	m_lastFrameIndex = 0;
+	m_lastFramePos = 0.0;
 }
 
 VideoFile::~VideoFile(void)
@@ -51,7 +52,6 @@ AVPixelFormat get_format( struct AVCodecContext *s, const enum AVPixelFormat *fm
 	for( int i = 0; fmt[i] != AV_PIX_FMT_NONE; ++i )
 	{
 		enum AVPixelFormat format = fmt[i];
-		int a = 0;
 	}
 	return fmt[0];
 }
@@ -68,7 +68,7 @@ bool VideoFile::initInput( const VideoMan::VMInputIdentification &device, VideoM
 		return false; // Couldn't find stream information
 	
 	//find video stream
-	for(int i=0; i<m_avFormatContext->nb_streams; i++)
+	for(unsigned int i=0; i<m_avFormatContext->nb_streams; i++)
 	{       
 		if((m_avFormatContext->streams[i])->codec->codec_type==AVMEDIA_TYPE_VIDEO)
 		{
@@ -91,7 +91,7 @@ bool VideoFile::initInput( const VideoMan::VMInputIdentification &device, VideoM
 	m_codecContext = avcodec_alloc_context3(codec);
 	if(avcodec_copy_context( m_codecContext, codecContext) != 0) {
 	  fprintf(stderr, "Couldn't copy codec context");
-	  return -1; // Error copying codec context
+	  return false; // Error copying codec context
 	}
 	avcodec_close(codecContext);	
 	if(avcodec_open2(m_codecContext, codec, NULL) < 0 )
@@ -105,15 +105,38 @@ bool VideoFile::initInput( const VideoMan::VMInputIdentification &device, VideoM
 
 	int w = m_codecContext->width;
 	int h = m_codecContext->height;
-	m_durationMicroSeconds = m_avFormatContext->duration;
+	if ( m_avFormatContext->duration != AV_NOPTS_VALUE )
+		m_durationMicroSeconds = m_avFormatContext->duration;
+	else
+		m_durationMicroSeconds = m_avFormatContext->streams[m_videoStream]->duration;
 	m_durationSeconds = (double)m_durationMicroSeconds / (double)AV_TIME_BASE;
 	AVRational rational = m_codecContext->time_base;
-	m_frameRate = av_q2d( m_avFormatContext->streams[m_videoStream]->avg_frame_rate );
-	m_durationFrames = 1E-6 * m_durationMicroSeconds * m_frameRate;
-
+	m_frameRate = av_q2d( av_guess_frame_rate( m_avFormatContext, m_avFormatContext->streams[m_videoStream], NULL ) );//m_avFormatContext->streams[m_videoStream]->avg_frame_rate );
+	m_durationFrames = static_cast<int>( floor( 1E-6 * m_durationMicroSeconds * m_frameRate + 0.5 ) );
+	if ( m_avFormatContext->streams[m_videoStream]->nb_frames > 0 )
+		m_durationFrames = m_avFormatContext->streams[m_videoStream]->nb_frames;
+	
 	m_scaledFrame = av_frame_alloc();	
 	m_dstPixelFormat = AV_PIX_FMT_RGB24;
-	m_swsContext = sws_getContext( w, h,  m_codecContext->pix_fmt, w, h, m_dstPixelFormat, SWS_BICUBIC, NULL, NULL, NULL);
+	//Change pix format because of the warning "deprecated pixel format used, make sure you did set range correctlly"
+		AVPixelFormat pixFormat;
+	switch (m_codecContext->pix_fmt) {
+	case AV_PIX_FMT_YUVJ420P :
+		pixFormat = AV_PIX_FMT_YUV420P;
+		break;
+	case AV_PIX_FMT_YUVJ422P  :
+		pixFormat = AV_PIX_FMT_YUV422P;
+		break;
+	case AV_PIX_FMT_YUVJ444P   :
+		pixFormat = AV_PIX_FMT_YUV444P;
+		break;
+	case AV_PIX_FMT_YUVJ440P :
+		pixFormat = AV_PIX_FMT_YUV440P;
+	default:
+		pixFormat = m_codecContext->pix_fmt;
+		break;
+	}
+	m_swsContext = sws_getContext( w, h,  pixFormat, w, h, m_dstPixelFormat, SWS_BICUBIC, NULL, NULL, NULL);
 	if( m_swsContext == NULL )
 	{
 		fprintf(stderr, "Cannot initialize the conversion context!\n");
@@ -132,125 +155,89 @@ bool VideoFile::initInput( const VideoMan::VMInputIdentification &device, VideoM
 		*aformat = format;
 
 	copyStringToChar( device.fileName, &identification.fileName );	
-	copyStringToChar( "FFMPEG_VIDEO_FILE", &identification.identifier );	
-
-//	while( !getFrame(false) );
-	
+	copyStringToChar( "FFMPEG_VIDEO_FILE", &identification.identifier );
+	return true;
 }
-
 
 char *VideoFile::getFrame( bool wait )
 {
-	if ( m_paused )
+	if ( m_paused || pixelBuffer )
 		return pixelBuffer;
-	if ( pixelBuffer )
-	{
-		//cout << floor(m_lastFrameIndex + 0.5) << " " << " " << m_lastFramePos << " " << (double)av_gettime() / 1000000.0  << endl;			
-		return pixelBuffer;
-	}
 	AVPacket packet;
 	while ( pixelBuffer == NULL )
 	{
-		if (av_read_frame(m_avFormatContext, &packet) < 0)
-		{
+		if ( av_read_frame(m_avFormatContext, &packet) < 0 )
 			return NULL;
-		}
-		if(packet.stream_index==m_videoStream) {
-		// Decode video m_frame   
-			int gotPicture;
-			avcodec_decode_video2(m_codecContext, m_frame, &gotPicture, &packet);
-			// Did we get a video m_frame?
-			if(gotPicture) 
-			{			 
-				if (m_codecContext->pix_fmt != m_dstPixelFormat)
-				{                       
-					if (m_codecContext->pix_fmt != m_dstPixelFormat )            
-					{
-						m_lastFramePos = av_frame_get_best_effort_timestamp( m_frame ) * av_q2d(m_avFormatContext->streams[m_videoStream]->time_base);			
-						m_lastFrameIndex = floor( m_lastFramePos * av_q2d( m_avFormatContext->streams[m_videoStream]->avg_frame_rate ) + 0.5 );
-				//cout << floor(m_lastFrameIndex + 0.5) << " " << packet.dts << " " << packet.pts << " " << m_lastFramePos << " " << (double)av_gettime() / 1000000.0  << endl;			
-
-						 sws_scale( m_swsContext, m_frame->data, 
-								  m_frame->linesize, 0, 
-								  m_codecContext->height, 
-								  m_scaledFrame->data, m_scaledFrame->linesize);              
-						 pixelBuffer = (char*)m_scaledFrame->data[0];
-						 av_free_packet(&packet);
-						 return pixelBuffer;
-					}
-				}
+		if ( packet.stream_index == m_videoStream )
+		{
+			// Decode frame   
+			int gotPicture = 0 ;
+			avcodec_decode_video2(m_codecContext, m_frame, &gotPicture, &packet);			
+			if ( gotPicture && m_codecContext->pix_fmt != m_dstPixelFormat ) 
+			{
+				if ( m_avFormatContext->streams[m_videoStream]->start_time != AV_NOPTS_VALUE )
+					m_lastFramePos = ( av_frame_get_best_effort_timestamp( m_frame ) - m_avFormatContext->streams[m_videoStream]->start_time ) * av_q2d(m_avFormatContext->streams[m_videoStream]->time_base);			
+				else
+					m_lastFramePos = ( av_frame_get_best_effort_timestamp( m_frame ) ) * av_q2d(m_avFormatContext->streams[m_videoStream]->time_base);			
+				m_lastFrameIndex = static_cast<int>( floor( m_lastFramePos * m_frameRate + 0.5 ) );
+				//cout << m_lastFrameIndex << " " << av_frame_get_best_effort_timestamp( m_frame ) << " " << packet.dts * av_q2d(m_avFormatContext->streams[m_videoStream]->time_base) << " " << packet.pts * av_q2d(m_avFormatContext->streams[m_videoStream]->time_base) << " " << m_lastFramePos << " " << (double)av_gettime() / 1000000.0  << endl;			
+				//cout << m_lastFrameIndex << " " << m_lastFramePos << endl;
+				sws_scale( m_swsContext, m_frame->data, m_frame->linesize, 0, m_codecContext->height,  m_scaledFrame->data, m_scaledFrame->linesize );
+				pixelBuffer = (char*)m_scaledFrame->data[0];
+				av_free_packet(&packet);
+				return pixelBuffer;
 			}
 		}
 		av_free_packet(&packet);
-	}
+	}	
 	return NULL;
 }
 
 void VideoFile::releaseFrame()
 {
 	pixelBuffer = NULL;
-
 }
 
-void VideoFile::goToMilisecond(  double milisecond )
+void VideoFile::seek(  double seekSecond )
+{
+	if ( seekSecond < 0 )
+		seekSecond = 0;	
+	if ( seekSecond > m_durationSeconds )
+		seekSecond = m_durationSeconds;	
+	AVRational rational = {1, 1};
+	int64_t seek_target =  av_rescale_q( seekSecond, rational, m_avFormatContext->streams[m_videoStream]->time_base);
+	//Seek to the closest keyframe previous to seektime
+	if ( av_seek_frame( m_avFormatContext, m_videoStream, seek_target, AVSEEK_FLAG_BACKWARD  ) >= 0 )
+	{
+		avcodec_flush_buffers( m_codecContext );	
+		//decode frames until reach seekSecond
+		do
+		{
+			releaseFrame();
+			if ( !getFrame() )
+				break;
+			if ( m_lastFramePos > seekSecond )
+				break;
+		}while( !pixelBuffer || fabs( m_lastFramePos - seekSecond ) >= ( 0.5 / m_frameRate ) );	
+	}
+}
+
+void VideoFile::goToMilisecond(  double seekMilisecond )
 {
 	bool wasPaused = m_paused;
 	m_paused = false;
-	//(int64_t)(pos * AV_TIME_BASE)
-	
-	//av_seek_frame( m_avFormatContext, m_videoStream, 0, AVSEEK_FLAG_ANY | AVSEEK_FLAG_BACKWARD );	
-	if ( milisecond < 0 )
-		milisecond = 0;	
-	double second = 0.001 * milisecond;
-	if ( second > m_durationSeconds )
-		second = m_durationSeconds;
-	const int64_t pos = (int64_t)( second * AV_TIME_BASE);
-	/*
-	5631 5797 5.464
-	5672 5756 5.506 KF
-	3.670
-	*/
-	
-	AVRational rational = {1, AV_TIME_BASE};
-	int64_t seek_target =  av_rescale_q( pos, rational, m_avFormatContext->streams[m_videoStream]->time_base);		
-	//cout << "seek_target " << seek_target << " " << m_avFormatContext->streams[m_videoStream]->start_time << endl;
-	int ret = av_seek_frame( m_avFormatContext, m_videoStream, seek_target, AVSEEK_FLAG_BACKWARD  );
-	//avformat_seek_file( m_avFormatContext, m_videoStream, seek_target,seek_target, seek_target, AVSEEK_FLAG_FRAME );
-	avcodec_flush_buffers( m_codecContext );	
-	do
-	{
-		releaseFrame();
-		if ( !getFrame() )
-			break;
-	}while( !pixelBuffer || fabs( m_lastFramePos - second ) >= ( 0.5 / m_frameRate ) );
-	//cout << "seek_target2 " << m_lastFramePos << endl;
+	const double seekSecond = 0.001 * seekMilisecond;	
+	seek( seekSecond );
 	m_paused = wasPaused;
 }
 
 void VideoFile::goToFrame( int frame )
 {
 	bool wasPaused = m_paused;
-	m_paused = false;
-	//(int64_t)(pos * AV_TIME_BASE)	
-	//av_seek_frame( m_avFormatContext, m_videoStream, 0, AVSEEK_FLAG_ANY | AVSEEK_FLAG_BACKWARD );
-	double time = frame / m_frameRate;
-	int64_t pos = (int64_t)(time * AV_TIME_BASE);	
-	
-	AVRational rational = {1, AV_TIME_BASE};
-	int64_t seek_target =  av_rescale_q( pos, rational, m_avFormatContext->streams[m_videoStream]->time_base);		
-	//cout << "seek_target " << seek_target << " " << m_avFormatContext->streams[m_videoStream]->start_time << endl;
-	int ret = av_seek_frame( m_avFormatContext, m_videoStream, seek_target, AVSEEK_FLAG_BACKWARD  );
-	//avformat_seek_file( m_avFormatContext, m_videoStream, seek_target,seek_target, seek_target, AVSEEK_FLAG_FRAME );
-	avcodec_flush_buffers( m_codecContext );	
-	do
-	{
-		releaseFrame();
-		if ( !getFrame() )
-			break;
-	}while( !pixelBuffer || fabs( m_lastFramePos - time ) >= ( 0.5 / m_frameRate ) );
-	//cout << "seek_target2 " << m_lastFramePos << endl;	
+	m_paused = false;	
+	const double seekSecond = frame / m_frameRate;
+	seek( seekSecond );
 	m_paused = wasPaused;
-
 }
 
 double VideoFile::getPositionSeconds()
