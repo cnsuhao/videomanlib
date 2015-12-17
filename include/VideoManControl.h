@@ -475,6 +475,8 @@ public:
 	*/
 	void freeAvailableDevicesList( VMInputIdentification **deviceList, int &numDevices );
 
+	/** \brief get the time stamp of the last captured frame (should be called before releaseFrame)
+	*/
 	double getTimeStamp( const size_t &input );
 
 //@}

@@ -2,6 +2,7 @@
 #include <GL/freeglut.h>
 #include <iostream>
 #include <vector>
+#include <sstream>
 
 #include "VideoManControl.h"
 
@@ -24,6 +25,7 @@ std::vector< int > videoInputIDs; //List of indexes of the initialized inputs
 int videoFileInputID;
 
 char *dirPath = 0;
+std::string windowTitle = "VideoMan with DirectShow ";
 
 void glutResize(int width, int height)
 {
@@ -150,6 +152,10 @@ void glutDisplay(void)
 		char *image = videoMan.getFrame( videoInputIDs[n] );
 		if ( image != NULL )
 		{
+			std::ostringstream sstream;			
+			sstream  << windowTitle << videoMan.getTimeStamp(  videoInputIDs[n] );
+			glutSetWindowTitle( sstream.str().c_str() );
+			cout << videoMan.getTimeStamp(  videoInputIDs[n] ) << endl;
 			//Update the texture of the renderer
 			videoMan.updateTexture( videoInputIDs[n] ); 
             
@@ -192,7 +198,7 @@ int main(int argc, char** argv)
     glutInitWindowPosition( 0, 0 );
     glutInitWindowSize( 640, 480 );
     glutInit( &argc, argv );
-    glutCreateWindow("VideoMan with DirectShow");
+    glutCreateWindow( windowTitle.c_str() );
 	glutHideWindow();
 
 	if ( !InitializeVideoMan() )
