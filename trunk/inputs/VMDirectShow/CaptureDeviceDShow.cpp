@@ -756,6 +756,7 @@ HRESULT WINAPI CaptureDeviceDShow::SampleCB( double SampleTime, IMediaSample *pS
 	{
 		if ( mediaSample == NULL )
 		{
+			lastTimeStamp = SampleTime;
 			pSample->AddRef();
 			mediaSample = pSample;
 			mediaSample->GetPointer((BYTE**)&pixelBuffer);
@@ -776,10 +777,16 @@ HRESULT WINAPI CaptureDeviceDShow::BufferCB(double sampleTimeSec, BYTE* bufferPt
 {
 	if ( pixelBuffer == NULL )
 	{
+		lastTimeStamp = sampleTimeSec;
 		pixelBuffer = (char*)bufferPtr;
 		frameCaptured = true;
 		if ( callback )
 			(*callback)( pixelBuffer, inputID, sampleTimeSec, frameCallbackData );
 	}
 	return(S_OK);
+}
+
+double CaptureDeviceDShow::getTimeStamp()
+{
+	return lastTimeStamp;
 }

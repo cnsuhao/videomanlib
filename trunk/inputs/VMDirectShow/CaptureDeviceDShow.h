@@ -26,6 +26,8 @@ public:
 	
 	void stop();
 
+	double getTimeStamp();
+
 	static void getAvailableDevices( VideoMan::VMInputIdentification **deviceList, int &numDevices  );	
 
 	VideoManPrivate::VideoManInputController *getController();
@@ -80,6 +82,7 @@ private:
 	HANDLE ghMutex;
 
 	VideoManPrivate::VideoManInputController *controller;
+	double lastTimeStamp;
 };
 
 #endif
