@@ -45,6 +45,7 @@ CaptureDeviceDShow::~CaptureDeviceDShow(void)
 		crossbar = NULL;
 	}
 	SAFE_RELEASE( mediaSample );
+	SAFE_RELEASE( currentMediaSample );
 
 	ReleaseSemaphore( ghSemaphore, 1, NULL );
 	CloseHandle( ghSemaphore );
@@ -390,27 +391,40 @@ HRESULT CaptureDeviceDShow::prepareMedia( std::string &friendlyName, std::string
 }
 
 char *CaptureDeviceDShow::getFrame( bool wait)
-{
-    if ( WaitForSingleObject( ghSemaphore, 100 ) == WAIT_OBJECT_0 )
-		return pixelBuffer;	
-	else
-		return NULL;
+{	
+	if ( !wait || WaitForSingleObject( ghSemaphore, INFINITE ) == WAIT_OBJECT_0 )
+	{
+		if ( WaitForSingleObject( ghMutex, INFINITE ) == WAIT_OBJECT_0  )
+		{
+			if (mediaSample != NULL )
+			{
+				currentMediaSample = mediaSample;
+				currentMediaSample->GetPointer((BYTE**)&pixelBuffer);		
+				mediaSample = NULL;	
+				currentTimeStamp = lastTimeStamp;
+				ReleaseMutex( ghMutex );
+				frameCaptured = true;		
+				return pixelBuffer;
+			}		
+			ReleaseMutex( ghMutex );
+		}
+	}
+	return NULL;
 }
 
 
 void CaptureDeviceDShow::releaseFrame()
 {
-	DWORD dwWaitResult = WaitForSingleObject( ghMutex, INFINITE );
-	if ( dwWaitResult == WAIT_OBJECT_0 )
+	if ( WaitForSingleObject( ghMutex, INFINITE ) == WAIT_OBJECT_0 )
 	{
-		if ( mediaSample != NULL )
+		if ( currentMediaSample != NULL )
 		{
 			pixelBuffer = NULL;		
-			mediaSample->Release();
+			currentMediaSample->Release();
 			frameCaptured = false;		
-			mediaSample = NULL;
+			currentMediaSample = NULL;
 		}
-	ReleaseMutex( ghMutex );
+		ReleaseMutex( ghMutex );
 	}
 }
 
@@ -750,25 +764,28 @@ void CaptureDeviceDShow::setFrameCallback( getFrameCallback theCallback, void *d
 }
 
 HRESULT WINAPI CaptureDeviceDShow::SampleCB( double SampleTime, IMediaSample *pSample )
-{
-	DWORD dwWaitResult = WaitForSingleObject( ghMutex, INFINITE );
-	if ( dwWaitResult == WAIT_OBJECT_0 )
+{	
+	if ( WaitForSingleObject( ghMutex, INFINITE ) == WAIT_OBJECT_0 )
 	{
-		if ( mediaSample == NULL )
+		if ( mediaSample != NULL )
+			mediaSample->Release();
+		
+		lastTimeStamp = SampleTime;
+		pSample->AddRef();
+		mediaSample = pSample;			
+		if ( callback )
 		{
-			lastTimeStamp = SampleTime;
-			pSample->AddRef();
-			mediaSample = pSample;
+			currentTimeStamp = SampleTime;
+			frameCaptured = true;	
 			mediaSample->GetPointer((BYTE**)&pixelBuffer);
-			frameCaptured = true;
-			if ( callback )
-				(*callback)( pixelBuffer, inputID, SampleTime, frameCallbackData );
-			else
-  				ReleaseSemaphore( ghSemaphore, 1, NULL );
-			ReleaseMutex(ghMutex);
-			return(S_OK);
+			(*callback)( pixelBuffer, inputID, SampleTime, frameCallbackData );
 		}
+		else
+  			ReleaseSemaphore( ghSemaphore, 1, NULL );
 		ReleaseMutex(ghMutex);
+		return(S_OK);
+		
+		
 	}
 	return(S_FALSE);
 }
@@ -788,5 +805,5 @@ HRESULT WINAPI CaptureDeviceDShow::BufferCB(double sampleTimeSec, BYTE* bufferPt
 
 double CaptureDeviceDShow::getTimeStamp()
 {
-	return lastTimeStamp;
+	return currentTimeStamp;
 }

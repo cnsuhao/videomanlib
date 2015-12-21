@@ -83,6 +83,7 @@ private:
 
 	VideoManPrivate::VideoManInputController *controller;
 	double lastTimeStamp;
+	double currentTimeStamp;
 };
 
 #endif
