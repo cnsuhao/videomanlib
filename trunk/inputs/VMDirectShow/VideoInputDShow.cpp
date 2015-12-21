@@ -18,6 +18,7 @@ VideoInputDShow::VideoInputDShow(void)
 	sampleGrabber = NULL;
 	videoSource = NULL;
 	mediaSample = NULL;
+	currentMediaSample = NULL;
 }
 
 VideoInputDShow::~VideoInputDShow(void)

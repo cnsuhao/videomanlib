@@ -67,5 +67,6 @@ protected:
 	#endif
 
 	IMediaSample* mediaSample;
+	IMediaSample* currentMediaSample;
 };
 #endif
