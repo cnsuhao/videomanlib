@@ -777,7 +777,9 @@ HRESULT WINAPI CaptureDeviceDShow::SampleCB( double SampleTime, IMediaSample *pS
 		{
 			currentTimeStamp = SampleTime;
 			frameCaptured = true;	
+			currentMediaSample = mediaSample;
 			mediaSample->GetPointer((BYTE**)&pixelBuffer);
+			mediaSample = NULL;
 			(*callback)( pixelBuffer, inputID, SampleTime, frameCallbackData );
 		}
 		else
