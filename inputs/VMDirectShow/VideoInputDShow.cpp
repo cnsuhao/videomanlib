@@ -146,21 +146,24 @@ HRESULT VideoInputDShow::findMediaType(IPin *pin, VMInputFormat *requestedFormat
 	pin->EnumMediaTypes(&enum_mt);
 	enum_mt->Reset();
 	AM_MEDIA_TYPE *mediaType = NULL;
-	GUID requestedSubtype;
-	requestedSubtype =GUID_NULL;//;GUID_NULL;//translatePIXEL_FORMAT( requestedFormat->pixelFormat );
-	requestedSubtype = translatePIXEL_FORMAT( requestedFormat->getPixelFormatIn() );
+	CHAR pszValue[5];
+	GUID requestedSubtype = translatePIXEL_FORMAT( requestedFormat->getPixelFormatIn() );
 	while( S_OK == ( hr = enum_mt->Next( 1, &mediaType, NULL ) ) )
 	{
 		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) mediaType->pbFormat;
 		if ( requestedFormat->fps > 0 )
 			pvi->AvgTimePerFrame = fps2referenceTime( requestedFormat->fps );
+		 *((UINT32*) pszValue) = mediaType->subtype.Data1;
 		copyMediaType( requestedMT, mediaType );
 		if( ((mediaType->subtype == requestedSubtype) || (requestedSubtype == GUID_NULL)) &&
 			(pvi->bmiHeader.biHeight == requestedFormat->height) &&
-			(pvi->bmiHeader.biWidth  == requestedFormat->width) )			
+			(pvi->bmiHeader.biWidth  == requestedFormat->width) &&
+			((requestedFormat->identification[0] == 0) ||
+			(memcmp(requestedFormat->identification, pszValue, 4) == 0)))
 		{
 			deleteMediaType(mediaType);
 			SAFE_RELEASE( enum_mt );
+			cout << "compatible format has been selected: " << pszValue << endl;
 			return(S_OK);
 		}
 		else deleteMediaType(mediaType);

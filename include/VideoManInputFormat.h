@@ -198,6 +198,8 @@ public:
 	int align;
 	/** frames per second */
 	double fps;
+	/* codec 4-char identificator (e.g. MJPG) */
+	char identification[5];
 	//@}
 
 	//! \name For capture devices
