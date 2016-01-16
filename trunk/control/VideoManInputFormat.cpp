@@ -9,6 +9,7 @@ VMInputFormat::VMInputFormat(void)
 	showDlg = false;
 	clock = true;
 	renderAudio = true;	
+	memset(identification, 0, sizeof(identification));
 }
 
 
