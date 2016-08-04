@@ -375,11 +375,20 @@ HRESULT CaptureDeviceDShow::prepareMedia( std::string &friendlyName, std::string
 	format.height = pvi->bmiHeader.biHeight;
 	format.fps = referenceTime2fps( pvi->AvgTimePerFrame );
  	format.setPixelFormat( VM_UNKNOWN, translateMEDIASUBTYPE( outputMediaType.subtype ) );
+	//Calculate pixel alignment
+	const int bytesPerRow = pvi->bmiHeader.biSizeImage / pvi->bmiHeader.biHeight;
+	if (pvi->bmiHeader.biWidth * pvi->bmiHeader.biBitCount == bytesPerRow * 8)
+		format.align = 1;
+	else if (bytesPerRow % 4 == 0)
+		format.align = 4;
+	else if (bytesPerRow % 2 == 0)
+		format.align = 2;
+	else
+		format.align = 8;
 	if ( format.getPixelFormatOut() == VM_UNKNOWN )
 	{
 		//The output format of the source filter is not supported
-		//Force a known format
-
+		//TODO Force a known format
 	}
 	freeMediaType(outputMediaType);	
 
