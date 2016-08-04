@@ -174,7 +174,7 @@ HRESULT VideoFileDShow::prepareMedia( const std::string &name, VMInputFormat *aF
 	ZeroMemory((PVOID)&mt, sizeof(AM_MEDIA_TYPE));
 	mt.majortype = MEDIATYPE_Video;
 	mt.formattype = GUID_NULL;
-	if ( aFormat != NULL )	
+	if ( aFormat != NULL )
 		mt.subtype = translatePIXEL_FORMAT( aFormat->getPixelFormatOut() );
 	else
 		mt.subtype = translatePIXEL_FORMAT( VM_RGB24 );
@@ -314,6 +314,16 @@ HRESULT VideoFileDShow::prepareMedia( const std::string &name, VMInputFormat *aF
 	format.height = pvi->bmiHeader.biHeight;
 	format.fps = referenceTime2fps( pvi->AvgTimePerFrame );
  	format.setPixelFormat( VM_UNKNOWN, translateMEDIASUBTYPE( mediaType.subtype ) );
+	//Calculate pixel alignment
+	const int bytesPerRow = pvi->bmiHeader.biSizeImage / pvi->bmiHeader.biHeight;
+	if (pvi->bmiHeader.biWidth * pvi->bmiHeader.biBitCount == bytesPerRow * 8)
+		format.align = 1;
+	else if (bytesPerRow % 4 == 0)
+		format.align = 4;
+	else if (bytesPerRow % 2 == 0)
+		format.align = 2;
+	else
+		format.align = 8;
 	avgTimePerFrame = static_cast<double>( pvi->AvgTimePerFrame );
 	if ( avgTimePerFrame <= 0 )
 		avgTimePerFrame = (double)seconds2referenceTime( 0.03 ); //30fps
