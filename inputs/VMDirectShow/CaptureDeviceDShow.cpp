@@ -367,6 +367,11 @@ HRESULT CaptureDeviceDShow::prepareMedia( std::string &friendlyName, std::string
 	SAFE_RELEASE( rendererPin );
 	SAFE_RELEASE( pVideoRenderer );
 	VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) outputMediaType.pbFormat;
+	if (pvi == NULL)
+	{
+		cerr << "VIDEOINFOHEADER NULL" << endl;
+		return E_FAIL;
+	}
 	FILTER_INFO filter_info;
 	videoSource->QueryFilterInfo(&filter_info);
 	SAFE_RELEASE( filter_info.pGraph );
