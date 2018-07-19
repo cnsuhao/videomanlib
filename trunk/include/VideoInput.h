@@ -17,6 +17,7 @@ public:
 		pixelBuffer = NULL;
 		callback = NULL;
 		roiMode = false;
+		xRoi = yRoi = wRoi = hRoi = 0;
 	}
 
 	virtual ~VideoInput( void )
