@@ -184,7 +184,7 @@ bool PointGreyController::getImageROI( int &x, int &y, int &width, int &height )
 	int w,h;
 	w = cameraList[0]->getVideoManInputFormat().width;
 	h = cameraList[0]->getVideoManInputFormat().height;
-	return (width!=w || height!=h);
+	return ((width> 0 && height > 0)  && (width != w || height != h));
 }
 
 bool PointGreyController::getROIUnits( int &Hmax, int &Vmax, int &imageHStepSize, int &imageVStepSize, int &offsetHStepSize, int &offsetVStepSize )
